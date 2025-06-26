@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
+import { Analytics } from "@vercel/analytics/next";
 
 // --- Helper Components ---
 
