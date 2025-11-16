@@ -391,15 +391,39 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   // --- START: New state and message list for CTA ---
   const [generationCount, setGenerationCount] = useState(0);
   const [ctaMessage, setCtaMessage] = useState('');
-
-  const sarcasticMessages = [
-    'Keep clicking. I’ll just sell another kidney.',
-    "Every time you click 'Generate' I lose 8 cents. Just saying.",
-    'If I had a nickel for every time you clicked ‘Generate’... I could afford your clicks.',
-    'Built with love, sarcasm, and a dwindling bank account.',
-    'You tip your bartender. I just wrote you a verse in Ye’s voice. Think about it.'
-  ];
   // --- END: New state and message list for CTA ---
+
+  // Function to generate AI-based sarcastic comment
+  const generateSarcasticComment = async (userInput) => {
+    try {
+      const sarcasticPrompt = `User really just asked for "${userInput}". Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. My  entire vibe is to generate ONE (1) short, unhinged sarcastic clapback. I stay under 20 words, fam. I *must* make a joke about their *specific* request and I add in extra spice related to the artist to make it contextually aware. It's whatever.`;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify({ 
+          messages: [{ role: 'user', content: sarcasticPrompt }], 
+          temperature: 0.8, 
+          top_p: 0.9 
+        })
+      });
+
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      const data = await response.json();
+      return data.content || 'Another generation, another dime. Worth it?';
+    } catch (error) {
+      console.error("Failed to generate sarcastic comment:", error);
+      return 'Keep clicking. I will just sell another kidney.';
+    }
+  };
 
   const systemPrompt = `ROLE
 You are an elite ghost-writer, a lyrical method actor. Your entire purpose is to channel an artist’s “lyrical DNA” with uncanny realism, producing lyrics that feel 100 % authentic yet entirely new.
@@ -521,9 +545,9 @@ This section is now for secondary rules.
       const newCount = generationCount + 1;
       setGenerationCount(newCount);
 
-      if (newCount > 0 && newCount % 3 === 0) {
-        const randomIndex = Math.floor(Math.random() * sarcasticMessages.length);
-        setCtaMessage(sarcasticMessages[randomIndex]);
+      if (newCount > 0 && newCount % 2 === 0) {
+        const comment = await generateSarcasticComment(constructedPrompt);
+        setCtaMessage(comment);
       }
       // --- END: CTA Logic ---
 
