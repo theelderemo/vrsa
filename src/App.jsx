@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
@@ -268,6 +269,110 @@ rust, static, glitch, code, king, queen, throne, abyss, void, echo, shadow, whis
 OUTPUT FORMAT
 Just the lyric lines (one line = one bar).  
 No labels, brackets, headers, commentary, or apologies.`;
+
+// --- Landing Page Component ---
+const Landing = ({ setCurrentPage }) => {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 overflow-hidden">
+            {/* Animated background elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            </div>
+
+            {/* Hero Section */}
+            <div className="relative z-10 container mx-auto px-4 py-20 md:py-32">
+                <div className="text-center max-w-5xl mx-auto">
+                    {/* Logo/Brand */}
+                    <div className="mb-8 flex justify-center">
+                      <div className="inline-flex items-center bg-slate-800/50 backdrop-blur-sm px-6 py-3 rounded-full border border-indigo-500/30">
+                        <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                          VRS/A
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Main Headline */}
+                    <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+                        <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+                            AI-Powered Lyrical
+                        </span>
+                        <br />
+                        <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            Co-Writing Studio
+                        </span>
+                    </h1>
+
+                    {/* Subheadline */}
+                    <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+                        Collaborate with advanced AI to craft authentic, unreleased-quality lyrics. 
+                        Channel any artist's DNA with precision or build your song piece-by-piece. Always free.
+                    </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
+            <button
+              onClick={() => setCurrentPage('ghostwriter')}
+              className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/50"
+            >
+              Start with Ghostwriter
+            </button>
+            <button
+              onClick={() => setCurrentPage('sandbox')}
+              className="group px-8 py-4 bg-slate-800/80 backdrop-blur-sm border-2 border-indigo-500/50 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-800 hover:border-indigo-400 hover:scale-105"
+            >
+              Try Sandbox Mode
+            </button>
+          </div>
+                </div>
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* Ghostwriter Card */}
+          <div className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10">
+            <div className="pt-8">
+              <h3 className="text-2xl font-bold mb-4 text-indigo-300">Ghostwriter Mode</h3>
+              <p className="text-slate-300 mb-6 leading-relaxed">
+                Chat-based interface for rapid lyrical generation. Provide structured inputs like artist name, 
+                theme, mood, and rhyme schemes. The AI channels your chosen artist's DNA to create authentic, 
+                unreleased-quality lyrics in seconds.
+              </p>
+              <ul className="space-y-3 text-slate-400">
+                <li>Structured input form for precision control</li>
+                <li>Advanced rhyme scheme selection</li>
+                <li>Adjustable temperature and creativity settings</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Sandbox Card */}
+          <div className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10">
+            <div className="pt-8">
+              <h3 className="text-2xl font-bold mb-4 text-purple-300">Sandbox Mode</h3>
+              <p className="text-slate-300 mb-6 leading-relaxed">
+                DAW-inspired interface for building songs section by section. Craft verses, choruses, bridges, 
+                and more with individual controls for each. Perfect for methodical songwriters who want 
+                granular control over every element.
+              </p>
+              <ul className="space-y-3 text-slate-400">
+                <li>Section-based workflow (verse, chorus, bridge)</li>
+                <li>Per-section density and bar controls</li>
+                <li>Visual song structure at a glance</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Features Section */}
+        <div className="mt-20 text-center">
+          <h3 className="text-3xl font-bold mb-12 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            Powered by Advanced AI. Always Free. No Ads. No Tracking.
+          </h3>
+                 </div>
+            </div>
+        </div>
+    );
+};
 
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [messages, setMessages] = useState([]);
@@ -552,9 +657,9 @@ const Sandbox = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
         setStructure(prev => [...prev, newSection]);
     };
 
-    const deleteSection = (idToDelete) => {
-        setStructure(structure.filter(section => section.id !== idToDelete));
-    };
+    const deleteSection = React.useCallback((idToDelete) => {
+        setStructure(prev => prev.filter(section => section.id !== idToDelete));
+    }, []);
 
     const generateSection = async (index, promptOverride) => {
         setStructure(prev => prev.map((sec, i) => i === index ? { ...sec, isGenerating: true } : sec));
@@ -713,15 +818,6 @@ const SectionCard = React.memo(function SectionCard({
     );
 
     // Memoize callbacks for stable identity
-    const handleContentChange = React.useCallback((idx, field, val) => {
-        setStructure(prev => prev.map((sec, i) => i === idx ? { ...sec, [field]: val } : sec));
-    }, []);
-    const handleGenerate = React.useCallback((indexOrType, e, idx) => {
-        if (indexOrType === 'dragStart') return handleDragStart(e, idx);
-        if (indexOrType === 'dragOver') return handleDragOver(e, idx);
-        if (indexOrType === 'dragEnd') return handleDragEnd();
-        return generateSection(indexOrType);
-    }, [generateSection]);
     const handleDelete = React.useCallback((id) => {
         deleteSection(id);
     }, [deleteSection]);
@@ -897,7 +993,7 @@ const STYLE_PALETTE_PROMPT = `You are a world-class musicologist and lyric analy
                                 index={index}
                                 onContentCommit={commitContent}
                                 onGenerate={generateSection}
-                                onDelete={deleteSection}
+                                onDelete={handleDelete}
                                 onDragStart={handleDragStart}
                                 onDragOver={handleDragOver}
                                 onDragEnd={handleDragEnd}
@@ -1109,7 +1205,7 @@ const Guide = () => (
 // --- Main App Component ---
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('ghostwriter');
+  const [currentPage, setCurrentPage] = useState('landing');
   const [selectedRhymeSchemes, setSelectedRhymeSchemes] = useState([]);
   const [kitView, setKitView] = useState('marketplace'); // 'marketplace' | 'detail' | 'create'
   const [activeKit, setActiveKit] = useState(null);
@@ -1131,8 +1227,9 @@ const App = () => {
     <UserProvider>
       <StyleKitProvider>
         <div className="bg-slate-900 text-white font-sans h-screen flex flex-col">
-          <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />
+          {currentPage !== 'landing' && <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />}
           <div className="flex-1 min-h-0 overflow-y-auto">
+            {currentPage === 'landing' && <Landing setCurrentPage={setCurrentPage} />}
             {currentPage === 'kits' && kitView === 'marketplace' && (
               <StyleKitMarketplace onSelectKit={handleSelectKit} onCreateKit={handleCreateKit} />
             )}
@@ -1148,7 +1245,7 @@ const App = () => {
             {currentPage === 'terms' && <TermsOfService />}
             {currentPage === 'login' && <AuthComponent />}
           </div>
-          <Footer onTermsClick={() => setCurrentPage('terms')} />
+          {currentPage !== 'landing' && <Footer onTermsClick={() => setCurrentPage('terms')} />}
         </div>
       </StyleKitProvider>
     </UserProvider>
