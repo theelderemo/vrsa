@@ -52,33 +52,26 @@ const Header = ({ currentPage, setCurrentPage }) => {
 
 // --- Ghostwriter Page Components ---
 
-const rhymeSchemesList = [
-  "AABB", 
-  "ABBA",
-  "Alternate rhyme",
-  "Anapestic rhyme",
-  "Assonance",
-  "Ballade",
-  "Broken rhyme",
-  "Chain rhyme",
-  "Consonance",
-  "Dactylic rhyme",
-  "Eye rhyme",
-  "Feminine rhyme",
-  "Four line rhyme schemes",
-  "Head rhyme",
+// Organized rhyme options by category
+const rhymePlacementOptions = [
+  "End rhyme",
   "Internal rhyme",
-  "Keatsian Ode",
-  "Limerick",
-  "Masculine rhyme",
-  "Monorhyme",
+  "Cross-line rhyme"
+];
+
+const rhymeQualityOptions = [
   "Perfect rhyme",
-  "Sibilant rhyme",
   "Slant rhyme",
-  "Sonnet",
-  "Terza rima",
-  "Triplet",
-  "Villanelle",
+  "Assonance",
+  "Consonance",
+  "Multisyllabic rhyme"
+];
+
+const rhymePatternOptions = [
+  "AABB (couplets)",
+  "ABAB (alternating)",
+  "ABBA (enclosed)",
+  "Free/irregular"
 ];
 
 const StructuredInputForm = ({ 
@@ -87,8 +80,10 @@ const StructuredInputForm = ({
     moodTag, setMoodTag,
     lengthHint, setLengthHint,
     isExplicit, setIsExplicit,
-    selectedRhymeSchemes, setSelectedRhymeSchemes, rhymeSchemesList,
-    temperature, setTemperature, topP, setTopP, // <-- add these props
+    selectedRhymeSchemes, setSelectedRhymeSchemes,
+    rhymeDensity, setRhymeDensity,
+    rhymeComplexity, setRhymeComplexity,
+    temperature, setTemperature, topP, setTopP,
     onReset,
     onCloseMobile
 }) => (
@@ -143,24 +138,112 @@ const StructuredInputForm = ({
                  <div className="ml-3 text-slate-300 font-medium">Explicit Language</div>
              </label>
         </div>
-        {rhymeSchemesList && selectedRhymeSchemes && setSelectedRhymeSchemes && (
-          <div className="mb-4">
-            <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Schemes (toggle any)</label>
-            <div className="grid grid-cols-2 gap-2">
-              {rhymeSchemesList.map(scheme => (
-                <label key={scheme} className="flex items-center space-x-2 text-slate-300 text-xs">
+        
+        {/* Rhyme Control Section */}
+        <div className="space-y-4 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+          <h3 className="text-sm font-bold text-indigo-300 mb-3">Rhyme Controls</h3>
+          
+          {/* Rhyme Density Slider */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
+              Rhyme Density: {rhymeDensity}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={rhymeDensity}
+              onChange={e => setRhymeDensity(Number(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+            <p className="text-xs text-slate-500 mt-1">How frequently rhymes appear</p>
+          </div>
+
+          {/* Rhyme Complexity Slider */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">
+              Rhyme Complexity: {rhymeComplexity}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={rhymeComplexity}
+              onChange={e => setRhymeComplexity(Number(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+            <p className="text-xs text-slate-500 mt-1">Multisyllabic & intricate patterns</p>
+          </div>
+
+          {/* Rhyme Placement */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-2">Rhyme Placement</label>
+            <div className="space-y-2">
+              {rhymePlacementOptions.map(option => (
+                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
                   <input
                     type="checkbox"
-                    checked={selectedRhymeSchemes.includes(scheme)}
-                    onChange={() => setSelectedRhymeSchemes(selectedRhymeSchemes.includes(scheme) ? selectedRhymeSchemes.filter(s => s !== scheme) : [...selectedRhymeSchemes, scheme])}
+                    checked={selectedRhymeSchemes.includes(option)}
+                    onChange={() => setSelectedRhymeSchemes(
+                      selectedRhymeSchemes.includes(option)
+                        ? selectedRhymeSchemes.filter(s => s !== option)
+                        : [...selectedRhymeSchemes, option]
+                    )}
                     className="accent-indigo-500"
                   />
-                  <span>{scheme}</span>
+                  <span>{option}</span>
                 </label>
               ))}
             </div>
           </div>
-        )}
+
+          {/* Rhyme Quality */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-2">Rhyme Quality</label>
+            <div className="space-y-2">
+              {rhymeQualityOptions.map(option => (
+                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={selectedRhymeSchemes.includes(option)}
+                    onChange={() => setSelectedRhymeSchemes(
+                      selectedRhymeSchemes.includes(option)
+                        ? selectedRhymeSchemes.filter(s => s !== option)
+                        : [...selectedRhymeSchemes, option]
+                    )}
+                    className="accent-indigo-500"
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Structure Patterns */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-2">Structure Patterns</label>
+            <div className="space-y-2">
+              {rhymePatternOptions.map(option => (
+                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={selectedRhymeSchemes.includes(option)}
+                    onChange={() => setSelectedRhymeSchemes(
+                      selectedRhymeSchemes.includes(option)
+                        ? selectedRhymeSchemes.filter(s => s !== option)
+                        : [...selectedRhymeSchemes, option]
+                    )}
+                    className="accent-indigo-500"
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Temperature and Top-p sliders */}
         <div className="mb-4">
           <label className="block text-xs font-semibold text-slate-400 mb-1">Temperature: {temperature}</label>
@@ -387,6 +470,8 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar state
   const [temperature, setTemperature] = useState(1);
   const [topP, setTopP] = useState(1);
+  const [rhymeDensity, setRhymeDensity] = useState(50);
+  const [rhymeComplexity, setRhymeComplexity] = useState(50);
 
   // --- START: New state and message list for CTA ---
   const [generationCount, setGenerationCount] = useState(0);
@@ -444,7 +529,9 @@ artist_name: <Name or “Artist-style”>
 core_theme: <1-sentence brief>
 optional_mood_tag: <melancholy | triumph | …>
 explicit_language: <yes | no>
-rhyme_schemes: ${selectedRhymeSchemes.length > 0 ? selectedRhymeSchemes.join(', ') : 'None'}
+rhyme_density: <0-100%> (how frequently rhymes appear)
+rhyme_complexity: <0-100%> (multisyllabic & intricate patterns)
+rhyme_schemes: ${selectedRhymeSchemes.length > 0 ? selectedRhymeSchemes.join(', '  ) : 'None specified - use your best judgment'}
 length_hint: <short | single | double | full song | hook | chorus | bridge | breakdown | outro>
 
 TASK
@@ -491,6 +578,9 @@ This section is now for secondary rules.
       setLengthHint('single');
       setIsExplicit(false);
       setFreeFormInput('');
+      setSelectedRhymeSchemes([]);
+      setRhymeDensity(50);
+      setRhymeComplexity(50);
       setCtaMessage(''); // Also reset the message on form reset
   };
 
@@ -507,6 +597,8 @@ This section is now for secondary rules.
     if (moodTag) promptParts.push(`optional_mood_tag: ${moodTag}`);
     promptParts.push(`length_hint: ${lengthHint}`);
     promptParts.push(`explicit_language: ${isExplicit ? 'yes' : 'no'}`);
+    promptParts.push(`rhyme_density: ${rhymeDensity}%`);
+    promptParts.push(`rhyme_complexity: ${rhymeComplexity}%`);
     if (selectedRhymeSchemes.length > 0) {
       promptParts.push(`rhyme_schemes: ${selectedRhymeSchemes.join(', ')}`);
     }
@@ -578,7 +670,8 @@ This section is now for secondary rules.
           isExplicit={isExplicit} setIsExplicit={setIsExplicit}
           selectedRhymeSchemes={selectedRhymeSchemes}
           setSelectedRhymeSchemes={setSelectedRhymeSchemes}
-          rhymeSchemesList={rhymeSchemesList}
+          rhymeDensity={rhymeDensity} setRhymeDensity={setRhymeDensity}
+          rhymeComplexity={rhymeComplexity} setRhymeComplexity={setRhymeComplexity}
           temperature={temperature} setTemperature={setTemperature}
           topP={topP} setTopP={setTopP}
           onReset={resetForm}
@@ -988,17 +1081,49 @@ const STYLE_PALETTE_PROMPT = `You are a world-class musicologist and lyric analy
                       </div>
                       {/* Rhyme Schemes */}
                       <div className="mb-2">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Schemes (toggle any)</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {rhymeSchemesList.map(scheme => (
-                            <label key={scheme} className="flex items-center space-x-2 text-slate-300 text-xs">
+                        <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Placement</label>
+                        <div className="space-y-1">
+                          {rhymePlacementOptions.map(option => (
+                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
                               <input
                                 type="checkbox"
-                                checked={selectedRhymeSchemes.includes(scheme)}
-                                onChange={() => toggleRhymeScheme(scheme)}
+                                checked={selectedRhymeSchemes.includes(option)}
+                                onChange={() => toggleRhymeScheme(option)}
                                 className="accent-indigo-500"
                               />
-                              <span>{scheme}</span>
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mb-2">
+                        <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Quality</label>
+                        <div className="space-y-1">
+                          {rhymeQualityOptions.map(option => (
+                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={selectedRhymeSchemes.includes(option)}
+                                onChange={() => toggleRhymeScheme(option)}
+                                className="accent-indigo-500"
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mb-2">
+                        <label className="block text-xs font-semibold text-slate-400 mb-1">Structure Patterns</label>
+                        <div className="space-y-1">
+                          {rhymePatternOptions.map(option => (
+                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={selectedRhymeSchemes.includes(option)}
+                                onChange={() => toggleRhymeScheme(option)}
+                                className="accent-indigo-500"
+                              />
+                              <span>{option}</span>
                             </label>
                           ))}
                         </div>
