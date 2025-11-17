@@ -12,7 +12,10 @@ Sentry.init({
   sendDefaultPii: true,
   integrations: [
     Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
     Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
     Sentry.feedbackIntegration({
       colorScheme: "dark",
