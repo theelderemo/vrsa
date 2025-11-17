@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
-import { UserProvider, useUser } from './UserProvider';
+import { UserProvider } from './UserProvider';
 import AuthComponent from './Auth';
 import { StyleKitProvider } from './StyleKitProvider';
 import StyleKitMarketplace from './StyleKitMarketplace';
@@ -13,8 +13,7 @@ import CreateStyleKit from './CreateStyleKit';
 
 // Header Component with Navigation
 const Header = ({ currentPage, setCurrentPage }) => {
-    const { user, loading, signOut } = useUser();
-    const navItems = ['Ghostwriter', 'Sandbox', 'Guide', 'Kits', 'Terms'];
+    const navItems = ['Ghostwriter', 'Sandbox', 'Guide', 'Terms'];
     return (
         <header className="p-4 border-b border-slate-700/50 text-center bg-slate-900 z-10 shrink-0 flex justify-between items-center">
             <div>{/* Spacer */}</div>
@@ -22,9 +21,8 @@ const Header = ({ currentPage, setCurrentPage }) => {
                 <h1 className="text-3xl font-bold text-indigo-400">VRS/A</h1>
                 <div className="mt-2 flex flex-col items-center space-y-1">
                   <span className="text-xs text-slate-400 font-semibold">
-  Updates Coming. Join me on <a href="https://www.reddit.com/r/VRSA/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300">r/vrsa</a> or <a href="https://discord.gg/FQ6XGNf53P" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300">discord</a>.
-</span>
-                  <span className="text-xs text-slate-400">Tip on <a href="https://coff.ee/vrsa" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">BuyMeaCoffee</a> or Cash App: <span className="font-mono text-green-400">chrisdickinson02</span></span>
+  I'm back. Updates coming weekly. Promise. Join me on <a href="https://www.reddit.com/r/VRSA/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300">r/vrsa</a></span>
+                  <span className="text-xs text-slate-400">Help me pay for server and api cost, keeping it free :) by tipping on <a href="https://coff.ee/vrsa" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">BuyMeaCoffee</a> or Cash App: <span className="font-mono text-green-400">chrisdickinson02</span></span>
                 </div>
             </div>
             <nav className="flex items-center space-x-2 md:space-x-4">
@@ -37,14 +35,6 @@ const Header = ({ currentPage, setCurrentPage }) => {
                         {item}
                     </button>
                 ))}
-                {/* Auth/Logout Button */}
-                {!loading && (
-                  user ? (
-                    <button className="ml-2 px-3 py-2 text-sm font-medium rounded-md bg-green-700 text-white" onClick={signOut}>Logout</button>
-                  ) : (
-                    <button className="ml-2 px-3 py-2 text-sm font-medium rounded-md bg-indigo-700 text-white" onClick={() => setCurrentPage('login')}>Login</button>
-                  )
-                )}
             </nav>
         </header>
     );
@@ -634,7 +624,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
     if (messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: '😎 Join me on r/vrsa or Discord, updates coming. Links are at the top. Use the form on the left or the text input below to begin lyrical emulation.'
+        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. Use the chat input at the bottom to generate lyrics, or use the structured form on the left for more control! Or both, be wild. Lmao.'
       }]);
     }
   }, [messages.length]);
