@@ -384,9 +384,8 @@ const Landing = ({ setCurrentPage }) => {
                     </h1>
 
                     {/* Subheadline */}
-                    <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                        Collaborate with advanced AI to craft authentic, unreleased-quality lyrics. 
-                        Channel any artist's DNA with precision or build your song piece-by-piece. Always free.
+            <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Paste lyrics or start from scratch. Analyze, deconstruct, and create with advanced AI tools: Style Palette, Suno AI Tag Generator, Stat-Sheet, and Rhyme Visualizer. Always free, always private.
                     </p>
 
           {/* CTA Buttons */}
