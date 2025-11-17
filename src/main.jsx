@@ -15,13 +15,24 @@ Sentry.init({
     Sentry.replayIntegration(),
     Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
     Sentry.feedbackIntegration({
-      colorScheme: "system",
+      colorScheme: "dark",
       isEmailRequired: true,
       showBranding: false,
       triggerAriaLabel: "Bug Report or Feedback?",
       triggerLabel: "Bug Report or Feedback?",
       formTitle: "...what did ya break?",
       messagePlaceholder: "Let me know what happened, as detailed as you can. You can also use this to give general feedback!",
+      themeDark: {
+        background: "#0f172a",          // slate-900 - matches your app background
+        backgroundHover: "#1e293b",     // slate-800 - hover state
+        foreground: "#e2e8f0",          // slate-200 - text color
+        accentForeground: "#ffffff",    // white text on accent
+        accentBackground: "#6366f1",    // indigo-500 - matches your primary color
+        successColor: "#10b981",        // green-500 - success state
+        errorColor: "#ef4444",          // red-500 - error state
+        boxShadow: "0px 4px 24px 0px rgba(99, 102, 241, 0.12)", // indigo shadow
+        outline: "1px auto var(--accent-background)"
+      }
     })
   ],
   // Tracing
