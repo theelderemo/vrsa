@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
+import * as Sentry from "@sentry/react";
 import { UserProvider } from './UserProvider';
 import AuthComponent from './Auth';
 import { StyleKitProvider } from './StyleKitProvider';
@@ -477,34 +478,62 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
 
   // Function to generate AI-based sarcastic comment
   const generateSarcasticComment = async (userInput) => {
-    try {
-      const sarcasticPrompt = `User really just asked for "${userInput}". Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. My  entire vibe is to generate ONE (1) short, unhinged sarcastic clapback. I stay under 20 words, fam. I *must* make a joke about their *specific* request and I add in extra spice related to the artist to make it contextually aware. It's whatever.`;
+    return Sentry.startSpan(
+      {
+        op: "http.client",
+        name: "Generate Sarcastic Comment API Call",
+      },
+      async (span) => {
+        span.setAttribute("user_input", userInput);
+        
+        try {
+          const { logger } = Sentry;
+          logger.info("Starting sarcastic comment generation", { userInput });
+          
+          const sarcasticPrompt = `User really just asked for "${userInput}". Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. My  entire vibe is to generate ONE (1) short, unhinged sarcastic clapback. I stay under 20 words, fam. I *must* make a joke about their *specific* request and I add in extra spice related to the artist to make it contextually aware. It's whatever.`;
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
 
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify({ 
-          messages: [{ role: 'user', content: sarcasticPrompt }], 
-          temperature: 0.8, 
-          top_p: 0.9 
-        })
-      });
+          const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`
+            },
+            body: JSON.stringify({ 
+              messages: [{ role: 'user', content: sarcasticPrompt }], 
+              temperature: 0.8, 
+              top_p: 0.9 
+            })
+          });
 
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      const data = await response.json();
-      return data.content || 'Another generation, another dime. Worth it?';
-    } catch (error) {
-      console.error("Failed to generate sarcastic comment:", error);
-      return 'Keep clicking. I will just sell another kidney.';
-    }
+          if (!response.ok) throw new Error(`API Error: ${response.status}`);
+          const data = await response.json();
+          const result = data.content || 'Another generation, another dime. Worth it?';
+          
+          logger.info("Successfully generated sarcastic comment", { 
+            userInput, 
+            responseStatus: response.status,
+            resultLength: result.length
+          });
+          
+          return result;
+        } catch (error) {
+          const { logger } = Sentry;
+          logger.error("Failed to generate sarcastic comment", {
+            userInput,
+            error: error.message,
+            stack: error.stack
+          });
+          Sentry.captureException(error);
+          console.error("Failed to generate sarcastic comment:", error);
+          return 'Keep clicking. I will just sell another kidney.';
+        }
+      }
+    );
   };
 
   const systemPrompt = `[IDENTITY]
@@ -667,48 +696,83 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
       constructedPrompt = constructedPrompt ? `${constructedPrompt}\n${freeFormInput}` : freeFormInput;
     }
     if (!constructedPrompt.trim() || isLoading) return;
-    const userMessage = { role: 'user', content: constructedPrompt };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    try {
-      const fullApiPrompt = `${systemPrompt}\n\n[USER INPUT START]\n${constructedPrompt}\n[USER INPUT END]`;
-      const messagesPayload = [
-        { role: 'user', content: fullApiPrompt }
-      ];
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      // Update the endpoint name if needed
-      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP }) // ensure top_p is used
-      });
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      const data = await response.json();
-      let botResponse = data.content || 'Error: Could not retrieve a valid response.';
-      setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
+    
+    return Sentry.startSpan(
+      {
+        op: "ui.action",
+        name: "Send Message - Generate Content",
+      },
+      async (span) => {
+        const { logger } = Sentry;
+        span.setAttribute("prompt_length", constructedPrompt.length);
+        span.setAttribute("artist_name", artistName || "none");
+        span.setAttribute("core_theme", coreTheme || "none");
+        span.setAttribute("generation_count", generationCount);
+        
+        logger.info("Starting content generation", {
+          promptLength: constructedPrompt.length,
+          artistName: artistName || "none",
+          coreTheme: coreTheme || "none",
+          generationCount
+        });
+        
+        const userMessage = { role: 'user', content: constructedPrompt };
+        setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
+        
+        try {
+          const fullApiPrompt = `${systemPrompt}\n\n[USER INPUT START]\n${constructedPrompt}\n[USER INPUT END]`;
+          const messagesPayload = [
+            { role: 'user', content: fullApiPrompt }
+          ];
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          // Update the endpoint name if needed
+          const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+          const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`
+            },
+            body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP }) // ensure top_p is used
+          });
+          if (!response.ok) throw new Error(`API Error: ${response.status}`);
+          const data = await response.json();
+          let botResponse = data.content || 'Error: Could not retrieve a valid response.';
+          setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
 
-      // --- START: CTA Logic - Set message after successful generation ---
-      const newCount = generationCount + 1;
-      setGenerationCount(newCount);
+          // --- START: CTA Logic - Set message after successful generation ---
+          const newCount = generationCount + 1;
+          setGenerationCount(newCount);
 
-      if (newCount > 0 && newCount % 2 === 0) {
-        const comment = await generateSarcasticComment(constructedPrompt);
-        setCtaMessage(comment);
+          if (newCount > 0 && newCount % 2 === 0) {
+            const comment = await generateSarcasticComment(constructedPrompt);
+            setCtaMessage(comment);
+          }
+          // --- END: CTA Logic ---
+
+          logger.info("Successfully generated content", {
+            responseStatus: response.status,
+            responseLength: botResponse.length,
+            newGenerationCount: newCount
+          });
+
+        } catch (error) {
+          logger.error("Failed to generate content", {
+            error: error.message,
+            promptLength: constructedPrompt.length,
+            stack: error.stack
+          });
+          Sentry.captureException(error);
+          console.error("Failed to fetch from Supabase Edge Function:", error);
+          setMessages(prev => [...prev, { role: 'assistant', content: `An error occurred: ${error.message}` }]);
+        } finally {
+          setIsLoading(false);
+        }
       }
-      // --- END: CTA Logic ---
-
-    } catch (error) {
-      console.error("Failed to fetch from Supabase Edge Function:", error);
-      setMessages(prev => [...prev, { role: 'assistant', content: `An error occurred: ${error.message}` }]);
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
   
   return (
