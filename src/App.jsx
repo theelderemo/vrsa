@@ -14,7 +14,7 @@ import CreateStyleKit from './CreateStyleKit';
 
 // Header Component with Navigation
 const Header = ({ currentPage, setCurrentPage }) => {
-    const navItems = ['Ghostwriter', 'Sandbox', 'Guide', 'Terms'];
+    const navItems = ['Ghostwriter', 'Analyzer', 'Guide', 'Terms'];
     return (
         <header className="p-4 border-b border-slate-700/50 text-center bg-slate-900 z-10 shrink-0 flex justify-between items-center">
             <div>{/* Spacer */}</div>
@@ -398,10 +398,10 @@ const Landing = ({ setCurrentPage }) => {
               Start with Ghostwriter
             </button>
             <button
-              onClick={() => setCurrentPage('sandbox')}
+              onClick={() => setCurrentPage('analyzer')}
               className="group px-8 py-4 bg-slate-800/80 backdrop-blur-sm border-2 border-indigo-500/50 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-800 hover:border-indigo-400 hover:scale-105"
             >
-              Try Sandbox Mode
+              Try Analyzer Mode
             </button>
           </div>
                 </div>
@@ -425,19 +425,20 @@ const Landing = ({ setCurrentPage }) => {
             </div>
           </div>
 
-          {/* Sandbox Card */}
+          {/* Analyzer Card */}
           <div className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10">
             <div className="pt-8">
-              <h3 className="text-2xl font-bold mb-4 text-purple-300">Sandbox Mode</h3>
+              <h3 className="text-2xl font-bold mb-4 text-purple-300">Analyzer Mode</h3>
               <p className="text-slate-300 mb-6 leading-relaxed">
-                DAW-inspired interface for building songs section by section. Craft verses, choruses, bridges, 
-                and more with individual controls for each. Perfect for methodical songwriters who want 
-                granular control over every element.
+                Deconstruct and analyze existing lyrics with powerful AI tools. Paste any lyrics to extract style palettes, 
+                generate Suno AI tags, calculate lyrical statistics, and visualize rhyme patterns. Perfect for understanding 
+                what makes great lyrics work.
               </p>
               <ul className="space-y-3 text-slate-400">
-                <li>Section-based workflow (verse, chorus, bridge)</li>
-                <li>Per-section density and bar controls</li>
-                <li>Visual song structure at a glance</li>
+                <li>✓ Lyrical DNA extraction (Style Palette)</li>
+                <li>✓ Suno AI-compatible tag generation</li>
+                <li>✓ Detailed stat-sheets with metrics</li>
+                <li>✓ Rhyme pattern visualization and analysis</li>
               </ul>
             </div>
           </div>
@@ -862,422 +863,224 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
   );
 };
 
-// --- Sandbox Page ---
+// --- Analyzer Page ---
 
-const Sandbox = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
-    const initialStructure = [
-        { id: 1, type: 'Verse', content: '', bars: 16, density: 'Normal', isGenerating: false },
-        { id: 2, type: 'Chorus', content: '', bars: 8, density: 'Dense', isGenerating: false },
-    ];
-    const [structure, setStructure] = useState(initialStructure);
-    const [draggingItem, setDraggingItem] = useState(null);
-    const [metaphorDensity, setMetaphorDensity] = useState(50);
-    const [rhymeComplexity, setRhymeComplexity] = useState(50);
-    const [temperature, setTemperature] = useState(1);
-    const [topP, setTopP] = useState(1);
-    const [openAccordion, setOpenAccordion] = useState('dial-a-poet');
-    const [forbiddenWords, setForbiddenWords] = React.useState("");
-    const [lens, setLens] = React.useState("");
+const Analyzer = () => {
+    const [lyricsInput, setLyricsInput] = useState('');
+    const [stylePaletteResult, setStylePaletteResult] = useState('');
+    const [sunoTagsResult, setSunoTagsResult] = useState('');
+    const [statSheetResult, setStatSheetResult] = useState('');
+    const [rhymeVisualizerResult, setRhymeVisualizerResult] = useState('');
+    const [isAnalyzingStylePalette, setIsAnalyzingStylePalette] = useState(false);
+    const [isGeneratingSunoTags, setIsGeneratingSunoTags] = useState(false);
+    const [isGeneratingStatSheet, setIsGeneratingStatSheet] = useState(false);
+    const [isAnalyzingRhymes, setIsAnalyzingRhymes] = useState(false);
 
-    const toggleRhymeScheme = (scheme) => {
-      setSelectedRhymeSchemes(prev => prev.includes(scheme) ? prev.filter(s => s !== scheme) : [...prev, scheme]);
-    };
-
-    const toggleAccordion = (section) => {
-        setOpenAccordion(openAccordion === section ? null : section);
-    };
-
-    const addSection = () => {
-        const newSection = {
-            id: crypto.randomUUID(), // Use a stable unique id
-            type: 'Verse',
-            content: '',
-            bars: 8,
-            density: 'Normal',
-            isGenerating: false,
-        };
-        setStructure(prev => [...prev, newSection]);
-    };
-
-    const deleteSection = React.useCallback((idToDelete) => {
-        setStructure(prev => prev.filter(section => section.id !== idToDelete));
-    }, []);
-
-    const generateSection = async (index, promptOverride) => {
-        setStructure(prev => prev.map((sec, i) => i === index ? { ...sec, isGenerating: true } : sec));
-        const section = structure[index];
-        const userPrompt = promptOverride !== undefined ? promptOverride : section.content;
-        const prompt = `${SANDBOX_SYSTEM_PROMPT}\n\nUser Section Request:\nType: ${section.type}\nBars: ${section.bars}\nDensity: ${section.density}\nMetaphor Density: ${metaphorDensity}%\nRhyme Complexity: ${rhymeComplexity}%\nExplicit: ${section.explicit || 'no'}\nPrompt: ${userPrompt}`;
+    // API call helper
+    const callAI = async (prompt, setLoading, setResult) => {
+        setLoading(true);
+        setResult('');
         try {
-            const messagesPayload = [
-              { role: 'user', content: prompt }
-            ];
+            const messagesPayload = [{ role: 'user', content: prompt }];
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
             const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
             const response = await fetch(edgeFunctionUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseAnonKey,
-                'Authorization': `Bearer ${supabaseAnonKey}`
-              },
-              body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseAnonKey,
+                    'Authorization': `Bearer ${supabaseAnonKey}`
+                },
+                body: JSON.stringify({ messages: messagesPayload })
             });
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await response.json();
-            const botResponse = data.content || 'Error: Could not generate content.';
-            setStructure(prev => prev.map((sec, i) => i === index ? { ...sec, content: botResponse, isGenerating: false } : sec));
+            const aiResult = data.content || 'Error: Could not process request.';
+            setResult(aiResult);
         } catch (error) {
-            setStructure(prev => prev.map((sec, i) => i === index ? { ...sec, content: `An error occurred: ${error.message}`, isGenerating: false } : sec));
+            setResult(`An error occurred: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
-    
-    const handleDragStart = (e, index) => {
-        setDraggingItem(index);
-        e.dataTransfer.effectAllowed = 'move';
+
+    const STYLE_PALETTE_PROMPT = `You are a world-class musicologist and lyric analyst. Given a set of lyrics, extract a detailed "style palette" describing:
+- Main genre and subgenre
+- Typical themes and emotional palette
+- Word choice, imagery, and recurring motifs
+- Flow, rhyme habits, and rhythmic quirks
+- Persona, vocal style, and unique artist signatures
+
+Output a concise but information-dense summary, suitable for use as a reference for ghostwriting in this style. Do not repeat the lyrics. Do not include meta commentary or apologies.`;
+
+    const SUNO_TAG_GENERATOR_PROMPT = `You are an expert at generating Suno AI-compatible style tags. Based on the lyrical analysis provided, generate:
+
+Genre: [primary genre with optional subgenre]
+Instruments: [comma-separated list of key instruments that fit the style]
+Tags: [comma-separated stylistic descriptors, mood tags, and production elements]
+
+Keep it concise. Match the vibe of the analyzed lyrics. Output ONLY the three lines above, no additional commentary.`;
+
+    const STAT_SHEET_PROMPT = `You are a lyrical analyst. Analyze the provided lyrics and generate a detailed "Stat-Sheet" with the following metrics:
+
+1. **Lexical Density**: Calculate (Unique words / Total words) × 100 and express as a percentage
+2. **Sentiment Analysis**: Break down the emotional content into percentages (e.g., "60% Melancholy, 25% Aggressive, 15% Reflective")
+3. **Reading Level**: Estimate the grade level (e.g., "Grade 8 reading level")
+4. **Banned Word Counter**: Count instances of generic/cliché words like: shadow, mirror, echo, void, abyss, whisper, silent, empty, king, queen, throne, rust, static, glitch, code, darkness, light (list any found)
+5. **Additional Insights**: Note any standout linguistic patterns (alliteration frequency, average syllables per word, etc.)
+
+Format as a clean stat sheet. Be precise with numbers.`;
+
+    const RHYME_VISUALIZER_PROMPT = `You are a rhyme analysis expert. Analyze the provided lyrics and identify ALL rhymes, categorizing them as:
+
+**Perfect Rhymes**: Exact sound matches (e.g., cat/hat, time/rhyme)
+**Slant Rhymes**: Near-rhymes or imperfect matches (e.g., shape/keep, soul/cold)
+**Internal Rhymes**: Rhymes within a single line (not just at line ends)
+
+For each category, list the rhyming pairs/groups you found, citing the specific words. Present this as a structured analysis that helps the user understand the rhyme structure.`;
+
+    const handleStylePaletteAnalysis = () => {
+        const prompt = `${STYLE_PALETTE_PROMPT}\n\nLyrics to analyze:\n${lyricsInput}`;
+        callAI(prompt, setIsAnalyzingStylePalette, setStylePaletteResult);
     };
 
-    const handleDragOver = (e, index) => {
-        e.preventDefault();
-        if (draggingItem === null) return;
-        const draggedOverItem = structure[index];
-        if (structure[draggingItem] === draggedOverItem) return;
-        let items = structure.filter((_, i) => i !== draggingItem);
-        items.splice(index, 0, structure[draggingItem]);
-        setDraggingItem(index);
-        setStructure(items);
+    const handleGenerateSunoTags = () => {
+        if (stylePaletteResult) {
+            // If Style Palette exists, use it
+            const prompt = `${SUNO_TAG_GENERATOR_PROMPT}\n\nLyrical Analysis:\n${stylePaletteResult}`;
+            callAI(prompt, setIsGeneratingSunoTags, setSunoTagsResult);
+        } else {
+            // Otherwise, generate directly from lyrics
+            const prompt = `${SUNO_TAG_GENERATOR_PROMPT}\n\nAnalyze these lyrics and generate appropriate tags:\n${lyricsInput}`;
+            callAI(prompt, setIsGeneratingSunoTags, setSunoTagsResult);
+        }
     };
 
-    const handleDragEnd = () => setDraggingItem(null);
+    const handleGenerateStatSheet = () => {
+        const prompt = `${STAT_SHEET_PROMPT}\n\nLyrics to analyze:\n${lyricsInput}`;
+        callAI(prompt, setIsGeneratingStatSheet, setStatSheetResult);
+    };
 
-    // --- SectionCard Component ---
-const SectionCard = React.memo(function SectionCard({
-  item,
-  index,
-  onContentCommit,
-  onGenerate,
-  onDelete,
-  onDragStart,
-  onDragOver,
-  onDragEnd
-}) {
-  const [draft, setDraft] = React.useState(item.content);
-  React.useEffect(() => { setDraft(item.content); }, [item.content]);
-
-  // Auto-grow textarea helper
-  const autoGrow = el => {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  };
-  const textareaRef = React.useRef(null);
-  React.useEffect(() => {
-    autoGrow(textareaRef.current);
-  }, [draft]);
-
-  return (
-    <div className={`flex flex-col bg-slate-800 p-3 rounded-lg border border-slate-700 hover:border-indigo-500 transition-all ${item.isGenerating ? 'opacity-75 animate-pulse' : ''}`}>
-      <div className="flex items-start">
-        <div
-          className="cursor-grab p-2"
-          draggable
-          onDragStart={e => onDragStart(e, index)}
-          onDragOver={e => onDragOver(e, index)}
-          onDragEnd={onDragEnd}
-        >
-          <GripVertical className="text-slate-500 shrink-0" />
-        </div>
-        <div className="flex-1 ml-2">
-          <select value={item.type} onChange={e => onContentCommit(index, { ...item, type: e.target.value })} className="bg-transparent text-lg font-bold text-indigo-400 focus:outline-none appearance-none">
-            <option>Verse</option><option>Chorus</option><option>Pre-Chorus</option><option>Bridge</option><option>Hook</option><option>Outro</option>
-          </select>
-          <div className="flex items-center space-x-4 mt-2 text-sm">
-            <div>
-              <label className="text-slate-400 mr-2">Bars:</label>
-              <input type="number" value={item.bars} onChange={e => onContentCommit(index, { ...item, bars: e.target.value })} className="w-16 bg-slate-700 rounded p-1 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500" />
-            </div>
-            <div>
-              <label className="text-slate-400 mr-2">Density:</label>
-              <select value={item.density} onChange={e => onContentCommit(index, { ...item, density: e.target.value })} className="bg-slate-700 rounded p-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 appearance-none">
-                <option>Sparse</option><option>Normal</option><option>Dense</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col space-y-2 ml-4">
-          <button onClick={() => onDelete(item.id)} className="p-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 rounded-md transition-colors"><Trash2 size={18} /></button>
-        </div>
-      </div>
-      <div className="mt-3">
-        <textarea
-          ref={r => {
-            textareaRef.current = r;
-            autoGrow(r);
-          }}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onInput={e => autoGrow(e.target)}
-          onBlur={() => onContentCommit(index, { ...item, content: draft })}
-          placeholder="Enter your prompt for this section, or paste lyrics here..."
-          className="w-full bg-slate-800/50 border border-slate-700/50 rounded-md p-2 text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y min-h-[80px]"
-        />
-      </div>
-      <div className="mt-3 flex justify-end">
-        <button
-          onClick={() => {
-            onContentCommit(index, { ...item, content: draft });
-            onGenerate(index, draft);
-          }}
-          disabled={item.isGenerating}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-        >
-          {item.isGenerating ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <BrainCircuit size={18} className="mr-2" />} Generate
-        </button>
-      </div>
-    </div>
-  );
-});
-
-    const AccordionItem = ({ title, icon, id, children }) => (
-        <div className="border border-slate-700/50 rounded-lg overflow-hidden">
-            <button
-                onClick={() => toggleAccordion(id)}
-                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 transition-colors"
-            >
-                <div className="flex items-center space-x-3">
-                    {icon}
-                    <span className="font-semibold text-slate-200">{title}</span>
-                </div>
-                <ChevronDown className={`text-slate-400 transform transition-transform duration-300 ${openAccordion === id ? 'rotate-180' : ''}`} />
-            </button>
-            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openAccordion === id ? 'max-h-[40rem]' : 'max-h-0'}`}>
-                <div className="p-4 bg-slate-900/75">
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-
-    // Memoize callbacks for stable identity
-    const handleDelete = React.useCallback((id) => {
-        deleteSection(id);
-    }, [deleteSection]);
-
-    const commitContent = React.useCallback((idx, newItem) => {
-      setStructure(prev =>
-        prev.map((sec, i) =>
-          i === idx ? { ...sec, ...newItem } : sec
-        )
-      );
-    }, []);
-
-    const [stylePaletteInput, setStylePaletteInput] = React.useState("");
-    const [analyzeResult, setAnalyzeResult] = React.useState("");
-    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-
-    // Style Palette Analysis Prompt
-const STYLE_PALETTE_PROMPT = `You are a world-class musicologist and lyric analyst. Given a set of lyrics, extract a detailed "style palette" describing:\n- Main genre and subgenre\n- Typical themes and emotional palette\n- Word choice, imagery, and recurring motifs\n- Flow, rhyme habits, and rhythmic quirks\n- Persona, vocal style, and unique artist signatures\n\nOutput a concise but information-dense summary, suitable for use as a reference for ghostwriting in this style. Do not repeat the lyrics. Do not include meta commentary or apologies.`;
-
-    const handleAnalyze = async () => {
-      setIsAnalyzing(true);
-      setAnalyzeResult("");
-      try {
-        const prompt = `${STYLE_PALETTE_PROMPT}\n\nLyrics to analyze:\n${stylePaletteInput}`;
-        const messagesPayload = [
-          { role: 'user', content: prompt }
-        ];
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
-        const response = await fetch(edgeFunctionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${supabaseAnonKey}`
-          },
-          body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP })
-        });
-        if (!response.ok) throw new Error(`API Error: ${response.status}`);
-        const data = await response.json();
-        const aiResult = data.content || 'Error: Could not analyze lyrics.';
-        setAnalyzeResult(aiResult);
-      } catch (error) {
-        setAnalyzeResult(`An error occurred: ${error.message}`);
-      } finally {
-        setIsAnalyzing(false);
-      }
+    const handleRhymeVisualization = () => {
+        const prompt = `${RHYME_VISUALIZER_PROMPT}\n\nLyrics to analyze:\n${lyricsInput}`;
+        callAI(prompt, setIsAnalyzingRhymes, setRhymeVisualizerResult);
     };
 
     return (
-        <div className="h-full w-full lg:flex lg:flex-row overflow-y-auto lg:overflow-hidden">
-            <div className="w-full lg:w-1/3 xl:w-1/4 lg:h-full lg:flex-shrink-0 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 lg:overflow-y-auto">
-                <div className="flex flex-col gap-4">
-                    <AccordionItem title="Dial-a-Poet Controls" icon={<Settings size={20}/>} id="dial-a-poet">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Metaphor Density: {metaphorDensity}%</label>
-                                <input type="range" min="0" max="100" value={metaphorDensity} onChange={(e) => setMetaphorDensity(e.target.value)} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Rhyme Complexity: {rhymeComplexity}%</label>
-                                <input type="range" min="0" max="100" value={rhymeComplexity} onChange={(e) => setRhymeComplexity(e.target.value)} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
-                            </div>
-                            {/* Temperature and Top-p sliders */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Temperature: {temperature}</label>
-                                <input
-                                  type="range"
-                                  min="0.1"
-                                  max="2"
-                                  step="0.01"
-                                  value={temperature}
-                                  onChange={e => setTemperature(Number(e.target.value))}
-                                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-2">Top-p: {topP}</label>
-                                <input
-                                  type="range"
-                                  min="0.1"
-                                  max="1"
-                                  step="0.01"
-                                  value={topP}
-                                  onChange={e => setTopP(Number(e.target.value))}
-                                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                                />
-                            </div>
-                        </div>
-                    </AccordionItem>
-                    <AccordionItem title="Style Palette" icon={<Palette size={20}/>} id="style-palette">
-                        <p className="text-sm text-slate-400 mb-3">Analyze lyrics to create a style palette, or blend styles.</p>
-                        <textarea
-                          placeholder="Paste lyrics here to analyze..."
-                          rows="8"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none mb-2 overflow-y-scroll"
-                          value={stylePaletteInput}
-                          onChange={e => setStylePaletteInput(e.target.value)}
-                          style={{ minHeight: '120px', maxHeight: '320px' }}
-                        />
-                        <button
-                          onClick={handleAnalyze}
-                          disabled={isAnalyzing || !stylePaletteInput.trim()}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed mb-2"
-                        >
-                          {isAnalyzing ? 'Analyzing...' : 'Analyze'}
-                        </button>
-                        {analyzeResult && (
-                          <div className="mt-2 p-2 bg-slate-700/50 rounded text-slate-200 text-sm whitespace-pre-wrap max-h-60 overflow-y-auto">{analyzeResult}</div>
-                        )}
-                    </AccordionItem>
-                    <AccordionItem title="Sculpting" icon={<PenSquare size={20}/>} id="sculpting">
-                      <p className="text-sm text-slate-400 mb-3">Apply conceptual filters and constraints.</p>
-                      {/* Forbidden Words Input */}
-                      <div className="mb-4">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Forbidden Words (comma-separated)</label>
-                        <input
-                          type="text"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="e.g., love, night, dream"
-                          value={forbiddenWords}
-                          onChange={e => setForbiddenWords(e.target.value)}
-                        />
-                      </div>
-                      {/* Lens System */}
-                      <div className="mb-4">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Lens (Conceptual Filter)</label>
-                        <select
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          value={lens}
-                          onChange={e => setLens(e.target.value)}
-                        >
-                          <option value="">None</option>
-                          <option value="First Person">Perspective: First Person</option>
-                          <option value="Third Person Omniscient">Perspective: Third Person Omniscient</option>
-                          <option value="Second Person Accusatory">Perspective: Second Person Accusatory</option>
-                          <option value="Looking Back (Nostalgic)">Time: Looking Back (Nostalgic)</option>
-                          <option value="In the Moment (Urgent)">Time: In the Moment (Urgent)</option>
-                          <option value="Future Hope/Dread">Time: Future Hope/Dread</option>
-                          <option value="Focus on Sound & Smell">Sensory: Focus on Sound & Smell</option>
-                          <option value="Focus on Sight & Touch">Sensory: Focus on Sight & Touch</option>
-                        </select>
-                      </div>
-                      {/* Rhyme Schemes */}
-                      <div className="mb-2">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Placement</label>
-                        <div className="space-y-1">
-                          {rhymePlacementOptions.map(option => (
-                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                              <input
-                                type="checkbox"
-                                checked={selectedRhymeSchemes.includes(option)}
-                                onChange={() => toggleRhymeScheme(option)}
-                                className="accent-indigo-500"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="mb-2">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Rhyme Quality</label>
-                        <div className="space-y-1">
-                          {rhymeQualityOptions.map(option => (
-                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                              <input
-                                type="checkbox"
-                                checked={selectedRhymeSchemes.includes(option)}
-                                onChange={() => toggleRhymeScheme(option)}
-                                className="accent-indigo-500"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="mb-2">
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">Structure Patterns</label>
-                        <div className="space-y-1">
-                          {rhymePatternOptions.map(option => (
-                            <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                              <input
-                                type="checkbox"
-                                checked={selectedRhymeSchemes.includes(option)}
-                                onChange={() => toggleRhymeScheme(option)}
-                                className="accent-indigo-500"
-                              />
-                              <span>{option}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </AccordionItem>
-                </div>
+        <div className="h-full w-full flex flex-col overflow-hidden">
+            <div className="p-4 lg:p-6 border-b border-slate-700/50 bg-slate-900">
+                <h2 className="text-2xl font-bold text-indigo-400 mb-2">Lyric Analyzer</h2>
+                <p className="text-slate-400 text-sm">Paste your lyrics below and deconstruct them with powerful AI analysis tools.</p>
             </div>
-            <div className="w-full lg:w-2/3 xl:w-3/4 p-4 lg:p-6 lg:h-full lg:flex lg:flex-col">
-                <div className="flex-1 flex flex-col min-h-0 bg-slate-900/50 rounded-lg border border-slate-700/50">
-                    <h3 className="text-lg font-semibold text-slate-300 p-4 border-b border-slate-700/50 shrink-0">Lyrical Sandbox</h3>
-                    <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-                        {structure.map((item, index) => (
-                            <SectionCard
-                                key={item.id}
-                                item={item}
-                                index={index}
-                                onContentCommit={commitContent}
-                                onGenerate={generateSection}
-                                onDelete={handleDelete}
-                                onDragStart={handleDragStart}
-                                onDragOver={handleDragOver}
-                                onDragEnd={handleDragEnd}
-                            />
-                        ))}
-                    </div>
-                    <div className="p-4 shrink-0 border-t border-slate-700/50">
-                        <button onClick={addSection} className="w-full flex items-center justify-center p-2 border-2 border-dashed border-slate-600 hover:border-indigo-500 text-slate-400 hover:text-indigo-400 rounded-lg transition-colors">
-                            <PlusCircle className="mr-2" /> Add Section
+            
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                {/* Left Panel - Input Area */}
+                <div className="w-full lg:w-1/2 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 flex flex-col">
+                    <h3 className="text-lg font-semibold text-slate-300 mb-3">Paste Lyrics</h3>
+                    <textarea
+                        value={lyricsInput}
+                        onChange={(e) => setLyricsInput(e.target.value)}
+                        placeholder="Paste your lyrics here for analysis..."
+                        className="flex-1 w-full bg-slate-800 border border-slate-700 rounded-lg p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-sm"
+                    />
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            onClick={handleStylePaletteAnalysis}
+                            disabled={isAnalyzingStylePalette || !lyricsInput.trim()}
+                            className="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                            {isAnalyzingStylePalette ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <Palette size={18} className="mr-2" />}
+                            Style Palette
                         </button>
+                        <button
+                            onClick={handleGenerateStatSheet}
+                            disabled={isGeneratingStatSheet || !lyricsInput.trim()}
+                            className="px-4 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                            {isGeneratingStatSheet ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <FileText size={18} className="mr-2" />}
+                            Stat-Sheet
+                        </button>
+                        <button
+                            onClick={handleRhymeVisualization}
+                            disabled={isAnalyzingRhymes || !lyricsInput.trim()}
+                            className="px-4 py-3 bg-pink-600 hover:bg-pink-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                            {isAnalyzingRhymes ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <ListCollapse size={18} className="mr-2" />}
+                            Rhyme Analysis
+                        </button>
+                        <button
+                            onClick={handleGenerateSunoTags}
+                            disabled={isGeneratingSunoTags || !lyricsInput.trim()}
+                            className="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                            {isGeneratingSunoTags ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <Mic size={18} className="mr-2" />}
+                            Suno Tags
+                        </button>
+                    </div>
+                </div>
+
+                {/* Right Panel - Results Area */}
+                <div className="w-full lg:w-1/2 p-4 lg:p-6 flex flex-col overflow-hidden">
+                    <h3 className="text-lg font-semibold text-slate-300 mb-3">Analysis Results</h3>
+                    <div className="flex-1 space-y-4 overflow-y-auto">
+                        {/* Style Palette Result */}
+                        {stylePaletteResult && (
+                            <div className="bg-slate-800/50 border border-indigo-500/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-indigo-400 flex items-center">
+                                        <Palette size={16} className="mr-2" /> Style Palette (Lyrical DNA)
+                                    </h4>
+                                </div>
+                                <p className="text-slate-200 text-sm whitespace-pre-wrap">{stylePaletteResult}</p>
+                            </div>
+                        )}
+
+                        {/* Suno Tags Result */}
+                        {sunoTagsResult && (
+                            <div className="bg-slate-800/50 border border-emerald-500/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-emerald-400 flex items-center">
+                                        <Mic size={16} className="mr-2" /> Suno AI Style Tags
+                                    </h4>
+                                </div>
+                                <p className="text-slate-200 text-sm whitespace-pre-wrap font-mono">{sunoTagsResult}</p>
+                            </div>
+                        )}
+
+                        {/* Stat Sheet Result */}
+                        {statSheetResult && (
+                            <div className="bg-slate-800/50 border border-purple-500/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-purple-400 flex items-center">
+                                        <FileText size={16} className="mr-2" /> Stat-Sheet
+                                    </h4>
+                                </div>
+                                <div className="text-slate-200 text-sm whitespace-pre-wrap">{statSheetResult}</div>
+                            </div>
+                        )}
+
+                        {/* Rhyme Visualizer Result */}
+                        {rhymeVisualizerResult && (
+                            <div className="bg-slate-800/50 border border-pink-500/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-pink-400 flex items-center">
+                                        <ListCollapse size={16} className="mr-2" /> Rhyme Analysis
+                                    </h4>
+                                </div>
+                                <div className="text-slate-200 text-sm whitespace-pre-wrap">{rhymeVisualizerResult}</div>
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!stylePaletteResult && !sunoTagsResult && !statSheetResult && !rhymeVisualizerResult && (
+                            <div className="flex items-center justify-center h-full text-slate-500">
+                                <div className="text-center">
+                                    <BrainCircuit size={48} className="mx-auto mb-4 opacity-50" />
+                                    <p>Analysis results will appear here</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1402,7 +1205,7 @@ const Guide = () => (
       <h2 className="text-xl font-semibold text-slate-200 mb-2">Ghostwriter Mode Tour</h2>
 
       <h3 className="text-lg font-medium text-slate-200 mb-2">Step 1: Navigation</h3>
-      <p className="text-slate-300 mb-4">Use the nav up top to switch between:<br />- <strong>Ghostwriter</strong>: For when you have a core idea and need a full, styled section generated quickly.<br />- <strong>Sandbox</strong>: For building songs piece-by-piece with precision control over every element.</p>
+      <p className="text-slate-300 mb-4">Use the nav up top to switch between:<br />- <strong>Ghostwriter</strong>: For when you have a core idea and need a full, styled section generated quickly.<br />- <strong>Analyzer</strong>: For deconstructing existing lyrics and understanding what makes them work.</p>
 
       <h3 className="text-lg font-medium text-slate-200 mb-2">Step 2: Structured Input Form</h3>
       <p className="text-slate-300 mb-4">The left panel is your command center. Be specific for the best results:<br />- <strong>Artist Name</strong>: Go for an era or album for more accuracy (e.g., "Kendrick Lamar on To Pimp a Butterfly").<br />- <strong>Core Theme</strong>: Give it the song's topic in a sentence or two.<br />- <strong>Mood</strong>: Set the emotional tone ("dark," "nostalgic," "aggressive").<br />- <strong>Length</strong>: Choose the exact section you need, from a short verse to a full song.</p>
@@ -1514,7 +1317,7 @@ const App = () => {
               <CreateStyleKit onBack={handleBackToMarketplace} />
             )}
             {currentPage === 'ghostwriter' && <Ghostwriter selectedRhymeSchemes={selectedRhymeSchemes} setSelectedRhymeSchemes={setSelectedRhymeSchemes} />}
-            {currentPage === 'sandbox' && <Sandbox selectedRhymeSchemes={selectedRhymeSchemes} setSelectedRhymeSchemes={setSelectedRhymeSchemes} />}
+            {currentPage === 'analyzer' && <Analyzer />}
             {currentPage === 'guide' && <Guide />}
             {currentPage === 'terms' && <TermsOfService />}
             {currentPage === 'login' && <AuthComponent />}
