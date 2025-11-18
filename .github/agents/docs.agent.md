@@ -1,8 +1,8 @@
 ---
-description: Create and maintain clear, helpful documentation
-name: Documentation Agent
-tools: ['fetch', 'githubRepo', 'search', 'edit', 'create']
-model: Claude Sonnet 4
+description: Create and maintain clear, helpful documentation for VRS/A features and codebase
+name: Documentation
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_perplexity/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Implement Feature
     agent: feature

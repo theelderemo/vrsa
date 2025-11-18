@@ -1,8 +1,8 @@
 ---
-description: Diagnose and fix bugs while maintaining code stability
-name: Bugfix Agent
-tools: ['fetch', 'githubRepo', 'search', 'usages', 'consoleMessages', 'networkRequests']
-model: Claude Sonnet 4
+description: Diagnose and fix bugs while maintaining code stability in the VRS/A lyric writing application
+name: Bugfix
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_sentry/*', 'mcp_microsoft_pla/*', 'mcp_chromedevtool/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Add Tests
     agent: feature

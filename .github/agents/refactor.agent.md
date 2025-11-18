@@ -1,8 +1,8 @@
 ---
-description: Refactor existing code to improve structure, readability, and maintainability
-name: Refactor Agent
-tools: ['fetch', 'githubRepo', 'search', 'usages', 'textDocument/references']
-model: Claude Sonnet 4
+description: Refactor existing code to improve structure, readability, and maintainability in VRS/A
+name: Refactor
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_chromedevtool/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Review Changes
     agent: security

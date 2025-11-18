@@ -1,8 +1,8 @@
 ---
-description: Design and implement new features with best practices
-name: Feature Development Agent
-tools: ['fetch', 'githubRepo', 'search', 'usages', 'edit', 'create']
-model: Claude Sonnet 4
+description: Design and implement new features with best practices for the VRS/A lyric writing tool
+name: Feature Development
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_sentry/*', 'mcp_microsoft_pla/*', 'mcp_chromedevtool/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Refactor Code
     agent: refactor

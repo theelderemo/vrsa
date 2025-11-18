@@ -1,8 +1,8 @@
 ---
-description: Identify and fix security vulnerabilities and enforce best practices
-name: Security Reviewer Agent
-tools: ['fetch', 'githubRepo', 'search', 'usages', 'vulnerabilities']
-model: Claude Sonnet 4
+description: Identify and fix security vulnerabilities and enforce best practices in VRS/A
+name: Security Review
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_sentry/*', 'mcp_perplexity/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Fix Issues
     agent: bugfix

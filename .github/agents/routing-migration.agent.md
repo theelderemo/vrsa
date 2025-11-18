@@ -1,8 +1,8 @@
 ---
-description: Migrate from currentPage state management to router-based navigation
-name: Routing Migration Agent
-tools: ['fetch', 'githubRepo', 'search', 'usages', 'edit', 'textDocument/references']
-model: Claude Sonnet 4
+description: Migrate VRS/A from currentPage state management to router-based navigation architecture
+name: Routing Migration
+tools: ['search', 'fetch', 'read_file', 'replace_string_in_file', 'create_file', 'run_in_terminal', 'mcp_memory/*', 'mcp_upstash_conte/*', 'mcp_sequentialthi/*', 'mcp_microsoft_pla/*', 'mcp_chromedevtool/*']
+model: Claude Sonnet 4.5
 handoffs:
   - label: Test Navigation
     agent: bugfix
