@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import * as Sentry from "@sentry/react";
+import ReactMarkdown from 'react-markdown';
 import { UserProvider } from './UserProvider';
 import AuthComponent from './Auth';
 import { StyleKitProvider } from './StyleKitProvider';
@@ -1031,7 +1032,9 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                                         <Palette size={16} className="mr-2" /> Style Palette (Lyrical DNA)
                                     </h4>
                                 </div>
-                                <p className="text-slate-200 text-sm whitespace-pre-wrap">{stylePaletteResult}</p>
+                                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown>{stylePaletteResult}</ReactMarkdown>
+                                </div>
                             </div>
                         )}
 
@@ -1043,7 +1046,9 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                                         <Mic size={16} className="mr-2" /> Suno AI Style Tags
                                     </h4>
                                 </div>
-                                <p className="text-slate-200 text-sm whitespace-pre-wrap font-mono">{sunoTagsResult}</p>
+                                <div className="text-slate-200 text-sm font-mono prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown>{sunoTagsResult}</ReactMarkdown>
+                                </div>
                             </div>
                         )}
 
@@ -1055,7 +1060,9 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                                         <FileText size={16} className="mr-2" /> Stat-Sheet
                                     </h4>
                                 </div>
-                                <div className="text-slate-200 text-sm whitespace-pre-wrap">{statSheetResult}</div>
+                                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown>{statSheetResult}</ReactMarkdown>
+                                </div>
                             </div>
                         )}
 
@@ -1067,7 +1074,9 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                                         <ListCollapse size={16} className="mr-2" /> Rhyme Analysis
                                     </h4>
                                 </div>
-                                <div className="text-slate-200 text-sm whitespace-pre-wrap">{rhymeVisualizerResult}</div>
+                                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown>{rhymeVisualizerResult}</ReactMarkdown>
+                                </div>
                             </div>
                         )}
 
