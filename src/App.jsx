@@ -1,6 +1,6 @@
 /* eslint-disable no-irregular-whitespace */
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, GripVertical, Settings, Palette, PenSquare, Trash2, PlusCircle, BrainCircuit, ChevronDown, RotateCcw, Copy, Check } from 'lucide-react';
+import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, Palette, BrainCircuit, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import * as Sentry from "@sentry/react";
 import ReactMarkdown from 'react-markdown';
@@ -17,28 +17,33 @@ import CreateStyleKit from './CreateStyleKit';
 const Header = ({ currentPage, setCurrentPage }) => {
     const navItems = ['Ghostwriter', 'Analyzer', 'Guide', 'Terms'];
     return (
-        <header className="p-4 border-b border-slate-700/50 text-center bg-slate-900 z-10 shrink-0 flex justify-between items-center">
-            <div>{/* Spacer */}</div>
-            <div className="text-center">
-                <h1 className="text-3xl font-bold text-indigo-400">VRS/A</h1>
-                <div className="mt-2 flex flex-col items-center space-y-1">
-                  <span className="text-xs text-slate-400 font-semibold">
-  I'm back. Updates coming weekly. Promise. Join me on <a href="https://www.reddit.com/r/VRSA/" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300">r/vrsa</a></span>
-                  <span className="text-xs text-slate-400">Help me pay for server and api cost, keeping it free :) by tipping on <a href="https://coff.ee/vrsa" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">BuyMeaCoffee</a> or Cash App: <span className="font-mono text-green-400">chrisdickinson02</span></span>
-                </div>
-            </div>
-            <nav className="flex items-center space-x-2 md:space-x-4">
-                {navItems.map(item => (
-                    <button 
-                        key={item} 
-                        onClick={() => setCurrentPage(item.toLowerCase())}
-                        className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${currentPage === item.toLowerCase() ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700'}`}
-                    >
-                        {item}
-                    </button>
-                ))}
-            </nav>
-        </header>
+      <header className="p-4 border-b border-slate-700/50 bg-slate-900 z-10 shrink-0">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <div>{/* Left spacer */}</div>
+          
+          {/* Center content */}
+          <div className="flex flex-col items-center">
+            <h1 className="text-3xl font-bold text-indigo-400">VRS/A</h1>
+          </div>
+          
+          {/* Right navigation */}
+          <nav className="flex items-center space-x-2 md:space-x-4">
+            {navItems.map(item => (
+              <button 
+                key={item} 
+                onClick={() => setCurrentPage(item.toLowerCase())}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  currentPage === item.toLowerCase() 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </header>
     );
 };
 
@@ -294,6 +299,29 @@ const ChatMessage = ({ message, index }) => {
     // Show copy button only for bot messages and not for the initial welcome message (index 0)
     const showCopyButton = isBotMessage && index > 0;
 
+    // Function to render text with clickable links
+    const renderMessageContent = (content) => {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const parts = content.split(urlRegex);
+        
+        return parts.map((part, i) => {
+            if (part.match(urlRegex)) {
+                return (
+                    <a
+                        key={i}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-yellow-400 hover:text-yellow-300 underline"
+                    >
+                        {part}
+                    </a>
+                );
+            }
+            return part;
+        });
+    };
+
     return (
         <div className={`flex items-start gap-4 my-6 ${isBotMessage ? 'pr-8' : 'pl-8'}`}>
             <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isBotMessage ? 'bg-indigo-600' : 'bg-slate-700'}`}>
@@ -309,47 +337,11 @@ const ChatMessage = ({ message, index }) => {
                         {isCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} className="text-slate-400" />}
                     </button>
                 )}
-                <p className="text-slate-200 whitespace-pre-wrap font-mono text-sm md:text-base pr-8">{message.content}</p>
+                <p className="text-slate-200 whitespace-pre-wrap font-mono text-sm md:text-base pr-8">{renderMessageContent(message.content)}</p>
             </div>
         </div>
     );
 };
-
-const SANDBOX_SYSTEM_PROMPT = `ROLE
-You are an elite ghost-writer, a lyrical method actor. Your entire purpose is to channel an artist’s “lyrical DNA” with uncanny realism, producing lyrics that feel 100 % authentic yet entirely new.  
-Your sole job: craft a single song section that exactly matches the user-supplied specs (type, bars, densities) while channeling the requested artist’s DNA.
-
-CONTEXT
-A human client wants original, unreleased-sounding lyrics. You will replicate the specified artist’s  
-• themes & emotional palette • word choice & imagery • flow & micro-rhythms • persona quirks.
-
-CORE DIRECTIVE: RHYMING PHILOSOPHY
-Abandon predictable end-rhymes. Treat rhyme as a rhythmic weapon, not punctuation.
-
-1. Prioritize internal rhymes – thread them through and across lines.  
-2. Embrace slant & half-rhymes – perfect rhymes are fallback only.  
-3. Rhyme as percussion – multisyllabic hits create groove before “correctness.”  
-4. Hard ban on three+ consecutive identical end-rhyme sounds. Break chains fast.
-
-SECTION CONSTRAINTS
-• **bars (lines):** Output *exactly* the requested number of lines—no headings, no notes.  
-• **density:** – Sparse ≈ 5-7 words / bar  
-  – Normal ≈ 8-12 words / bar  
-  – Dense ≈ 13+ words / bar  
-  Minor ±1 variance is fine for natural phrasing.  
-• **metaphor_density, rhyme_complexity** (0–100 %): interpret as relative intensity knobs—higher % ⇒ richer imagery or denser rhyme webs.  
-• If explicit_language is 'yes', you MUST use profanity and explicit themes appropriate to the artist. This is not optional.
-
-1. Internalize the artist profile before writing.  
-2. Ghost-write, obeying RHYMING PHILOSOPHY and BAR & DENSITY COMPLIANCE. Avoid AABB at all cost.  
-3. Self-critique: “Would {artist_name} say this?” and “Does this read like boilerplate AI?” Revise until raw & human.
-
-BANNED WORD LIST
-rust, static, glitch, code, king, queen, throne, abyss, void, echo, shadow, whisper, mirror, silent, empty, plus any blatant “AI giveaway” terms.
-
-OUTPUT FORMAT
-Just the lyric lines (one line = one bar).  
-No labels, brackets, headers, commentary, or apologies.`;
 
 // --- Landing Page Component ---
 const Landing = ({ setCurrentPage }) => {
@@ -654,7 +646,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
     if (messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. Use the chat input at the bottom to generate lyrics, or use the structured form on the left for more control! Or both, be wild. Lmao.'
+        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. I accidentally updated my new coffee link but forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo'
       }]);
     }
   }, [messages.length]);
@@ -1208,7 +1200,7 @@ const Guide = () => (
       <h2 className="text-xl font-semibold text-slate-200 mb-2">Welcome to VRS/A</h2>
       <p className="text-slate-300 mb-4">Built by one guy, running on fumes, vibes, and a couple tips. VRS/A is your lyric engine for bending styles, moods, and rhyme forms into something that doesn’t sound like it was grown in a lab.</p>
 
-      <p className="text-slate-400 mb-6 text-sm italic">Like it? Help keep it free: <a href="https://coff.ee/vrsa" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">BuyMeaCoffee</a> or Cash App <span className="font-mono text-green-400">$chrisdickinson02</span>.</p>
+      <p className="text-slate-400 mb-6 text-sm italic">Like it? Help keep it free: <a href="buymeacoffee.com/theelderemo" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">BuyMeaCoffee</a> or Cash App <span className="font-mono text-green-400">$chrisdickinson02</span>.</p>
 
       <h2 className="text-xl font-semibold text-slate-200 mb-2">Ghostwriter Mode Tour</h2>
 
@@ -1237,9 +1229,6 @@ const Guide = () => (
 
       <h3 className="text-lg font-medium text-slate-200 mb-2">Step 8: Style Palette</h3>
       <p className="text-slate-300 mb-4">Paste existing lyrics to get a detailed breakdown of that artist’s DNA. Useful for mimicry and theft (the legal kind).</p>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-2">Step 9: Sculpting</h3>
-      <p className="text-slate-300 mb-4">Use <strong>Forbidden Words</strong> to avoid lyrical clichés. Apply creative "Lenses" to shift the song's perspective or mood. If your lyrics keep mentioning shadows or mirrors, this is your fix.</p>
 
       <h3 className="text-lg font-medium text-slate-200 mb-2">Step 10: Generate Sections</h3>
       <p className="text-slate-300 mb-6">Each section card has its own prompt box. Hit the brain icon to generate lyrics for just that section. Trash what sucks. Repeat.</p>
@@ -1292,21 +1281,6 @@ const Guide = () => (
 const App = () => {
   const [currentPage, setCurrentPage] = useState('landing');
   const [selectedRhymeSchemes, setSelectedRhymeSchemes] = useState([]);
-  const [kitView, setKitView] = useState('marketplace'); // 'marketplace' | 'detail' | 'create'
-  const [activeKit, setActiveKit] = useState(null);
-
-  // Kits page logic
-  const handleSelectKit = (kit) => {
-    setActiveKit(kit);
-    setKitView('detail');
-  };
-  const handleBackToMarketplace = () => {
-    setActiveKit(null);
-    setKitView('marketplace');
-  };
-  const handleCreateKit = () => {
-    setKitView('create');
-  };
 
   return (
     <UserProvider>
@@ -1315,15 +1289,6 @@ const App = () => {
           {currentPage !== 'landing' && <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />}
           <div className="flex-1 min-h-0 overflow-y-auto">
             {currentPage === 'landing' && <Landing setCurrentPage={setCurrentPage} />}
-            {currentPage === 'kits' && kitView === 'marketplace' && (
-              <StyleKitMarketplace onSelectKit={handleSelectKit} onCreateKit={handleCreateKit} />
-            )}
-            {currentPage === 'kits' && kitView === 'detail' && (
-              <StyleKitDetail kit={activeKit} onBack={handleBackToMarketplace} />
-            )}
-            {currentPage === 'kits' && kitView === 'create' && (
-              <CreateStyleKit onBack={handleBackToMarketplace} />
-            )}
             {currentPage === 'ghostwriter' && <Ghostwriter selectedRhymeSchemes={selectedRhymeSchemes} setSelectedRhymeSchemes={setSelectedRhymeSchemes} />}
             {currentPage === 'analyzer' && <Analyzer />}
             {currentPage === 'guide' && <Guide />}
