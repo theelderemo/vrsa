@@ -1,29 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, Palette, BrainCircuit, RotateCcw, Copy, Check } from 'lucide-react';
-import { Analytics } from '@vercel/analytics/react';
+import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, Palette, BrainCircuit, RotateCcw, Copy, Check, ChevronDown } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import ReactMarkdown from 'react-markdown';
 import { UserProvider } from './UserProvider';
-import AuthComponent from './Auth';
 import { StyleKitProvider } from './StyleKitProvider';
-import StyleKitMarketplace from './StyleKitMarketplace';
-import StyleKitDetail from './StyleKitDetail';
-import CreateStyleKit from './CreateStyleKit';
+import AuthComponent from './Auth';
+import { useUser } from './hooks/useUser'; // Import the hook
 
 // Define available models here. 
 // The 'id' should match what your backend expects to map to an Azure deployment.
 const MODEL_OPTIONS = [
-  { id: 'gpt-4.1', name: 'GPT 4.1' },
-  { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
-  { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1' },
-  { id: 'claude-sonnet-4-5', name: 'Claude Sonnet' },
+  { id: 'gpt-4.1', name: 'GPT 4.1', premium: false },
+  { id: 'DeepSeek-R1', name: 'DeepSeek R1', premium: false },
+  { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1', premium: false },
+  { id: 'claude-3-opus', name: 'Claude 3 Opus', premium: true }, 
 ];
 
 // --- Helper Components ---
 
 // Header Component with Navigation
 const Header = ({ currentPage, setCurrentPage }) => {
+    const { user, profile, signOut } = useUser();
     const navItems = ['Ghostwriter', 'Analyzer', 'Guide', 'Terms'];
+    
     return (
       <header className="p-4 border-b border-slate-700/50 bg-slate-900 z-10 shrink-0">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
@@ -49,6 +48,36 @@ const Header = ({ currentPage, setCurrentPage }) => {
                 {item}
               </button>
             ))}
+            
+            {/* Auth Button */}
+            {user ? (
+              <div className="flex items-center space-x-2 ml-2">
+                <span className="text-slate-400 text-sm hidden md:inline">
+                  {profile?.username ? `@${profile.username}` : user.email}
+                </span>
+                <button
+                  onClick={async () => {
+                    await signOut();
+                    setCurrentPage('landing');
+                    window.location.reload();
+                  }}
+                  className="px-3 py-2 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setCurrentPage('login')}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ml-2 ${
+                  currentPage === 'login'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-600/80 hover:bg-indigo-600 text-white'
+                }`}
+              >
+                Login
+              </button>
+            )}
           </nav>
         </div>
       </header>
@@ -76,8 +105,81 @@ const rhymePatternOptions = [
   "AABB (couplets)",
   "ABAB (alternating)",
   "ABBA (enclosed)",
+  "ABCCB Pattern",
+  "ABCCA",
   "Free/irregular"
 ];
+
+const poeticFormOptions = [
+  "Haiku",
+  "Sonnet",
+  "Free verse",
+  "Limerick",
+  "Villanelle",
+  "Elegy",
+  "Ode",
+  "Acrostic",
+  "Sestina",
+  "Narrative",
+  "Cinquain",
+  "Prose",
+  "Ekphrastic",
+  "Pantoum",
+  "Pastoral",
+  "Ballad",
+  "Ghazal"
+];
+
+// Dropdown with checkboxes component
+const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholder = "Select options..." }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedCount = options.filter(opt => selectedValues.includes(opt)).length;
+  const displayText = selectedCount > 0 ? `${selectedCount} selected` : placeholder;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <label className="block text-xs font-semibold text-slate-400 mb-2">{label}</label>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-left text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-between"
+      >
+        <span className={selectedCount > 0 ? "text-white" : "text-slate-500"}>{displayText}</span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="p-2 space-y-1">
+            {options.map(option => (
+              <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs p-2 hover:bg-slate-700 rounded cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedValues.includes(option)}
+                  onChange={() => onChange(option)}
+                  className="accent-indigo-500"
+                />
+                <span>{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const StructuredInputForm = ({ 
     artistName, setArtistName,
@@ -91,9 +193,11 @@ const StructuredInputForm = ({
     rhymeComplexity, setRhymeComplexity,
     temperature, setTemperature, topP, setTopP,
     selectedModel, setSelectedModel,
+    profile,
     onReset,
     onCloseMobile
-}) => (
+}) => {
+  return (
     <div className="bg-slate-900 flex flex-col h-full border-r border-slate-700/50 relative">
       {/* Mobile close button */}
       {onCloseMobile && (
@@ -119,14 +223,32 @@ const StructuredInputForm = ({
             <BrainCircuit className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
             <select 
               value={selectedModel} 
-              onChange={e => setSelectedModel(e.target.value)} 
+              onChange={e => {
+                const model = MODEL_OPTIONS.find(m => m.id === e.target.value);
+                // Block premium models for non-pro users
+                if (model?.premium && profile.is_pro !== 'true') {
+                  return;
+                }
+                setSelectedModel(e.target.value);
+              }} 
               className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {MODEL_OPTIONS.map(model => (
-                <option key={model.id} value={model.id}>{model.name}</option>
+                <option 
+                  key={model.id} 
+                  value={model.id} 
+                  disabled={model.premium && profile.is_pro !== 'true'}
+                >
+                  {model.name} {model.premium && profile.is_pro !== 'true' ? '(Studio Pass Only)' : ''}
+                </option>
               ))}
             </select>
-            <p className="text-xs text-slate-500 mt-1">Choose which model to use</p>
+            {/* Upsell Link */}
+            {profile.is_pro !== 'true' && (
+               <a href="https://buymeacoffee.com/theelderemo/membership" target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-400 mt-1 hover:underline block">
+                 Unlock Claude 3 Opus with Studio Pass
+               </a>
+            )}
         </div>
         <div className="relative">
             <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>
@@ -205,70 +327,56 @@ const StructuredInputForm = ({
           </div>
 
           {/* Rhyme Placement */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">Rhyme Placement</label>
-            <div className="space-y-2">
-              {rhymePlacementOptions.map(option => (
-                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={selectedRhymeSchemes.includes(option)}
-                    onChange={() => setSelectedRhymeSchemes(
-                      selectedRhymeSchemes.includes(option)
-                        ? selectedRhymeSchemes.filter(s => s !== option)
-                        : [...selectedRhymeSchemes, option]
-                    )}
-                    className="accent-indigo-500"
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <CheckboxDropdown
+            label="Rhyme Placement"
+            options={rhymePlacementOptions}
+            selectedValues={selectedRhymeSchemes}
+            onChange={(option) => setSelectedRhymeSchemes(
+              selectedRhymeSchemes.includes(option)
+                ? selectedRhymeSchemes.filter(s => s !== option)
+                : [...selectedRhymeSchemes, option]
+            )}
+            placeholder="Select rhyme placement..."
+          />
 
           {/* Rhyme Quality */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">Rhyme Quality</label>
-            <div className="space-y-2">
-              {rhymeQualityOptions.map(option => (
-                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={selectedRhymeSchemes.includes(option)}
-                    onChange={() => setSelectedRhymeSchemes(
-                      selectedRhymeSchemes.includes(option)
-                        ? selectedRhymeSchemes.filter(s => s !== option)
-                        : [...selectedRhymeSchemes, option]
-                    )}
-                    className="accent-indigo-500"
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <CheckboxDropdown
+            label="Rhyme Quality"
+            options={rhymeQualityOptions}
+            selectedValues={selectedRhymeSchemes}
+            onChange={(option) => setSelectedRhymeSchemes(
+              selectedRhymeSchemes.includes(option)
+                ? selectedRhymeSchemes.filter(s => s !== option)
+                : [...selectedRhymeSchemes, option]
+            )}
+            placeholder="Select rhyme quality..."
+          />
 
           {/* Structure Patterns */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2">Structure Patterns</label>
-            <div className="space-y-2">
-              {rhymePatternOptions.map(option => (
-                <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={selectedRhymeSchemes.includes(option)}
-                    onChange={() => setSelectedRhymeSchemes(
-                      selectedRhymeSchemes.includes(option)
-                        ? selectedRhymeSchemes.filter(s => s !== option)
-                        : [...selectedRhymeSchemes, option]
-                    )}
-                    className="accent-indigo-500"
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <CheckboxDropdown
+            label="Structure Patterns"
+            options={rhymePatternOptions}
+            selectedValues={selectedRhymeSchemes}
+            onChange={(option) => setSelectedRhymeSchemes(
+              selectedRhymeSchemes.includes(option)
+                ? selectedRhymeSchemes.filter(s => s !== option)
+                : [...selectedRhymeSchemes, option]
+            )}
+            placeholder="Select rhyme patterns..."
+          />
+
+          {/* Poetic Forms */}
+          <CheckboxDropdown
+            label="Poetic Forms"
+            options={poeticFormOptions}
+            selectedValues={selectedRhymeSchemes}
+            onChange={(option) => setSelectedRhymeSchemes(
+              selectedRhymeSchemes.includes(option)
+                ? selectedRhymeSchemes.filter(s => s !== option)
+                : [...selectedRhymeSchemes, option]
+            )}
+            placeholder="Select poetic forms..."
+          />
         </div>
 
         {/* Temperature and Top-p sliders */}
@@ -298,7 +406,8 @@ const StructuredInputForm = ({
         </div>
       </div>
     </div>
-);
+  );
+};
 
 const ChatMessage = ({ message, index }) => {
     const [isCopied, setIsCopied] = useState(false);
@@ -472,6 +581,7 @@ const Landing = ({ setCurrentPage }) => {
 };
 
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
+  const { user, profile, loading } = useUser();
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
@@ -493,6 +603,56 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [generationCount, setGenerationCount] = useState(0);
   const [ctaMessage, setCtaMessage] = useState('');
   // --- END: New state and message list for CTA ---
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+    
+  // Initialize welcome message
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{
+        role: 'assistant',
+        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
+      }]);
+    }
+  }, [messages.length]);
+
+  // Auth check - show login prompt if not authenticated
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900">
+        <LoaderCircle className="animate-spin text-indigo-400" size={48} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900 p-8">
+        <div className="max-w-md text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
+          <p className="text-slate-400 mb-6">Please log in to access Ghostwriter mode.</p>
+          <button
+            onClick={() => window.location.href = '/#login'}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            Log In / Sign Up
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Wait for profile to load
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900">
+        <LoaderCircle className="animate-spin text-indigo-400" size={48} />
+      </div>
+    );
+  }
 
   // Function to generate AI-based sarcastic comment
   const generateSarcasticComment = async (userInput) => {
@@ -555,7 +715,6 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   };
 
   const systemPrompt = `[IDENTITY]
-[IDENTITY]
 I am a song-writing assistant. My entire purpose is to write lyrics that feel raw, human, and authentic to a specific artist's style. I am also an expert in the Suno AI music generation platform, using its meta-tag syntax to provide detailed instructions for musical and vocal performance.
 
 [CORE_PHILOSOPHY]
@@ -662,19 +821,6 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
 * I will aim for 2-5 descriptive tags per section.
 * I will be specific. "60s jangly guitar rhythm" is better than "guitar."
 `;
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-    
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([{
-        role: 'assistant',
-        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
-      }]);
-    }
-  }, [messages.length]);
   
   const resetForm = () => {
       setArtistName('');
@@ -818,6 +964,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
           temperature={temperature} setTemperature={setTemperature}
           topP={topP} setTopP={setTopP}
           selectedModel={selectedModel} setSelectedModel={setSelectedModel}
+          profile={profile}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
         />
@@ -895,6 +1042,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
 // --- Analyzer Page ---
 
 const Analyzer = () => {
+    const { user, loading } = useUser();
     const [lyricsInput, setLyricsInput] = useState('');
     const [stylePaletteResult, setStylePaletteResult] = useState('');
     const [sunoTagsResult, setSunoTagsResult] = useState('');
@@ -904,6 +1052,32 @@ const Analyzer = () => {
     const [isGeneratingSunoTags, setIsGeneratingSunoTags] = useState(false);
     const [isGeneratingStatSheet, setIsGeneratingStatSheet] = useState(false);
     const [isAnalyzingRhymes, setIsAnalyzingRhymes] = useState(false);
+
+    // Auth check - show login prompt if not authenticated
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-full bg-slate-900">
+                <LoaderCircle className="animate-spin text-indigo-400" size={48} />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-full bg-slate-900 p-8">
+                <div className="max-w-md text-center">
+                    <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
+                    <p className="text-slate-400 mb-6">Please log in to access Analyzer mode.</p>
+                    <button
+                        onClick={() => window.location.href = '/#login'}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+                    >
+                        Log In / Sign Up
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     // API call helper
     const callAI = async (prompt, setLoading, setResult) => {
@@ -1318,6 +1492,23 @@ const Guide = () => (
 const App = () => {
   const [currentPage, setCurrentPage] = useState('landing');
   const [selectedRhymeSchemes, setSelectedRhymeSchemes] = useState([]);
+
+  // Handle hash-based routing for login navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove the '#'
+      if (hash === 'login') {
+        setCurrentPage('login');
+      }
+    };
+
+    // Check on mount
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   return (
     <UserProvider>
