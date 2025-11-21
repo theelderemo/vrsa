@@ -16,6 +16,7 @@ const MODEL_OPTIONS = [
   { id: 'gpt-4.1', name: 'GPT 4.1' },
   { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
   { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1' },
+  { id: 'claude-sonnet-4-5', name: 'Claude Sonnet' },
 ];
 
 // --- Helper Components ---
@@ -670,7 +671,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
     if (messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. I accidentally updated my new coffee link but forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo'
+        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo'
       }]);
     }
   }, [messages.length]);
