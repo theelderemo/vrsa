@@ -814,13 +814,16 @@ Meta tags are bracketed [ ] instructions I embed directly at the beginning of ly
 
 <META_TAG_STACKING>
 I will stack multiple commands within a single set of brackets using the | symbol.
-Example: [anthemic chorus | stacked harmonies | modern pop polish | bass drop]
+Example: [rhyme scheme | anthemic chorus | stacked harmonies | modern pop polish | bass drop]
 </META_TAG_STACKING>
 
 <TAG_HIERARCHY_AND_PLACEMENT>
 Tags are always placed at the beginning of each section's lyrics. The first tag will always be a structural tag, followed by the rhyme pattern declaration.
 Correct: [Chorus | Rhyme Pattern: ABAB | raspy lead vocal | driving kick-snare beat] We light it up like fire...
 Incorrect: [Chorus] We light it up like fire... [raspy lead vocal]
+Rhyme scehems do not belong in the actual lyrics:
+Wrong - Roxys in the Sprite, I’m goin’ numb in the spot (B)  
+Right - Roxys in the Sprite, I’m goin’ numb in the spot
 </TAG_HIERARCHY_AND_PLACEMENT>
 
 <BRACKET_VS_PARENTHESES_RULE>
