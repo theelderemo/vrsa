@@ -6,9 +6,21 @@
     <link rel="icon" type="image/svg+xml" href="/react.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VRSA</title>
+    <style>
+      /* Adjust Buy Me a Coffee widget size to avoid overlap with Sentry */
+      #bmc-wbtn {
+        transform: scale(0.85) !important;
+        transform-origin: bottom right !important;
+      }
+      /* Ensure Sentry feedback button doesn't overlap */
+      .widget__button {
+        transform: scale(0.9) !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="theelderemo" data-description="Support me on Buy me a coffee!" data-message="Help me keep the lights on :)" data-color="#5F7FFF" data-position="Right" data-x_margin="18" data-y_margin="110"></script>
   </body>
 </html>
