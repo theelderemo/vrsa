@@ -1,7 +1,6 @@
 // src/Auth.jsx
 import { useState } from 'react';
 import * as Sentry from '@sentry/react';
-import { Turnstile } from '@marsidev/react-turnstile';
 import { supabase } from './lib/supabase';
 import { useUser } from './hooks/useUser';
 import { Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, LogIn, UserPlus, Loader } from 'lucide-react';
@@ -15,7 +14,6 @@ export default function AuthComponent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [captchaToken, setCaptchaToken] = useState('');
 
   // Validation functions
   const validateEmail = (email) => {
@@ -37,11 +35,6 @@ export default function AuthComponent() {
   const clearMessages = () => {
     setError('');
     setSuccessMessage('');
-  };
-
-  // Reset captcha
-  const resetCaptcha = () => {
-    setCaptchaToken('');
   };
 
   // Handle Signup
@@ -70,11 +63,6 @@ export default function AuthComponent() {
       return;
     }
 
-    if (!captchaToken) {
-      setError('Please complete the CAPTCHA verification');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -83,7 +71,6 @@ export default function AuthComponent() {
         email,
         password,
         options: {
-          captchaToken,
           data: {
             username: username,
           }
@@ -115,7 +102,6 @@ export default function AuthComponent() {
         } else {
           setError(authError.message || 'Failed to create account. Please try again.');
         }
-        resetCaptcha();
         setLoading(false);
         return;
       }
@@ -142,7 +128,6 @@ export default function AuthComponent() {
         setEmail('');
         setPassword('');
         setUsername('');
-        resetCaptcha();
       }
     } catch (error) {
       // Catch unexpected errors
@@ -162,7 +147,6 @@ export default function AuthComponent() {
 
       setError('An unexpected error occurred. Please try again.');
       console.error('Signup error:', error);
-      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -184,20 +168,12 @@ export default function AuthComponent() {
       return;
     }
 
-    if (!captchaToken) {
-      setError('Please complete the CAPTCHA verification');
-      return;
-    }
-
     setLoading(true);
 
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          captchaToken
-        }
+        password
       });
 
       if (authError) {
@@ -225,7 +201,6 @@ export default function AuthComponent() {
         } else {
           setError(authError.message || 'Login failed. Please try again.');
         }
-        resetCaptcha();
         setLoading(false);
         return;
       }
@@ -269,7 +244,6 @@ export default function AuthComponent() {
 
       setError('An unexpected error occurred. Please try again.');
       console.error('Login error:', error);
-      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -335,7 +309,6 @@ export default function AuthComponent() {
             onClick={() => {
               setMode('login');
               clearMessages();
-              resetCaptcha(); // Clear captcha when switching to login
             }}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'login'
@@ -350,7 +323,6 @@ export default function AuthComponent() {
             onClick={() => {
               setMode('signup');
               clearMessages();
-              resetCaptcha(); // Clear captcha when switching to signup
             }}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               mode === 'signup'
@@ -481,27 +453,6 @@ export default function AuthComponent() {
             )}
           </button>
         </form>
-
-        {/* Cloudflare Turnstile CAPTCHA - Show for both login and signup */}
-        <div className="mt-4">
-          <Turnstile
-            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-            onSuccess={(token) => {
-              setCaptchaToken(token);
-              clearMessages(); // Clear any previous errors when CAPTCHA is completed
-            }}
-            onError={() => {
-              setCaptchaToken('');
-              setError('CAPTCHA verification failed. Please try again.');
-            }}
-            onExpire={() => {
-              setCaptchaToken('');
-              setError('CAPTCHA expired. Please verify again.');
-            }}
-            theme="dark"
-            size="normal"
-          />
-        </div>
 
         {/* Additional Info */}
         <div className="mt-6 text-center">
