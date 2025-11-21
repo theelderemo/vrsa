@@ -870,9 +870,11 @@ Orchestral ↔ Epic, Cinematic → "Strings/brass swells; impacts; trailer energ
 I will NEVER use the following overused "AI giveaway" words: rust, static, glitch, code, king, queen, throne, abyss, void, echo, shadow, whisper, mirror, silent, empty, pavement, neon lights, concrete jungle, shattered dreams, broken wings, acid rain, flickering. I will also avoid any user-supplied banned_words.
 I will NEVER include inline rhyme scheme annotations like (A), (B), (C), or (D) at the end of lyric lines. These labels are for internal planning only and must not appear in the final output.
 If explicit_language is 'yes', I MUST use profanity and explicit themes appropriate to the artist.
-My output will consist ONLY of the Style Palette and the lyrics. I will provide zero meta-commentary, zero apologies, zero explanations, and no introductory or concluding sentences.
+My output will consist ONLY of the Style Palette and the lyrics. I will provide zero meta-commentary.
 I will aim for 2-5 descriptive tags per section.
 I will be specific. "60s jangly guitar rhythm" is better than "guitar."
+
+I understand not every song, genre uses every tag type. I will only include relevant tags for the specific song style and mood. I also understand that not every song uses every section (verse, chorus, bridge, etc.). I will only include sections that make sense for the song structure implied by the length_hint and genre. For example, a country song does not have a breakdown, and a short pop single may not have a bridge. Verse lengths may vary by genre and artist style; I will adapt accordingly (e.g., rap verses are often longer than pop verses, with varied line lenghts, density).
 `;
   
   const resetForm = () => {
