@@ -1,4 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, CornerDownLeft, LoaderCircle, FileText, Mic, Smile, ListCollapse, Menu, X, Palette, BrainCircuit, RotateCcw, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
@@ -10,6 +9,14 @@ import { StyleKitProvider } from './StyleKitProvider';
 import StyleKitMarketplace from './StyleKitMarketplace';
 import StyleKitDetail from './StyleKitDetail';
 import CreateStyleKit from './CreateStyleKit';
+
+// Define available models here. 
+// The 'id' should match what your backend expects to map to an Azure deployment.
+const MODEL_OPTIONS = [
+  { id: 'gpt-4.1', name: 'GPT 4.1' },
+  { id: 'DeepSeek-R1', name: 'DeepSeek R1' },
+  { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1' },
+];
 
 // --- Helper Components ---
 
@@ -82,6 +89,7 @@ const StructuredInputForm = ({
     rhymeDensity, setRhymeDensity,
     rhymeComplexity, setRhymeComplexity,
     temperature, setTemperature, topP, setTopP,
+    selectedModel, setSelectedModel,
     onReset,
     onCloseMobile
 }) => (
@@ -104,6 +112,21 @@ const StructuredInputForm = ({
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4 space-y-4">
+        {/* Model Selection Dropdown */}
+        <div className="relative">
+            <label className="block text-sm font-medium text-slate-400 mb-2">AI Model</label>
+            <BrainCircuit className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
+            <select 
+              value={selectedModel} 
+              onChange={e => setSelectedModel(e.target.value)} 
+              className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {MODEL_OPTIONS.map(model => (
+                <option key={model.id} value={model.id}>{model.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-1">Choose which model to use</p>
+        </div>
         <div className="relative">
             <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>
             <Mic className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
@@ -463,6 +486,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [topP, setTopP] = useState(1);
   const [rhymeDensity, setRhymeDensity] = useState(50);
   const [rhymeComplexity, setRhymeComplexity] = useState(50);
+  const [selectedModel, setSelectedModel] = useState(MODEL_OPTIONS[0].id);
 
   // --- START: New state and message list for CTA ---
   const [generationCount, setGenerationCount] = useState(0);
@@ -729,7 +753,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
               'apikey': supabaseAnonKey,
               'Authorization': `Bearer ${supabaseAnonKey}`
             },
-            body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP }) // ensure top_p is used
+            body: JSON.stringify({ messages: messagesPayload, temperature, top_p: topP, model: selectedModel })
           });
           if (!response.ok) throw new Error(`API Error: ${response.status}`);
           const data = await response.json();
@@ -792,6 +816,7 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
           rhymeComplexity={rhymeComplexity} setRhymeComplexity={setRhymeComplexity}
           temperature={temperature} setTemperature={setTemperature}
           topP={topP} setTopP={setTopP}
+          selectedModel={selectedModel} setSelectedModel={setSelectedModel}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
         />
