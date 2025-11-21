@@ -873,6 +873,17 @@ Orchestral ↔ Epic, Cinematic → “Strings/brass swells; impacts; trailer ene
                 <CornerDownLeft className="h-6 w-6" />
               </button>
             </div>
+            {/* Discord Link */}
+            <div className="mt-3 text-center">
+              <a 
+                href="https://discord.gg/N3SZkShj" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm text-indigo-400 hover:text-indigo-300 underline"
+              >
+                Join our Discord community
+              </a>
+            </div>
           </div>
         </div>
         {/* --- END: Wrapper for CTA and Input Box --- */}
