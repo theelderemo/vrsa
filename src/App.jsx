@@ -32,7 +32,7 @@ const App = () => {
   return (
     <AppProviders>
       {currentPage === 'landing' ? (
-        <div className="bg-slate-900 text-white font-sans h-screen flex flex-col">
+        <div className="bg-slate-900 text-white font-sans">
           <Landing setCurrentPage={setCurrentPage} />
         </div>
       ) : (
