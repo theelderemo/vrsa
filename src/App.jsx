@@ -4,6 +4,7 @@ import MainLayout from './components/layout/MainLayout';
 import Landing from './pages/Landing';
 import Ghostwriter from './pages/Ghostwriter';
 import Analyzer from './pages/Analyzer';
+import AlbumArt from './pages/AlbumArt';
 import Guide from './pages/Guide';
 import Terms from './pages/Terms';
 import AuthComponent from './Auth';
@@ -44,6 +45,7 @@ const App = () => {
             />
           )}
           {currentPage === 'analyzer' && <Analyzer />}
+          {currentPage === 'albumart' && <AlbumArt />}
           {currentPage === 'guide' && <Guide />}
           {currentPage === 'terms' && <Terms />}
           {currentPage === 'login' && <AuthComponent />}

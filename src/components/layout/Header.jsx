@@ -3,7 +3,7 @@ import { useUser } from '../../hooks/useUser';
 
 const Header = ({ currentPage, setCurrentPage }) => {
   const { user, profile, signOut } = useUser();
-  const navItems = ['Ghostwriter', 'Analyzer', 'Guide', 'Terms'];
+  const navItems = ['Ghostwriter', 'Analyzer', 'AlbumArt', 'Guide', 'Terms'];
   
   return (
     <header className="p-4 border-b border-slate-700/50 bg-slate-900 z-10 shrink-0">

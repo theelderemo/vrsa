@@ -10,6 +10,11 @@ export const MODEL_OPTIONS = [
   { id: 'gpt-5.1-chat', name: 'GPT 5.1', premium: true}
 ];
 
+// Image generator options
+export const IMAGE_GENERATOR_OPTIONS = [
+  { id: 'FLUX-1.1-pro', name: 'Flux 1.1', premium: true }
+];
+
 // Rhyme scheme options organized by category
 export const rhymePlacementOptions = [
   "End rhyme",
