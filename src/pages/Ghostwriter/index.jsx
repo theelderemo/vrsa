@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Import this
 import { CornerDownLeft, LoaderCircle, Menu, X } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
@@ -9,6 +10,7 @@ import StructuredInputForm from './StructuredInputForm';
 
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
+  const navigate = useNavigate(); // <-- Initialize hook
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
@@ -44,7 +46,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   }, [messages.length]);
 
   // Auth check
-  if (loading) {
+if (loading) {
     return (
       <div className="flex items-center justify-center h-full bg-slate-900">
         <LoaderCircle className="animate-spin text-indigo-400" size={48} />
@@ -59,7 +61,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
           <p className="text-slate-400 mb-6">Please log in to access Ghostwriter mode.</p>
           <button
-            onClick={() => window.location.href = '/#login'}
+            onClick={() => navigate('/login')} // <-- FIXED: Uses router navigation
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
             Log In / Sign Up

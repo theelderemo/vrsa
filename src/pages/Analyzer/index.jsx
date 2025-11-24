@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Import
 import { LoaderCircle, Palette, Mic, FileText, ListCollapse, BrainCircuit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useUser } from '../../hooks/useUser';
@@ -6,6 +7,7 @@ import { callAI } from '../../lib/api';
 
 const Analyzer = () => {
   const { user, loading } = useUser();
+  const navigate = useNavigate(); // <-- Init hook
   const [lyricsInput, setLyricsInput] = useState('');
   const [stylePaletteResult, setStylePaletteResult] = useState('');
   const [sunoTagsResult, setSunoTagsResult] = useState('');
@@ -25,14 +27,14 @@ const Analyzer = () => {
     );
   }
 
-  if (!user) {
+if (!user) {
     return (
       <div className="flex items-center justify-center h-full bg-slate-900 p-8">
         <div className="max-w-md text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
           <p className="text-slate-400 mb-6">Please log in to access Analyzer mode.</p>
           <button
-            onClick={() => window.location.href = '/#login'}
+            onClick={() => navigate('/login')} // <-- FIXED
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
             Log In / Sign Up

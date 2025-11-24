@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom'; // <-- Import
 
-const Landing = ({ setCurrentPage }) => {
+const Landing = () => { // No props needed
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
       {/* Animated background elements */}
@@ -37,20 +38,20 @@ const Landing = ({ setCurrentPage }) => {
             Paste lyrics or start from scratch. Analyze, deconstruct, and create with advanced AI tools: Style Palette, Suno AI Tag Generator, Stat-Sheet, and Rhyme Visualizer. Always free, always private.
           </p>
 
-          {/* CTA Buttons */}
+{/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
-            <button
-              onClick={() => setCurrentPage('ghostwriter')}
-              className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/50"
+            <Link
+              to="/ghostwriter" // <-- Real Link
+              className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/50 flex items-center justify-center"
             >
               Start with Ghostwriter
-            </button>
-            <button
-              onClick={() => setCurrentPage('analyzer')}
-              className="group px-8 py-4 bg-slate-800/80 backdrop-blur-sm border-2 border-indigo-500/50 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-800 hover:border-indigo-400 hover:scale-105"
+            </Link>
+            <Link
+              to="/analyzer" // <-- Real Link
+              className="group px-8 py-4 bg-slate-800/80 backdrop-blur-sm border-2 border-indigo-500/50 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-800 hover:border-indigo-400 hover:scale-105 flex items-center justify-center"
             >
               Try Analyzer Mode
-            </button>
+            </Link>
           </div>
         </div>
 

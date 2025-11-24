@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom'; // <-- Import this
 import AppProviders from './providers/AppProviders';
 import MainLayout from './components/layout/MainLayout';
 import Landing from './pages/Landing';
@@ -10,47 +11,34 @@ import Terms from './pages/Terms';
 import AuthComponent from './Auth';
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('landing');
+  // NOTE: currentPage state is gone!
   const [selectedRhymeSchemes, setSelectedRhymeSchemes] = useState([]);
-
-  // Handle hash-based routing for login navigation
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1); // Remove the '#'
-      if (hash === 'login') {
-        setCurrentPage('login');
-      }
-    };
-
-    // Check on mount
-    handleHashChange();
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
 
   return (
     <AppProviders>
-      {currentPage === 'landing' ? (
-        <div className="bg-slate-900 text-white font-sans">
-          <Landing setCurrentPage={setCurrentPage} />
-        </div>
-      ) : (
-        <MainLayout currentPage={currentPage} setCurrentPage={setCurrentPage}>
-          {currentPage === 'ghostwriter' && (
+      <Routes>
+        {/* Landing Page (No Layout) */}
+        <Route path="/" element={
+          <div className="bg-slate-900 text-white font-sans">
+            <Landing />
+          </div>
+        } />
+
+        {/* Main App Pages (With Layout) */}
+        <Route element={<MainLayout />}>
+          <Route path="/ghostwriter" element={
             <Ghostwriter 
               selectedRhymeSchemes={selectedRhymeSchemes} 
               setSelectedRhymeSchemes={setSelectedRhymeSchemes} 
             />
-          )}
-          {currentPage === 'analyzer' && <Analyzer />}
-          {currentPage === 'albumart' && <AlbumArt />}
-          {currentPage === 'guide' && <Guide />}
-          {currentPage === 'terms' && <Terms />}
-          {currentPage === 'login' && <AuthComponent />}
-        </MainLayout>
-      )}
+          } />
+          <Route path="/analyzer" element={<Analyzer />} />
+          <Route path="/albumart" element={<AlbumArt />} />
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/login" element={<AuthComponent />} />
+        </Route>
+      </Routes>
     </AppProviders>
   );
 };

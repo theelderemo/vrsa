@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Import
 import { LoaderCircle, Image, User, Type } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
@@ -6,6 +7,7 @@ import { IMAGE_GENERATOR_OPTIONS } from '../../lib/constants';
 
 const AlbumArt = () => {
   const { user, profile, loading } = useUser();
+  const navigate = useNavigate(); // <-- Init hook
   const [activeGenerator, setActiveGenerator] = useState('album-cover');
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -22,14 +24,14 @@ const AlbumArt = () => {
     );
   }
 
-  if (!user) {
+if (!user) {
     return (
       <div className="flex items-center justify-center h-full bg-slate-900 p-8">
         <div className="max-w-md text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
           <p className="text-slate-400 mb-6">Please log in to access Album Art generation.</p>
           <button
-            onClick={() => window.location.href = '/#login'}
+            onClick={() => navigate('/login')} // <-- FIXED
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
             Log In / Sign Up
