@@ -1,0 +1,32 @@
+on:
+  push:
+
+name: Discord updater
+
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      models: read
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Run AI inference
+        id: inference
+        uses: actions/ai-inference@v1
+        with:
+          prompt: |
+            Summarize the github commit, into a concise, formatted message for a discord with the apps users in it.
+            1. No conversational filler (e.g., "Here are the changes," "We are excited to announce"). Start directly with the categories. 2. No emojis. 3. Categorize every change using a header (catagory, i.e.: User Feature, Frontend, UI, etc). 4. Combine related points into single concise bullets. 5. If a change is purely code cleanup with no user impact, mark it as Internal or omit it if minor.
+
+      - name: Run AI Reporter
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python .github/scripts/announce_changes.py
