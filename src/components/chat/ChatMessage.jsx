@@ -33,8 +33,11 @@ const ChatMessage = ({
   // Show copy button only for bot messages and not for the initial welcome message (index 0)
   const showCopyButton = isBotMessage && index > 0;
   
-  // Split bot messages into lines for inline editing
-  const lines = isBotMessage ? message.content.split('\n').filter(line => line.trim()) : [];
+  // The initial welcome message (index 0) should not be editable
+  const isInitialMessage = index === 0;
+  
+  // Split bot messages into lines for inline editing (but not the initial message)
+  const lines = isBotMessage && !isInitialMessage ? message.content.split('\n').filter(line => line.trim()) : [];
   const isMultiLine = lines.length > 1;
   const messageId = `msg-${index}`;
 

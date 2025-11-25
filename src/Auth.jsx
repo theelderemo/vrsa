@@ -252,7 +252,7 @@ export default function AuthComponent() {
   // Retry handler
   const handleRetry = () => {
     clearMessages();
-    resetCaptcha();
+    // resetCaptcha is not available in this component; no-op here.
   };
 
   // If user is already logged in, show profile info

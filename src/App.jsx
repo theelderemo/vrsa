@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom'; // <-- Import this
+import { Routes, Route } from 'react-router-dom';
 import AppProviders from './providers/AppProviders';
 import MainLayout from './components/layout/MainLayout';
 import Landing from './pages/Landing';
@@ -8,6 +8,7 @@ import Analyzer from './pages/Analyzer';
 import AlbumArt from './pages/AlbumArt';
 import Guide from './pages/Guide';
 import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import AuthComponent from './Auth';
 
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<AuthComponent />} />
         </Route>
       </Routes>

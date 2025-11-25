@@ -28,6 +28,13 @@ import {
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
   const navigate = useNavigate(); // <-- Initialize hook
+  
+  // Welcome message that's always shown but never saved
+  const welcomeMessage = {
+    role: 'assistant',
+    content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
+  };
+  
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
@@ -87,16 +94,6 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       });
     }
   }, [user, sessionId]);
-  
-  // Initialize welcome message
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([{
-        role: 'assistant',
-        content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
-      }]);
-    }
-  }, [messages.length]);
 
   // Auth check
 if (loading) {
@@ -269,11 +266,8 @@ I understand not every song, genre uses every tag type. I will only include rele
       }
     }
     
-    // Reset UI messages to welcome message
-    setMessages([{
-      role: 'assistant',
-      content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
-    }]);
+    // Reset UI messages (welcome message will still show)
+    setMessages([]);
   };
   
   // Delete all user chat history
@@ -298,11 +292,8 @@ I understand not every song, genre uses every tag type. I will only include rele
       setSessionId(newSessionId);
     }
     
-    // Reset UI to welcome message
-    setMessages([{
-      role: 'assistant',
-      content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
-    }]);
+    // Reset UI - empty messages since welcome message is always prepended
+    setMessages([]);
     
     // Show success message
     setTimeout(() => {
@@ -318,8 +309,9 @@ I understand not every song, genre uses every tag type. I will only include rele
   // AI suggestion handler for inline editing
   const handleAiSuggest = async (messageIndex, lineNumber, originalText) => {
     try {
-      // Build context from surrounding lines
-      const message = messages[messageIndex];
+      // Adjust index since welcome message is at index 0
+      const actualIndex = messageIndex - 1;
+      const message = messages[actualIndex];
       const lines = message.content.split('\n').filter(line => line.trim());
       const contextBefore = lines.slice(Math.max(0, lineNumber - 3), lineNumber - 1).join('\n');
       const contextAfter = lines.slice(lineNumber, Math.min(lines.length, lineNumber + 2)).join('\n');
@@ -385,10 +377,12 @@ I understand not every song, genre uses every tag type. I will only include rele
   };
   
   const handleSaveEdit = (messageIndex, lineNumber, newText) => {
+    // Adjust index since welcome message is at index 0
+    const actualIndex = messageIndex - 1;
     // Update the message content
     setMessages(prev => {
       const updated = [...prev];
-      const message = updated[messageIndex];
+      const message = updated[actualIndex];
       const lines = message.content.split('\n');
       const actualLineIndex = lines.findIndex((line, idx) => {
         const nonEmptyLines = lines.slice(0, idx + 1).filter(l => l.trim());
@@ -646,11 +640,18 @@ I understand not every song, genre uses every tag type. I will only include rele
       <div className="col-span-1 md:col-span-2 xl:col-span-3 flex flex-col bg-slate-800/50 min-h-0">
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-4xl mx-auto">
+            {/* Always show welcome message first */}
+            <ChatMessage 
+              key="welcome" 
+              message={welcomeMessage} 
+              index={0}
+            />
+            {/* Then show chat history */}
             {messages.map((msg, index) => (
               <ChatMessage 
-                key={index} 
+                key={index + 1} 
                 message={msg} 
-                index={index}
+                index={index + 1}
                 onLineEdit={handleLineEdit}
                 editingLine={editingLine}
                 onCancelEdit={handleCancelEdit}
