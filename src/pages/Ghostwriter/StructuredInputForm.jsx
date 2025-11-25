@@ -1,6 +1,8 @@
 import React from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse } from 'lucide-react';
+import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2 } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
+import MemoryToggle from '../../components/ui/MemoryToggle';
+import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
 import { 
   MODEL_OPTIONS, 
   rhymePlacementOptions, 
@@ -22,6 +24,9 @@ const StructuredInputForm = ({
   temperature, setTemperature, topP, setTopP,
   selectedModel, setSelectedModel,
   profile,
+  memoryEnabled, onMemoryToggle,
+  useStructuredInput, onStructuredInputToggle,
+  onClearConversation,
   onReset,
   onCloseMobile
 }) => {
@@ -78,6 +83,32 @@ const StructuredInputForm = ({
             </a>
           )}
         </div>
+        
+        {/* Memory Toggle */}
+        <MemoryToggle 
+          enabled={memoryEnabled}
+          onChange={onMemoryToggle}
+          className="mb-2"
+        />
+        
+        {/* Structured Input Toggle */}
+        <StructuredInputToggle 
+          enabled={useStructuredInput}
+          onChange={onStructuredInputToggle}
+          className="mb-2"
+        />
+        
+        {/* Clear Conversation Button */}
+        {memoryEnabled && (
+          <button
+            onClick={onClearConversation}
+            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-sm"
+          >
+            <Trash2 size={14} />
+            Clear Conversation History
+          </button>
+        )}
+        
         <div className="relative">
           <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>
           <Mic className="absolute left-3 top-10 w-5 h-5 text-slate-500" />

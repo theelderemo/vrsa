@@ -7,6 +7,14 @@ import { generateSarcasticComment } from '../../lib/api';
 import { MODEL_OPTIONS } from '../../lib/constants';
 import ChatMessage from '../../components/chat/ChatMessage';
 import StructuredInputForm from './StructuredInputForm';
+import MemoryToggle from '../../components/ui/MemoryToggle';
+import { 
+  getOrCreateSession, 
+  getMessages, 
+  appendMessage, 
+  updateMemorySetting,
+  clearChatHistory 
+} from '../../lib/chatSessions';
 
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
@@ -29,12 +37,41 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [selectedModel, setSelectedModel] = useState(MODEL_OPTIONS[0].id);
   const [generationCount, setGenerationCount] = useState(0);
   const [ctaMessage, setCtaMessage] = useState('');
+  
+  // Memory/Context state
+  const [memoryEnabled, setMemoryEnabled] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [useStructuredInput, setUseStructuredInput] = useState(true);
 
   // Auto-scroll to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
     
+  // Initialize chat session
+  useEffect(() => {
+    if (user && !sessionId) {
+      getOrCreateSession(user.id).then(({ sessionId: id, error }) => {
+        if (error) {
+          console.error('Failed to initialize chat session:', error);
+          return;
+        }
+        setSessionId(id);
+        
+        // Load previous messages if any
+        getMessages(id).then(({ messages: savedMessages, error: msgError }) => {
+          if (msgError) {
+            console.error('Failed to load messages:', msgError);
+            return;
+          }
+          if (savedMessages.length > 0) {
+            setMessages(savedMessages);
+          }
+        });
+      });
+    }
+  }, [user, sessionId]);
+  
   // Initialize welcome message
   useEffect(() => {
     if (messages.length === 0) {
@@ -176,28 +213,69 @@ I understand not every song, genre uses every tag type. I will only include rele
     setRhymeComplexity(50);
     setCtaMessage('');
   };
+  
+  // Handle memory toggle
+  const handleMemoryToggle = async (enabled) => {
+    setMemoryEnabled(enabled);
+    
+    if (sessionId) {
+      const { error } = await updateMemorySetting(sessionId, enabled);
+      if (error) {
+        console.error('Failed to update memory setting:', error);
+      }
+      
+      // If disabling memory, optionally clear the UI messages or keep them
+      // For now, we'll keep the UI messages but not save new ones to history
+    }
+  };
+  
+  // Clear conversation history
+  const handleClearConversation = async () => {
+    if (sessionId) {
+      const { error } = await clearChatHistory(sessionId);
+      if (error) {
+        console.error('Failed to clear chat history:', error);
+        return;
+      }
+    }
+    
+    // Reset UI messages to welcome message
+    setMessages([{
+      role: 'assistant',
+      content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
+    }]);
+  };
 
   const sendMessage = async () => {
     if (ctaMessage) {
       setCtaMessage('');
     }
 
-    const promptParts = [];
-    if (artistName) promptParts.push(`artist_name: ${artistName}`);
-    if (coreTheme) promptParts.push(`core_theme: ${coreTheme}`);
-    if (moodTag) promptParts.push(`optional_mood_tag: ${moodTag}`);
-    if (bannedWords) promptParts.push(`banned_words: ${bannedWords}`);
-    promptParts.push(`length_hint: ${lengthHint}`);
-    promptParts.push(`explicit_language: ${isExplicit ? 'yes' : 'no'}`);
-    promptParts.push(`rhyme_density: ${rhymeDensity}%`);
-    promptParts.push(`rhyme_complexity: ${rhymeComplexity}%`);
-    if (selectedRhymeSchemes.length > 0) {
-      promptParts.push(`rhyme_schemes: ${selectedRhymeSchemes.join(', ')}`);
+    // Build prompt based on useStructuredInput toggle
+    let constructedPrompt = '';
+    
+    if (useStructuredInput) {
+      const promptParts = [];
+      if (artistName) promptParts.push(`artist_name: ${artistName}`);
+      if (coreTheme) promptParts.push(`core_theme: ${coreTheme}`);
+      if (moodTag) promptParts.push(`optional_mood_tag: ${moodTag}`);
+      if (bannedWords) promptParts.push(`banned_words: ${bannedWords}`);
+      promptParts.push(`length_hint: ${lengthHint}`);
+      promptParts.push(`explicit_language: ${isExplicit ? 'yes' : 'no'}`);
+      promptParts.push(`rhyme_density: ${rhymeDensity}%`);
+      promptParts.push(`rhyme_complexity: ${rhymeComplexity}%`);
+      if (selectedRhymeSchemes.length > 0) {
+        promptParts.push(`rhyme_schemes: ${selectedRhymeSchemes.join(', ')}`);
+      }
+      constructedPrompt = promptParts.join(', ');
+      if (freeFormInput.trim()) {
+        constructedPrompt = constructedPrompt ? `${constructedPrompt}\n${freeFormInput}` : freeFormInput;
+      }
+    } else {
+      // Only use free-form input when structured input is disabled
+      constructedPrompt = freeFormInput.trim();
     }
-    let constructedPrompt = promptParts.join(', ');
-    if (freeFormInput.trim()) {
-      constructedPrompt = constructedPrompt ? `${constructedPrompt}\n${freeFormInput}` : freeFormInput;
-    }
+    
     if (!constructedPrompt.trim() || isLoading) return;
     
     return Sentry.startSpan(
@@ -224,10 +302,32 @@ I understand not every song, genre uses every tag type. I will only include rele
         setIsLoading(true);
         
         try {
-          const fullApiPrompt = `${systemPrompt}\n\n[USER INPUT START]\n${constructedPrompt}\n[USER INPUT END]`;
-          const messagesPayload = [
-            { role: 'user', content: fullApiPrompt }
-          ];
+          // Get chat history if memory is enabled
+          let conversationHistory = [];
+          if (memoryEnabled && sessionId) {
+            const { messages: savedMessages, error: historyError } = await getMessages(sessionId);
+            if (!historyError && savedMessages.length > 0) {
+              conversationHistory = savedMessages;
+            }
+          }
+          
+          // Build messages payload
+          let messagesPayload;
+          if (memoryEnabled && conversationHistory.length > 0) {
+            // Use conversation history + new message
+            messagesPayload = [
+              { role: 'system', content: systemPrompt },
+              ...conversationHistory,
+              { role: 'user', content: constructedPrompt }
+            ];
+          } else {
+            // Single-shot mode (no memory)
+            const fullApiPrompt = `${systemPrompt}\n\n[USER INPUT START]\n${constructedPrompt}\n[USER INPUT END]`;
+            messagesPayload = [
+              { role: 'user', content: fullApiPrompt }
+            ];
+          }
+          
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
@@ -244,6 +344,12 @@ I understand not every song, genre uses every tag type. I will only include rele
           const data = await response.json();
           let botResponse = data.content || 'Error: Could not retrieve a valid response.';
           setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
+          
+          // Save messages to session if memory is enabled
+          if (memoryEnabled && sessionId) {
+            await appendMessage(sessionId, userMessage);
+            await appendMessage(sessionId, { role: 'assistant', content: botResponse });
+          }
 
           const newCount = generationCount + 1;
           setGenerationCount(newCount);
@@ -301,6 +407,11 @@ I understand not every song, genre uses every tag type. I will only include rele
           topP={topP} setTopP={setTopP}
           selectedModel={selectedModel} setSelectedModel={setSelectedModel}
           profile={profile}
+          memoryEnabled={memoryEnabled}
+          onMemoryToggle={handleMemoryToggle}
+          useStructuredInput={useStructuredInput}
+          onStructuredInputToggle={setUseStructuredInput}
+          onClearConversation={handleClearConversation}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
         />
