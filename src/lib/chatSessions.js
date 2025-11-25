@@ -71,7 +71,7 @@ export async function updateMemorySetting(sessionId, memoryEnabled) {
     
     return { success: true, error: null };
   } catch (error) {
-    console.error('Error updating memory setting:', error);
+    console.error('Error updating the memory setting:', error);
     return { success: false, error };
   }
 }
