@@ -46,8 +46,8 @@ Enable the AI model to retain context across editing sessions:
   - Automatic summarization when context gets too large
   - Smart truncation (keep system prompt + recent messages)
 
-#### 1.2 Interactive Chat Based on Last Output
-- [ ] "Continue editing" mode after generation
+#### 1.2 Inline Edit
+- [ ] "Edit" mode after generation
   - Display last output with inline edit markers
   - Chat input stays active below output
   - AI can reference specific lines by number
