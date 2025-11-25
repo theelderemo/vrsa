@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2 } from 'lucide-react';
+import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Undo2, Redo2, Download } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
@@ -27,6 +27,9 @@ const StructuredInputForm = ({
   memoryEnabled, onMemoryToggle,
   useStructuredInput, onStructuredInputToggle,
   onClearConversation,
+  canUndo, onUndo,
+  canRedo, onRedo,
+  onExportConversation,
   onReset,
   onCloseMobile
 }) => {
@@ -108,6 +111,37 @@ const StructuredInputForm = ({
             Clear Conversation History
           </button>
         )}
+        
+        {/* Edit History Controls */}
+        <div className="flex gap-2">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Undo last edit"
+          >
+            <Undo2 size={14} />
+            Undo
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Redo last undone edit"
+          >
+            <Redo2 size={14} />
+            Redo
+          </button>
+        </div>
+        
+        {/* Export Conversation Button */}
+        <button
+          onClick={onExportConversation}
+          className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
+        >
+          <Download size={14} />
+          Export Conversation
+        </button>
         
         <div className="relative">
           <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>

@@ -22,12 +22,12 @@ The inline editor lets users click any line in generated output and edit it dire
 Enable the AI model to retain context across editing sessions:
 
 #### 1.1 Context Retention System
-- [ ] Add toggle control in UI for "Remember conversation context"
+- [x] Add toggle control in UI for "Remember conversation context"
   - Default: OFF (privacy-first)
   - Store preference in user settings (supabase)
   - Clear visual indicator when memory is active
   
-- [ ] Implement conversation history storage
+- [x] Implement conversation history storage
   - Store in supabase `chat_sessions` table with schema:
     ```sql
     - id (uuid, primary key)
@@ -40,19 +40,19 @@ Enable the AI model to retain context across editing sessions:
     - expires_at (timestamp, auto-delete after 7 days)
     ```
   
-- [ ] Build context window management
+- [x] Build context window management
   - Keep last N messages (configurable, default 10)
   - Token counting to stay within model limits
   - Automatic summarization when context gets too large
   - Smart truncation (keep system prompt + recent messages)
 
 #### 1.2 Inline Edit
-- [ ] "Edit" mode after generation
+- [x] "Edit" mode after generation
   - Display last output with inline edit markers
   - Chat input stays active below output
   - AI can reference specific lines by number
   
-- [ ] Contextual commands
+- [x] Contextual commands
   - "Make line 3 more metaphorical"
   - "Rhyme line 5 with 'dreams'"
   - "Rewrite the hook to be catchier"
@@ -64,13 +64,13 @@ Enable the AI model to retain context across editing sessions:
   - Undo/redo stack for edits
 
 #### 1.3 Memory Management Controls
-- [ ] User controls:
+- [x] User controls:
   - "Clear conversation" button
   - "Start fresh" (resets context but keeps output)
   - Export conversation history (JSON)
   - Auto-clear after X minutes of inactivity
   
-- [ ] Privacy considerations:
+- [x] Privacy considerations:
   - End-to-end context (not shared across projects)
   - Clear disclaimers about data storage
   - One-click delete all history

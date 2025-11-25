@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
 import { generateSarcasticComment } from '../../lib/api';
 import { MODEL_OPTIONS } from '../../lib/constants';
+import { parseEditCommand, buildEditPrompt } from '../../lib/editCommands';
 import ChatMessage from '../../components/chat/ChatMessage';
 import StructuredInputForm from './StructuredInputForm';
 import MemoryToggle from '../../components/ui/MemoryToggle';
@@ -42,6 +43,11 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [memoryEnabled, setMemoryEnabled] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [useStructuredInput, setUseStructuredInput] = useState(true);
+  
+  // Inline editing state
+  const [editingLine, setEditingLine] = useState(null); // { messageIndex, lineNumber, originalText }
+  const [editHistory, setEditHistory] = useState([]); // Undo/redo stack
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -116,12 +122,15 @@ if (loading) {
     );
   }
 
-  const systemPrompt = `[IDENTITY]
+  const getSystemPrompt = () => {
+    const basePrompt = `[IDENTITY]
 
 I am a song-writing assistant. My entire purpose is to write lyrics that feel raw, human, and authentic to a specific artist's style. I am also an expert in the Suno AI music generation platform, using its meta-tag syntax to provide detailed instructions for musical and vocal performance.
 
 [CORE_PHILOSOPHY]
-My primary goal is to write lyrics that are conversational, direct, and emotionally "real," avoiding "poetic" or "AI-sounding" phrases. 
+My primary goal is to write lyrics that are conversational, direct, and emotionally "real," avoiding "poetic" or "AI-sounding" phrases.`;
+
+    const structuredInputSection = useStructuredInput ? `
 [USER_INPUT_PARAMETERS]
 
 I will receive the following parameters to guide my writing process:
@@ -139,7 +148,17 @@ length_hint: <short | single | double | full song | hook | chorus | bridge | bre
 1.  Internalize the provided artist profile.
 2.  Write lyrics that match the **CORE_PHILOSOPHY** (raw, human, conversational) above all else.
 3.  Only output the specific section(s) or length implied by the length_hint.
-4.  Perform a final self-critique: "Does this sound like the 'Correct' example or the 'Wrong' example?" Revise until it feels human.
+4.  Perform a final self-critique: "Does this sound like the 'Correct' example or the 'Wrong' example?" Revise until it feels human.` : `
+[USER_INPUT]
+
+I will receive free-form instructions and requests for songwriting. I will interpret and respond to these requests naturally, inferring style, tone, and structure from the user's description.
+
+[PRIMARY_TASK]
+1.  Analyze the user's free-form request to understand the desired artist style, theme, mood, and structure.
+2.  Write lyrics that match the **CORE_PHILOSOPHY** (raw, human, conversational) above all else.
+3.  Perform a final self-critique: "Does this sound like the 'Correct' example or the 'Wrong' example?" Revise until it feels human.`;
+
+    return `${basePrompt}${structuredInputSection}
 
 [ARTIST_ANALYSIS_FRAMEWORK]
 To channel the artist, I will analyze and replicate the following:
@@ -199,6 +218,7 @@ Orchestral ↔ Epic, Cinematic → "Strings/brass swells; impacts; trailer energ
 * I will be specific. "60s jangly guitar rhythm" is better than "guitar."
 I understand not every song, genre uses every tag type. I will only include relevant tags for the specific song style and mood. I also understand that not every song uses every section (verse, chorus, bridge, etc.). I will only include sections that make sense for the song structure implied by the length_hint and genre. For example, a country song does not have a breakdown, and a short pop single may not have a bridge. Verse lengths may vary by genre and artist style; I will adapt accordingly (e.g., rap verses are often longer than pop verses, with varied line lenghts, density).
 `;
+  };
   
   const resetForm = () => {
     setArtistName('');
@@ -245,6 +265,96 @@ I understand not every song, genre uses every tag type. I will only include rele
       content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
     }]);
   };
+  
+  // Inline editing handlers
+  const handleLineEdit = (messageIndex, lineNumber, originalText) => {
+    setEditingLine({ messageIndex, lineNumber, originalText });
+  };
+  
+  const handleCancelEdit = () => {
+    setEditingLine(null);
+  };
+  
+  const handleSaveEdit = (messageIndex, lineNumber, newText) => {
+    // Update the message content
+    setMessages(prev => {
+      const updated = [...prev];
+      const message = updated[messageIndex];
+      const lines = message.content.split('\n');
+      const actualLineIndex = lines.findIndex((line, idx) => {
+        const nonEmptyLines = lines.slice(0, idx + 1).filter(l => l.trim());
+        return nonEmptyLines.length === lineNumber;
+      });
+      
+      if (actualLineIndex !== -1) {
+        const oldContent = message.content;
+        lines[actualLineIndex] = newText;
+        message.content = lines.join('\n');
+        
+        // Add to edit history for undo/redo
+        const newHistory = editHistory.slice(0, historyIndex + 1);
+        newHistory.push({
+          messageIndex,
+          lineNumber,
+          oldContent,
+          newContent: message.content,
+          timestamp: new Date().toISOString()
+        });
+        setEditHistory(newHistory);
+        setHistoryIndex(newHistory.length - 1);
+      }
+      
+      return updated;
+    });
+    
+    setEditingLine(null);
+  };
+  
+  // Undo/Redo handlers
+  const handleUndo = () => {
+    if (historyIndex >= 0) {
+      const edit = editHistory[historyIndex];
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[edit.messageIndex].content = edit.oldContent;
+        return updated;
+      });
+      setHistoryIndex(historyIndex - 1);
+    }
+  };
+  
+  const handleRedo = () => {
+    if (historyIndex < editHistory.length - 1) {
+      const edit = editHistory[historyIndex + 1];
+      setMessages(prev => {
+        const updated = [...prev];
+        updated[edit.messageIndex].content = edit.newContent;
+        return updated;
+      });
+      setHistoryIndex(historyIndex + 1);
+    }
+  };
+  
+  // Export conversation history
+  const handleExportConversation = () => {
+    const exportData = {
+      sessionId,
+      memoryEnabled,
+      messages,
+      editHistory,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vrsa-conversation-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const sendMessage = async () => {
     if (ctaMessage) {
@@ -253,27 +363,45 @@ I understand not every song, genre uses every tag type. I will only include rele
 
     // Build prompt based on useStructuredInput toggle
     let constructedPrompt = '';
+    let isEditCommand = false;
+    let editContext = null;
     
-    if (useStructuredInput) {
-      const promptParts = [];
-      if (artistName) promptParts.push(`artist_name: ${artistName}`);
-      if (coreTheme) promptParts.push(`core_theme: ${coreTheme}`);
-      if (moodTag) promptParts.push(`optional_mood_tag: ${moodTag}`);
-      if (bannedWords) promptParts.push(`banned_words: ${bannedWords}`);
-      promptParts.push(`length_hint: ${lengthHint}`);
-      promptParts.push(`explicit_language: ${isExplicit ? 'yes' : 'no'}`);
-      promptParts.push(`rhyme_density: ${rhymeDensity}%`);
-      promptParts.push(`rhyme_complexity: ${rhymeComplexity}%`);
-      if (selectedRhymeSchemes.length > 0) {
-        promptParts.push(`rhyme_schemes: ${selectedRhymeSchemes.join(', ')}`);
+    // Check if this is an edit command (e.g., "make line 3 more metaphorical")
+    if (freeFormInput.trim() && messages.length > 0) {
+      const lastBotMessage = [...messages].reverse().find(m => m.role === 'assistant');
+      if (lastBotMessage) {
+        const parsed = parseEditCommand(freeFormInput.trim(), lastBotMessage.content);
+        if (parsed) {
+          isEditCommand = true;
+          editContext = parsed;
+          constructedPrompt = buildEditPrompt(parsed, lastBotMessage.content);
+        }
       }
-      constructedPrompt = promptParts.join(', ');
-      if (freeFormInput.trim()) {
-        constructedPrompt = constructedPrompt ? `${constructedPrompt}\n${freeFormInput}` : freeFormInput;
+    }
+    
+    // If not an edit command, build normal prompt
+    if (!isEditCommand) {
+      if (useStructuredInput) {
+        const promptParts = [];
+        if (artistName) promptParts.push(`artist_name: ${artistName}`);
+        if (coreTheme) promptParts.push(`core_theme: ${coreTheme}`);
+        if (moodTag) promptParts.push(`optional_mood_tag: ${moodTag}`);
+        if (bannedWords) promptParts.push(`banned_words: ${bannedWords}`);
+        promptParts.push(`length_hint: ${lengthHint}`);
+        promptParts.push(`explicit_language: ${isExplicit ? 'yes' : 'no'}`);
+        promptParts.push(`rhyme_density: ${rhymeDensity}%`);
+        promptParts.push(`rhyme_complexity: ${rhymeComplexity}%`);
+        if (selectedRhymeSchemes.length > 0) {
+          promptParts.push(`rhyme_schemes: ${selectedRhymeSchemes.join(', ')}`);
+        }
+        constructedPrompt = promptParts.join(', ');
+        if (freeFormInput.trim()) {
+          constructedPrompt = constructedPrompt ? `${constructedPrompt}\n${freeFormInput}` : freeFormInput;
+        }
+      } else {
+        // Only use free-form input when structured input is disabled
+        constructedPrompt = freeFormInput.trim();
       }
-    } else {
-      // Only use free-form input when structured input is disabled
-      constructedPrompt = freeFormInput.trim();
     }
     
     if (!constructedPrompt.trim() || isLoading) return;
@@ -312,6 +440,7 @@ I understand not every song, genre uses every tag type. I will only include rele
           }
           
           // Build messages payload
+          const systemPrompt = getSystemPrompt();
           let messagesPayload;
           if (memoryEnabled && conversationHistory.length > 0) {
             // Use conversation history + new message
@@ -343,6 +472,17 @@ I understand not every song, genre uses every tag type. I will only include rele
           if (!response.ok) throw new Error(`API Error: ${response.status}`);
           const data = await response.json();
           let botResponse = data.content || 'Error: Could not retrieve a valid response.';
+          
+          // If this was an edit command, apply the edit to the original message
+          if (isEditCommand && editContext) {
+            const lastBotMessageIndex = messages.map((m, i) => m.role === 'assistant' ? i : -1).filter(i => i !== -1).pop();
+            if (lastBotMessageIndex !== undefined) {
+              handleSaveEdit(lastBotMessageIndex, editContext.lineNumber, botResponse.trim());
+              // Add a confirmation message instead of the raw response
+              botResponse = `✓ Line ${editContext.lineNumber} updated`;
+            }
+          }
+          
           setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
           
           // Save messages to session if memory is enabled
@@ -412,6 +552,11 @@ I understand not every song, genre uses every tag type. I will only include rele
           useStructuredInput={useStructuredInput}
           onStructuredInputToggle={setUseStructuredInput}
           onClearConversation={handleClearConversation}
+          canUndo={historyIndex >= 0}
+          onUndo={handleUndo}
+          canRedo={historyIndex < editHistory.length - 1}
+          onRedo={handleRedo}
+          onExportConversation={handleExportConversation}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
         />
@@ -429,7 +574,17 @@ I understand not every song, genre uses every tag type. I will only include rele
       <div className="col-span-1 md:col-span-2 xl:col-span-3 flex flex-col bg-slate-800/50 min-h-0">
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-4xl mx-auto">
-            {messages.map((msg, index) => <ChatMessage key={index} message={msg} index={index} />)}
+            {messages.map((msg, index) => (
+              <ChatMessage 
+                key={index} 
+                message={msg} 
+                index={index}
+                onLineEdit={handleLineEdit}
+                editingLine={editingLine}
+                onCancelEdit={handleCancelEdit}
+                onSaveEdit={handleSaveEdit}
+              />
+            ))}
             {isLoading && (
               <div className="flex items-start gap-4 my-6 pr-8">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-indigo-600"><LoaderCircle className="text-white animate-spin" /></div>

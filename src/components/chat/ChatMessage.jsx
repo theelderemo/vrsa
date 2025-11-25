@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Bot, User, Copy, Check } from 'lucide-react';
+import EditableLine from './EditableLine';
 
-const ChatMessage = ({ message, index }) => {
+const ChatMessage = ({ 
+  message, 
+  index, 
+  onLineEdit, 
+  editingLine, 
+  onCancelEdit, 
+  onSaveEdit 
+}) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = () => {
@@ -23,6 +31,11 @@ const ChatMessage = ({ message, index }) => {
   const isBotMessage = message.role === 'assistant';
   // Show copy button only for bot messages and not for the initial welcome message (index 0)
   const showCopyButton = isBotMessage && index > 0;
+  
+  // Split bot messages into lines for inline editing
+  const lines = isBotMessage ? message.content.split('\n').filter(line => line.trim()) : [];
+  const isMultiLine = lines.length > 1;
+  const messageId = `msg-${index}`;
 
   // Function to render text with clickable links
   const renderMessageContent = (content) => {
@@ -62,7 +75,27 @@ const ChatMessage = ({ message, index }) => {
             {isCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} className="text-slate-400" />}
           </button>
         )}
-        <p className="text-slate-200 whitespace-pre-wrap font-mono text-sm md:text-base pr-8">{renderMessageContent(message.content)}</p>
+        
+        {/* Render bot messages with editable lines, user messages as plain text */}
+        {isBotMessage && isMultiLine ? (
+          <div className="text-slate-200 font-mono text-sm md:text-base pr-8">
+            {lines.map((line, lineIndex) => (
+              <EditableLine
+                key={`${messageId}-line-${lineIndex}`}
+                lineNumber={lineIndex + 1}
+                text={line}
+                onEdit={(lineNum, text) => onLineEdit && onLineEdit(index, lineNum, text)}
+                isEditing={editingLine?.messageIndex === index && editingLine?.lineNumber === lineIndex + 1}
+                onCancelEdit={() => onCancelEdit && onCancelEdit()}
+                onSaveEdit={(lineNum, newText) => onSaveEdit && onSaveEdit(index, lineNum, newText)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-200 whitespace-pre-wrap font-mono text-sm md:text-base pr-8">
+            {renderMessageContent(message.content)}
+          </p>
+        )}
       </div>
     </div>
   );
