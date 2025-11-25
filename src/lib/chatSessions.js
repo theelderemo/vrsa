@@ -92,7 +92,7 @@ export async function appendMessage(sessionId, message, contextWindow = 10) {
     // Append new message
     let messages = [...session.messages, message];
     
-    // Trim to context window (keep system message if it exists, then recent messages)
+    // Trim to context window
     if (messages.length > contextWindow) {
       const systemMessages = messages.filter(m => m.role === 'system');
       const nonSystemMessages = messages.filter(m => m.role !== 'system');
