@@ -9,13 +9,21 @@ import { parseEditCommand, buildEditPrompt } from '../../lib/editCommands';
 import ChatMessage from '../../components/chat/ChatMessage';
 import StructuredInputForm from './StructuredInputForm';
 import MemoryToggle from '../../components/ui/MemoryToggle';
+import PrivacyDisclaimer from '../../components/ui/PrivacyDisclaimer';
+import DeleteConfirmDialog from '../../components/ui/DeleteConfirmDialog';
 import { 
   getOrCreateSession, 
   getMessages, 
   appendMessage, 
   updateMemorySetting,
-  clearChatHistory 
+  clearChatHistory,
+  deleteAllUserSessions
 } from '../../lib/chatSessions';
+import { 
+  exportConversationAsTxt, 
+  exportConversationAsPdf, 
+  exportConversationAsJson 
+} from '../../lib/exportUtils';
 
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
@@ -46,8 +54,10 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   
   // Inline editing state
   const [editingLine, setEditingLine] = useState(null); // { messageIndex, lineNumber, originalText }
-  const [editHistory, setEditHistory] = useState([]); // Undo/redo stack
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  
+  // Privacy modal state
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -266,9 +276,108 @@ I understand not every song, genre uses every tag type. I will only include rele
     }]);
   };
   
+  // Delete all user chat history
+  const handleDeleteAllHistory = async () => {
+    if (!user) return;
+    
+    const { deletedCount, error } = await deleteAllUserSessions(user.id);
+    if (error) {
+      console.error('Failed to delete all history:', error);
+      alert('Failed to delete history. Please try again.');
+      return;
+    }
+    
+    // Close confirmation dialog
+    setShowDeleteConfirm(false);
+    
+    // Create a new session
+    const { sessionId: newSessionId, error: createError } = await getOrCreateSession(user.id);
+    if (createError) {
+      console.error('Failed to create new session:', createError);
+    } else {
+      setSessionId(newSessionId);
+    }
+    
+    // Reset UI to welcome message
+    setMessages([{
+      role: 'assistant',
+      content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
+    }]);
+    
+    // Show success message
+    setTimeout(() => {
+      alert(`Successfully deleted ${deletedCount} chat session(s).`);
+    }, 100);
+  };
+  
   // Inline editing handlers
   const handleLineEdit = (messageIndex, lineNumber, originalText) => {
     setEditingLine({ messageIndex, lineNumber, originalText });
+  };
+  
+  // AI suggestion handler for inline editing
+  const handleAiSuggest = async (messageIndex, lineNumber, originalText) => {
+    try {
+      // Build context from surrounding lines
+      const message = messages[messageIndex];
+      const lines = message.content.split('\n').filter(line => line.trim());
+      const contextBefore = lines.slice(Math.max(0, lineNumber - 3), lineNumber - 1).join('\n');
+      const contextAfter = lines.slice(lineNumber, Math.min(lines.length, lineNumber + 2)).join('\n');
+      
+      const systemPrompt = `You are a professional lyricist helping to edit and improve lyrics. Your task is to suggest alternative versions of a specific line while maintaining the overall style, tone, and flow of the piece.`;
+      
+      const userPrompt = `Provide EXACTLY 3 alternative versions for this line. Match the tone, style, and flow. Output ONLY the 3 lines, one per line, with no numbering or explanations.\n\nContext before:\n${contextBefore}\n\nLine to rewrite: ${originalText}\n\nContext after:\n${contextAfter}`;
+      
+      // Call the API directly (same as sendMessage does)
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+      
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify({ 
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7,
+          top_p: 0.9,
+          model: selectedModel
+        })
+      });
+      
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      
+      const data = await response.json();
+      
+      if (data.content) {
+        // Parse suggestions (split by newlines, clean up)
+        let suggestions = data.content
+          .split('\n')
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+        
+        // Remove numbered prefixes (1. 2. 3.) but keep the content
+        suggestions = suggestions.map(s => s.replace(/^\d+[.)\s]+/, '').trim());
+        
+        // Filter out empty strings, original text, and any remaining junk
+        suggestions = suggestions
+          .filter(s => s.length > 0 && s !== originalText && !s.toLowerCase().includes('alternative'))
+          .slice(0, 3);
+        
+        return suggestions;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Failed to get AI suggestions:', error);
+      return [];
+    }
   };
   
   const handleCancelEdit = () => {
@@ -287,21 +396,8 @@ I understand not every song, genre uses every tag type. I will only include rele
       });
       
       if (actualLineIndex !== -1) {
-        const oldContent = message.content;
         lines[actualLineIndex] = newText;
         message.content = lines.join('\n');
-        
-        // Add to edit history for undo/redo
-        const newHistory = editHistory.slice(0, historyIndex + 1);
-        newHistory.push({
-          messageIndex,
-          lineNumber,
-          oldContent,
-          newContent: message.content,
-          timestamp: new Date().toISOString()
-        });
-        setEditHistory(newHistory);
-        setHistoryIndex(newHistory.length - 1);
       }
       
       return updated;
@@ -310,50 +406,28 @@ I understand not every song, genre uses every tag type. I will only include rele
     setEditingLine(null);
   };
   
-  // Undo/Redo handlers
-  const handleUndo = () => {
-    if (historyIndex >= 0) {
-      const edit = editHistory[historyIndex];
-      setMessages(prev => {
-        const updated = [...prev];
-        updated[edit.messageIndex].content = edit.oldContent;
-        return updated;
-      });
-      setHistoryIndex(historyIndex - 1);
-    }
-  };
-  
-  const handleRedo = () => {
-    if (historyIndex < editHistory.length - 1) {
-      const edit = editHistory[historyIndex + 1];
-      setMessages(prev => {
-        const updated = [...prev];
-        updated[edit.messageIndex].content = edit.newContent;
-        return updated;
-      });
-      setHistoryIndex(historyIndex + 1);
-    }
-  };
+
   
   // Export conversation history
-  const handleExportConversation = () => {
-    const exportData = {
+  const handleExportConversation = (format = 'json') => {
+    const metadata = {
       sessionId,
       memoryEnabled,
-      messages,
-      editHistory,
       exportedAt: new Date().toISOString()
     };
     
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `vrsa-conversation-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    switch (format) {
+      case 'txt':
+        exportConversationAsTxt(messages, metadata);
+        break;
+      case 'pdf':
+        exportConversationAsPdf(messages, metadata);
+        break;
+      case 'json':
+      default:
+        exportConversationAsJson(messages, metadata);
+        break;
+    }
   };
 
   const sendMessage = async () => {
@@ -552,10 +626,8 @@ I understand not every song, genre uses every tag type. I will only include rele
           useStructuredInput={useStructuredInput}
           onStructuredInputToggle={setUseStructuredInput}
           onClearConversation={handleClearConversation}
-          canUndo={historyIndex >= 0}
-          onUndo={handleUndo}
-          canRedo={historyIndex < editHistory.length - 1}
-          onRedo={handleRedo}
+          onDeleteAllHistory={() => setShowDeleteConfirm(true)}
+          onShowPrivacy={() => setShowPrivacyModal(true)}
           onExportConversation={handleExportConversation}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
@@ -583,6 +655,7 @@ I understand not every song, genre uses every tag type. I will only include rele
                 editingLine={editingLine}
                 onCancelEdit={handleCancelEdit}
                 onSaveEdit={handleSaveEdit}
+                onAiSuggest={handleAiSuggest}
               />
             ))}
             {isLoading && (
@@ -631,6 +704,23 @@ I understand not every song, genre uses every tag type. I will only include rele
           </div>
         </div>
       </div>
+      
+      {/* Privacy Disclaimer Modal */}
+      <PrivacyDisclaimer
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onDeleteAllHistory={() => {
+          setShowPrivacyModal(false);
+          setShowDeleteConfirm(true);
+        }}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteAllHistory}
+      />
     </div>
   );
 };

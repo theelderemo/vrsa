@@ -8,7 +8,8 @@ const ChatMessage = ({
   onLineEdit, 
   editingLine, 
   onCancelEdit, 
-  onSaveEdit 
+  onSaveEdit,
+  onAiSuggest // New prop for AI suggestions
 }) => {
   const [isCopied, setIsCopied] = useState(false);
 
@@ -88,6 +89,7 @@ const ChatMessage = ({
                 isEditing={editingLine?.messageIndex === index && editingLine?.lineNumber === lineIndex + 1}
                 onCancelEdit={() => onCancelEdit && onCancelEdit()}
                 onSaveEdit={(lineNum, newText) => onSaveEdit && onSaveEdit(index, lineNum, newText)}
+                onAiSuggest={onAiSuggest ? (lineNum, text) => onAiSuggest(index, lineNum, text) : undefined}
               />
             ))}
           </div>

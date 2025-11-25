@@ -187,6 +187,47 @@ export async function deleteChatSession(sessionId) {
 }
 
 /**
+ * Delete all chat sessions for a user (one-click delete all history)
+ * @param {string} userId - The authenticated user's ID
+ * @returns {Promise<{success: boolean, deletedCount: number, error: Error | null}>}
+ */
+export async function deleteAllUserSessions(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .delete()
+      .eq('user_id', userId)
+      .select('id');
+
+    if (error) throw error;
+    
+    return { success: true, deletedCount: data?.length || 0, error: null };
+  } catch (error) {
+    console.error('Error deleting all user sessions:', error);
+    return { success: false, deletedCount: 0, error };
+  }
+}
+
+/**
+ * Start fresh session (creates new session, keeps current output in UI)
+ * @param {string} userId - The authenticated user's ID
+ * @param {boolean} memoryEnabled - Whether to enable memory on the new session
+ * @returns {Promise<{sessionId: string, error: null} | {sessionId: null, error: Error}>}
+ */
+export async function startFreshSession(userId, memoryEnabled = false) {
+  try {
+    // Create a brand new session
+    const { id, error } = await createChatSession(userId, memoryEnabled);
+    if (error) throw error;
+    
+    return { sessionId: id, error: null };
+  } catch (error) {
+    console.error('Error starting fresh session:', error);
+    return { sessionId: null, error };
+  }
+}
+
+/**
  * Get the most recent active session for a user, or create a new one
  * @param {string} userId - The authenticated user's ID
  * @returns {Promise<{sessionId: string, error: null} | {sessionId: null, error: Error}>}

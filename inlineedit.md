@@ -23,12 +23,12 @@ Enable the AI model to retain context across editing sessions:
 
 #### 1.1 Context Retention System
 - [x] Add toggle control in UI for "Remember conversation context"
-  - Default: OFF (privacy-first)
-  - Store preference in user settings (supabase)
-  - Clear visual indicator when memory is active
+  - ~~Default: OFF (privacy-first)~~
+  - ~~Store preference in user settings (supabase)~~
+  - ~~Clear visual indicator when memory is active~~
   
 - [x] Implement conversation history storage
-  - Store in supabase `chat_sessions` table with schema:
+  - ~~Store in supabase `chat_sessions` table with schema:~~
     ```sql
     - id (uuid, primary key)
     - user_id (uuid, foreign key)
@@ -40,23 +40,16 @@ Enable the AI model to retain context across editing sessions:
     - expires_at (timestamp, auto-delete after 7 days)
     ```
   
-- [x] Build context window management
-  - Keep last N messages (configurable, default 10)
-  - Token counting to stay within model limits
+- [ ] Build context window management
+  - ~~Keep last N messages (configurable, default 10)~~
+  - ~~Token counting to stay within model limits~~
   - Automatic summarization when context gets too large
-  - Smart truncation (keep system prompt + recent messages)
+  - ~~Smart truncation (keep system prompt + recent messages)~~
 
 #### 1.2 Inline Edit
 - [x] "Edit" mode after generation
-  - Display last output with inline edit markers
-  - Chat input stays active below output
-  - AI can reference specific lines by number
-  
-- [x] Contextual commands
-  - "Make line 3 more metaphorical"
-  - "Rhyme line 5 with 'dreams'"
-  - "Rewrite the hook to be catchier"
-  - Parse natural language into structured edits
+  - ~~Display last output with inline edit markers~~
+  - ~~Chat input stays active below output~~
   
 - [ ] Output diffing
   - Show what changed between iterations
@@ -65,36 +58,33 @@ Enable the AI model to retain context across editing sessions:
 
 #### 1.3 Memory Management Controls
 - [x] User controls:
-  - "Clear conversation" button
-  - "Start fresh" (resets context but keeps output)
-  - Export conversation history (JSON)
-  - Auto-clear after X minutes of inactivity
+  - ~~Clear conversation button~~
+  - ~~Export conversation history (JSON)~~
+  - ~~Add txt and pdf export~~
   
-- [x] Privacy considerations:
-  - End-to-end context (not shared across projects)
-  - Clear disclaimers about data storage
-  - One-click delete all history
-  - Respect user's memory toggle preference
+- [x] Privacy:
+  - ~~End-to-end context~~
+  - ~~Clear disclaimers about data storage~~
+  - ~~One-click delete all history~~
+  - ~~Respect user's memory toggle preference~~
 
 ---
 
 ### 2. Inline Editing UI/UX
 
 #### 2.1 Line-Level Interaction
-- [ ] Make each line clickable/hoverable
-  - Line numbers in gutter
-  - Edit icon on hover
-  - Click to activate inline editor
+- [X] Make each line clickable/hoverable
+  - ~~Line numbers in gutter~~
+  - ~~Edit icon on hover~~
+  - ~~Click to activate inline editor~~
   
-- [ ] Inline editor component
-  - Text input overlays the line
-  - AI suggestion mode vs. manual edit mode
-  - Keyboard shortcuts (Cmd+E to edit, Esc to cancel)
+- [x] Inline editor component
+  - ~~Text input overlays the line~~
+  - ~~AI suggestion mode vs. manual edit mode~~
   
 - [ ] Selection modes
-  - Single line edit
+  - ~~Single line edit~~
   - Multi-line selection (verse, chorus)
-  - Highlight text within line for word-level edits
 
 #### 2.2 AI-Assisted Editing Modes
 - [ ] Quick actions dropdown per line:
@@ -110,8 +100,6 @@ Enable the AI model to retain context across editing sessions:
   - Maintain rhyme scheme consistency
   - Match syllable count/cadence
   - Preserve metaphor themes
-
----
 
 ### 3. Rhyme Finder Integration
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Undo2, Redo2, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
@@ -27,12 +27,14 @@ const StructuredInputForm = ({
   memoryEnabled, onMemoryToggle,
   useStructuredInput, onStructuredInputToggle,
   onClearConversation,
-  canUndo, onUndo,
-  canRedo, onRedo,
+  onDeleteAllHistory,
+  onShowPrivacy,
   onExportConversation,
   onReset,
   onCloseMobile
 }) => {
+  const [exportFormat, setExportFormat] = useState('json');
+  
   return (
     <div className="bg-slate-900 flex flex-col h-full border-r border-slate-700/50 relative">
       {/* Mobile close button */}
@@ -108,40 +110,50 @@ const StructuredInputForm = ({
             className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-sm"
           >
             <Trash2 size={14} />
-            Clear Conversation History
+            Clear Conversation
           </button>
         )}
         
-        {/* Edit History Controls */}
-        <div className="flex gap-2">
+        {/* Privacy & Data Management */}
+        <div className="space-y-2 pt-2 border-t border-slate-700/50">
           <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Undo last edit"
+            onClick={onShowPrivacy}
+            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
           >
-            <Undo2 size={14} />
-            Undo
+            <Shield size={14} />
+            Privacy & Data
           </button>
+          
           <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Redo last undone edit"
+            onClick={onDeleteAllHistory}
+            className="w-full flex items-center justify-center gap-2 p-2.5 bg-red-900/20 hover:bg-red-900/30 border border-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition-colors text-sm"
           >
-            <Redo2 size={14} />
-            Redo
+            <History size={14} />
+            Delete All History
           </button>
         </div>
         
-        {/* Export Conversation Button */}
-        <button
-          onClick={onExportConversation}
-          className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
-        >
-          <Download size={14} />
-          Export Conversation
-        </button>
+        {/* Export Conversation */}
+        <div className="space-y-2 pt-2 border-t border-slate-700/50">
+          <label className="block text-sm font-medium text-slate-400 mb-1">Export Format</label>
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="json">JSON (structured data)</option>
+            <option value="txt">TXT (plain text)</option>
+            <option value="pdf">PDF (print to PDF)</option>
+          </select>
+          
+          <button
+            onClick={() => onExportConversation(exportFormat)}
+            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
+          >
+            <Download size={14} />
+            Export Conversation
+          </button>
+        </div>
         
         <div className="relative">
           <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>
