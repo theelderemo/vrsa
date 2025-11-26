@@ -9,6 +9,7 @@ import AlbumArt from './pages/AlbumArt';
 import Guide from './pages/Guide';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import StudioPass from './pages/StudioPass';
 import AuthComponent from './Auth';
 
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/analyzer" element={<Analyzer />} />
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/guide" element={<Guide />} />
+          <Route path="/studio-pass" element={<StudioPass />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/login" element={<AuthComponent />} />

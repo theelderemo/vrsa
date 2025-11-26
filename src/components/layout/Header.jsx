@@ -12,6 +12,7 @@ const Header = () => { // No props needed anymore!
     { name: 'Analyzer', path: '/analyzer' },
     { name: 'AlbumArt', path: '/albumart' },
     { name: 'Guide', path: '/guide' },
+    { name: 'Studio Pass', path: '/studio-pass' },
     { name: 'Terms', path: '/terms' }
   ];
   

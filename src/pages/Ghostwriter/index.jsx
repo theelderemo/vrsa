@@ -306,19 +306,43 @@ I understand not every song, genre uses every tag type. I will only include rele
     setEditingLine({ messageIndex, lineNumber, originalText });
   };
   
-  // AI suggestion handler for inline editing
-  const handleAiSuggest = async (messageIndex, lineNumber, originalText) => {
+  // AI suggestion handler for inline editing with custom prompt
+  const handleAiSuggest = async (messageIndex, lineNumber, originalText, customPrompt) => {
     try {
       // Adjust index since welcome message is at index 0
       const actualIndex = messageIndex - 1;
       const message = messages[actualIndex];
-      const lines = message.content.split('\n').filter(line => line.trim());
+      const fullSongContext = message.content; // Full song/lyrics content
+      const lines = fullSongContext.split('\n').filter(line => line.trim());
+      
+      // Get surrounding context for better coherence
       const contextBefore = lines.slice(Math.max(0, lineNumber - 3), lineNumber - 1).join('\n');
       const contextAfter = lines.slice(lineNumber, Math.min(lines.length, lineNumber + 2)).join('\n');
       
-      const systemPrompt = `You are a professional lyricist helping to edit and improve lyrics. Your task is to suggest alternative versions of a specific line while maintaining the overall style, tone, and flow of the piece.`;
+      const systemPrompt = `You are a professional lyricist helping to edit and improve lyrics. Your task is to suggest alternative versions of a specific line based on the user's custom instruction, while maintaining the overall style, tone, and flow of the entire piece.
+
+You have access to the full song context, so make sure your suggestions fit naturally within the larger work.`;
       
-      const userPrompt = `Provide EXACTLY 3 alternative versions for this line. Match the tone, style, and flow. Output ONLY the 3 lines, one per line, with no numbering or explanations.\n\nContext before:\n${contextBefore}\n\nLine to rewrite: ${originalText}\n\nContext after:\n${contextAfter}`;
+      const userPrompt = `I need help rewriting a specific line in my lyrics based on this instruction: "${customPrompt}"
+
+FULL SONG CONTEXT:
+${fullSongContext}
+
+IMMEDIATE CONTEXT:
+Lines before:
+${contextBefore}
+
+TARGET LINE (Line ${lineNumber}): ${originalText}
+
+Lines after:
+${contextAfter}
+
+Please provide EXACTLY 3 alternative versions for the target line that:
+1. Follow my instruction: "${customPrompt}"
+2. Maintain the style, tone, and flow of the full song
+3. Fit naturally with the surrounding lines
+
+Output ONLY the 3 alternative lines, one per line, with no numbering, explanations, or additional commentary.`;
       
       // Call the API directly (same as sendMessage does)
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -337,7 +361,7 @@ I understand not every song, genre uses every tag type. I will only include rele
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
           ],
-          temperature: 0.7,
+          temperature: 0.8,
           top_p: 0.9,
           model: selectedModel
         })
@@ -657,6 +681,7 @@ I understand not every song, genre uses every tag type. I will only include rele
                 onCancelEdit={handleCancelEdit}
                 onSaveEdit={handleSaveEdit}
                 onAiSuggest={handleAiSuggest}
+                profile={profile}
               />
             ))}
             {isLoading && (

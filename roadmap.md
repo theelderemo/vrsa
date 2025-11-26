@@ -20,21 +20,17 @@ my working notes on where this thing is going
 - ~~sarcastic AI comments~~ (every 2 generations lol)
 - ~~error tracking~~ (sentry integration)
 - ~~discord/reddit community~~
+- ~~inline AI editing~~
+- ~~export options~~
 
 ---
 
 ## building
 
-### inline AI editing
-let people click a line in the output and edit it directly with AI. no more copy-paste-regenerate loops.
-
 ### version history
 git-style tracking for lyrics. see what changed, roll back, branch different versions.
 
-### export options
-pdf/docx with formatting, plain text, with metadata. batch export multiple projects.
-
-### genius grounding thing (when budget allows)
+#   `## genius grounding thing - is_pro = true to use "grounding" option
 hook up that 329k song dataset from hugging face. chunk it by verse/chorus, throw it in azure ai search with vector embeddings. when someone says "write like kendrick" it'll actually pull real examples instead of just guessing.
 - https://huggingface.co/datasets/brunokreiner/genius-lyrics
 
@@ -49,7 +45,7 @@ need to add attribution ("inspired by X song" or "this flow pattern shows up in 
 ### mobile-friendly improvements
 responsive layout is okay but needs work. mobile keyboard handling, better touch targets.
 
-### multi-agent stuff
+### multi-agent stuff - is_pro = true
 specialized agents instead of one generic AI:
 - verse agent
 - hook/chorus agent  
@@ -59,7 +55,7 @@ specialized agents instead of one generic AI:
 
 let them "debate" and show ranked options
 
-### suno integration (maybe)
+### suno integration - is_pro = true
 lyrics → actual music generation. edge function proxy, users bring their own tokens. beta label everything. auto-populate params from our analysis.
 
 risk: unofficial API, could get shut down. legal gray area.
@@ -84,8 +80,7 @@ production: ableton link, daw plugins
 - user portfolios
 - leaderboards/badges
 
-### visual generation ideas
-
+### visual generation ideas  - is_pro = true
 - social media assets (square/story sizes for instagram/twitter)
 - music video storyboards
 - vinyl/cassette mockups
@@ -95,8 +90,7 @@ production: ableton link, daw plugins
 - tour posters
 - full AI music videos (azure)
 
-### audio stuff (way later)
-
+### audio stuff   - is_pro = true
 - midi export from lyric cadence
 - bpm analyzer based on flow
 - beat pattern generator
@@ -105,14 +99,7 @@ production: ableton link, daw plugins
 - voice cloning (azure voice models for demos)
 - beat marketplace (user-uploaded instrumentals)
 
-## monetization / pro tier (current)
-
-what studio pass gets you:
-- premium AI models (flux 1.1 pro, better image gen)
-- priority processing
-- unlimited generations (free tier has daily caps)
-
-future pro features to consider:
+### future pro features to consider:
 - api access for devs
 - bulk generation (10+ variations at once)
 - custom model training on your lyrics

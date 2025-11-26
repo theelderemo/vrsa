@@ -86,31 +86,8 @@ Enable the AI model to retain context across editing sessions:
   - ~~Single line edit~~
   - Multi-line selection (verse, chorus)
 
-#### 2.2 AI-Assisted Editing Modes
-- [ ] Quick actions dropdown per line:
-  - "Improve this line"
-  - "Find rhymes"
-  - "Add wordplay"
-  - "Make more [emotional/aggressive/smooth]"
-  - "Replace cliché"
-  - "Generate alternatives"
-  
-- [ ] Context-aware suggestions
-  - Analyze surrounding lines
-  - Maintain rhyme scheme consistency
-  - Match syllable count/cadence
-  - Preserve metaphor themes
-
 ### 3. Rhyme Finder Integration
 
-#### 3.1 Rhyme Detection Engine
-- [ ] Build rhyme matching logic
-  - Perfect rhymes
-  - Slant rhymes (consonance)
-  - Assonance (vowel matching)
-  - Multi-syllable rhymes
-  - Internal rhymes
-  
 - [ ] Rhyme database/API
   - Consider RhymeBrain API or Datamuse API
   - Cache common rhymes locally
@@ -121,13 +98,6 @@ Enable the AI model to retain context across editing sessions:
   - Sidebar panel with rhyme suggestions
   - Grouped by type (perfect/slant/assonance)
   - Show example usage in real songs (if grounding active)
-  
-- [ ] Interactive replacement
-  - Click rhyme to replace word
-  - AI rewrites line to incorporate rhyme
-  - Preview changes before applying
-
----
 
 ### 4. Wordplay Suggester
 

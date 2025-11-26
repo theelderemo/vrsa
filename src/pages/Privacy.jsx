@@ -63,7 +63,7 @@ const Privacy = () => (
         <section>
           <h3 className="text-lg font-bold text-slate-100 mb-2">5. Contact</h3>
           <p>For privacy requests or to shout at clouds:</p>
-          <p className="mt-1">Email: <a href="mailto:vrsa.app@mailfence.com" className="text-indigo-400 hover:text-indigo-300 transition-colors">vrsa.app@mailfence.com</a></p>
+          <p className="mt-1">Email: <a href="mailto:support@mailfence.app" className="text-indigo-400 hover:text-indigo-300 transition-colors">support@mailfence.app</a></p>
         </section>
 
         <div className="pt-6 border-t border-slate-700 text-center text-slate-400 text-xs">

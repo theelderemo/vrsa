@@ -8,41 +8,49 @@ const EditableLine = ({
   isEditing, 
   onCancelEdit,
   onSaveEdit,
-  onAiSuggest // New prop for AI suggestions
+  onAiSuggest, // New prop for AI suggestions with custom prompt
+  profile // For pro feature checks
 }) => {
   const [editedText, setEditedText] = useState(text);
   const [isHovered, setIsHovered] = useState(false);
   const [editMode, setEditMode] = useState('manual'); // 'manual' or 'ai'
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(''); // For custom AI instructions
 
   const handleEdit = (mode = 'manual') => {
     setEditedText(text);
     setEditMode(mode);
+    setCustomPrompt(''); // Reset custom prompt when entering edit mode
     onEdit(lineNumber, text);
+  };
+
+  const handleAiSuggest = async () => {
+    if (!customPrompt.trim() || !onAiSuggest) return;
     
-    // If AI mode, request suggestions
-    if (mode === 'ai' && onAiSuggest) {
-      setIsLoadingSuggestions(true);
-      onAiSuggest(lineNumber, text).then((suggestions) => {
-        setAiSuggestions(suggestions || []);
-        setIsLoadingSuggestions(false);
-      }).catch(() => {
-        setIsLoadingSuggestions(false);
-        setEditMode('manual'); // Fall back to manual if AI fails
-      });
+    setIsLoadingSuggestions(true);
+    try {
+      const suggestions = await onAiSuggest(lineNumber, text, customPrompt);
+      setAiSuggestions(suggestions || []);
+    } catch (error) {
+      console.error('Failed to get AI suggestions:', error);
+      setAiSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
     }
   };
 
   const handleSave = (textToSave = editedText) => {
     onSaveEdit(lineNumber, textToSave);
     setAiSuggestions([]);
+    setCustomPrompt('');
     setEditMode('manual');
   };
 
   const handleCancel = () => {
     setEditedText(text);
     setAiSuggestions([]);
+    setCustomPrompt('');
     setEditMode('manual');
     onCancelEdit();
   };
@@ -89,11 +97,11 @@ const EditableLine = ({
                     ? 'bg-indigo-600 text-white' 
                     : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
                 }`}
-                title="AI suggestions"
-                disabled={!onAiSuggest}
+                title={profile?.is_pro !== 'true' ? 'AI Prompt (Studio Pass Only)' : 'AI suggestions with custom prompt'}
+                disabled={!onAiSuggest || profile?.is_pro !== 'true'}
               >
                 <Sparkles size={12} />
-                AI Suggest
+                AI Prompt {profile?.is_pro !== 'true' ? '🔒' : ''}
               </button>
             </div>
 
@@ -115,14 +123,46 @@ const EditableLine = ({
             {/* AI Suggestions Mode */}
             {editMode === 'ai' && (
               <div className="space-y-2">
+                {/* Custom prompt input */}
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-400">
+                    What do you want to change about this line?
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && customPrompt.trim()) {
+                          handleAiSuggest();
+                        }
+                        if (e.key === 'Escape') handleCancel();
+                      }}
+                      className="flex-1 bg-slate-700 border border-indigo-500 rounded px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder='e.g., "make it more metaphorical" or "add a sports reference"'
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleAiSuggest}
+                      disabled={!customPrompt.trim() || isLoadingSuggestions}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-sm text-white flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Sparkles size={14} />
+                      Generate
+                    </button>
+                  </div>
+                </div>
+
+                {/* Loading state */}
                 {isLoadingSuggestions ? (
                   <div className="bg-slate-700/50 border border-slate-600 rounded px-3 py-2 text-slate-400 text-sm flex items-center gap-2">
                     <Sparkles size={14} className="animate-pulse" />
-                    Generating AI suggestions...
+                    Generating AI suggestions with full song context...
                   </div>
                 ) : aiSuggestions.length > 0 ? (
                   <>
-                    <p className="text-xs text-slate-400">Select a suggestion or switch to manual:</p>
+                    <p className="text-xs text-slate-400">Select a suggestion:</p>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                       {aiSuggestions.map((suggestion, idx) => (
                         <button
@@ -135,26 +175,7 @@ const EditableLine = ({
                       ))}
                     </div>
                   </>
-                ) : (
-                  <div className="bg-slate-700/50 border border-slate-600 rounded px-3 py-2 text-slate-400 text-sm">
-                    No suggestions available. Try manual editing.
-                  </div>
-                )}
-                
-                {/* Current edited text (if manually modified after AI suggestions) */}
-                {!isLoadingSuggestions && editedText !== text && (
-                  <input
-                    type="text"
-                    value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                    className="flex-1 bg-slate-700 border border-indigo-500 rounded px-2 py-1 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Or type your own edit..."
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSave();
-                      if (e.key === 'Escape') handleCancel();
-                    }}
-                  />
-                )}
+                ) : null}
               </div>
             )}
 
@@ -197,9 +218,10 @@ const EditableLine = ({
                 {onAiSuggest && (
                   <button
                     onClick={() => handleEdit('ai')}
-                    className="p-1 rounded hover:bg-slate-600 transition-colors"
-                    aria-label="Get AI suggestions"
-                    title="AI suggestions"
+                    className="p-1 rounded hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Prompt AI for suggestions"
+                    title={profile?.is_pro !== 'true' ? 'AI Prompt (Studio Pass Only)' : 'Prompt AI for suggestions'}
+                    disabled={profile?.is_pro !== 'true'}
                   >
                     <Sparkles size={14} className="text-slate-400 hover:text-yellow-400" />
                   </button>
