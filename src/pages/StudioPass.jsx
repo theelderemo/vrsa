@@ -283,10 +283,10 @@ const StudioPass = () => {
             </a>{' '}
             or email{' '}
             <a
-              href="mailto:support@mailfence.com"
+              href="mailto:support@vrsa.com"
               className="text-indigo-400 hover:text-indigo-300 underline"
             >
-              support@mailfence.app
+              support@vrsa.app
             </a>
           </p>
         </div>

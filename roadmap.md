@@ -25,16 +25,49 @@ my working notes on where this thing is going
 
 ---
 
-## building
+### Copyright / Plagarism Checker
+Use https://www.copyscape.com/ api
+username is theelderemo	 
+API key is ewwv2xqycct3p9ch
+
+Text Plagiarism Search Request
+To check for copies of some text via the Copyscape API, send an HTTP POST request to either of these URLs:
+
+http://www.copyscape.com/api/
+https://www.copyscape.com/api/
+
+The text to be searched and other parameters can be specified in one of two ways:
+
+Form Encoded. Provide all parameter values as form-urlencoded data within the HTTP POST payload. This is how web browsers submit forms over HTTP, and will usually be easiest. If your scripting language lets you set up an HTTP POST request with a list of parameter values, it will probably build this form-urlencoded payload automatically.
+Raw POST. Provide all parameters except the text to be searched (parameter t) on the URL (using urlencoding and ? and &, as if this was an HTTP GET). Provide the text itself in the raw HTTP POST payload data with no parameter name and no urlencoding. This method may be easier if you are building HTTP requests at a lower level, or using a command-line tool such as curl.
+The parameters are as follows:
+
+| **Parameter** | **Explanation** | **Value** | **Required?** | **Default** |
+|:---:|:---:|:---:|:---:|:---:|
+| u | Username | theelderemo | Yes | - |
+| k | API key | ewwv2xqycct3p9ch | Yes | - |
+| o | API operation | csearch (or psearch or cpsearch if you create a private index) | Yes | - |
+| e | Text encoding | [encoding name] | Yes | - |
+| t | Text to be searched | [the text] | Yes | - |
+| c | Full comparisons | 0 to 10 | No | 0 |
+| f | Response format | json or xml or html | No | xml |
+| i | Ignore sites | [comma-delimited domains to ignore] | No | - |
+| l | Spend limit | [value in dollars, e.g. 0.50] | No | - |
+| x | Example test | 1 or omitted | No | - |
 
 ### version history
 git-style tracking for lyrics. see what changed, roll back, branch different versions.
 
-#   `## genius grounding thing - is_pro = true to use "grounding" option
+### genius grounding thing - is_pro = true to use "grounding" option
+> [!NOTE]
+> Will most likely use api calls to genius instead, as it's cheaper and faster.
+
 hook up that 329k song dataset from hugging face. chunk it by verse/chorus, throw it in azure ai search with vector embeddings. when someone says "write like kendrick" it'll actually pull real examples instead of just guessing.
 - https://huggingface.co/datasets/brunokreiner/genius-lyrics
 
 need to add attribution ("inspired by X song" or "this flow pattern shows up in 47 songs") so we're not accidentally plagiarizing
+
+-Genius API: https://docs.genius.com/
 
 ### collaboration features
 - share projects with other users
@@ -51,7 +84,6 @@ specialized agents instead of one generic AI:
 - hook/chorus agent  
 - editor agent
 - flow coach agent
-- copyright scanner agent
 
 let them "debate" and show ranked options
 
