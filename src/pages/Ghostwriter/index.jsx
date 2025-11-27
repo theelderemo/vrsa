@@ -275,8 +275,26 @@ I understand not every song, genre uses every tag type. I will only include rele
         console.error('Failed to update memory setting:', error);
       }
       
-      // If disabling memory, optionally clear the UI messages or keep them
-      // For now, we'll keep the UI messages but not save new ones to history
+      // If enabling memory, sync existing local messages to the session (deduplicated)
+      if (enabled && messages.length > 0) {
+        const { messages: savedMessages, error: fetchError } = await getMessages(sessionId);
+        if (fetchError) {
+          console.error('Failed to fetch saved messages for sync:', fetchError);
+        } else {
+          // Build a set of saved message signatures for deduplication
+          const savedSet = new Set(
+            savedMessages.map(m => `${m.role}::${m.content}`)
+          );
+          // Append only local messages not already saved
+          for (const msg of messages) {
+            const sig = `${msg.role}::${msg.content}`;
+            if (!savedSet.has(sig)) {
+              await appendMessage(sessionId, msg);
+              savedSet.add(sig); // avoid duplicates within same sync
+            }
+          }
+        }
+      }
     }
   };
   
@@ -556,8 +574,8 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           // Build messages payload
           const systemPrompt = getSystemPrompt();
           let messagesPayload;
-          if (memoryEnabled && conversationHistory.length > 0) {
-            // Use conversation history + new message
+          if (memoryEnabled && sessionId) {
+            // Use conversation history + new message (history may be empty, that's fine)
             messagesPayload = [
               { role: 'system', content: systemPrompt },
               ...conversationHistory,
