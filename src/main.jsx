@@ -1,15 +1,36 @@
+/**
+ * MIT License
+ *
+ * Copyright (c) 2025 Christopher Dickinson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom' // <-- Add this
+import { BrowserRouter } from 'react-router-dom' 
 import * as Sentry from "@sentry/react";
 import './index.css'
 import App from './App.jsx'
 
-// Initialize Sentry as early as possible in the application's lifecycle
 Sentry.init({
   dsn: "https://23db32b682813a8a4400c7cd33460371@o4510367251234816.ingest.us.sentry.io/4510377545891840",
-  // Setting this option to true will send default PII data to Sentry.
-  // For example, automatic IP address collection on events
   sendDefaultPii: true,
   integrations: [
     Sentry.browserTracingIntegration(),
@@ -27,26 +48,24 @@ Sentry.init({
       formTitle: "...what did ya break?",
       messagePlaceholder: "Let me know what happened, as detailed as you can. You can also use this to give general feedback!",
       themeDark: {
-        background: "#0f172a",          // slate-900 - matches your app background
-        backgroundHover: "#1e293b",     // slate-800 - hover state
-        foreground: "#e2e8f0",          // slate-200 - text color
-        accentForeground: "#ffffff",    // white text on accent
-        accentBackground: "#6366f1",    // indigo-500 - matches your primary color
-        successColor: "#10b981",        // green-500 - success state
-        errorColor: "#ef4444",          // red-500 - error state
-        boxShadow: "0px 4px 24px 0px rgba(99, 102, 241, 0.12)", // indigo shadow
+        background: "#0f172a",         
+        backgroundHover: "#1e293b",    
+        foreground: "#e2e8f0",        
+        accentForeground: "#ffffff",  
+        accentBackground: "#6366f1",   
+        successColor: "#10b981",        
+        errorColor: "#ef4444",         
+        boxShadow: "0px 4px 24px 0px rgba(99, 102, 241, 0.12)", 
         outline: "1px auto var(--accent-background)"
       }
     })
   ],
   // Tracing
-  tracesSampleRate: 1.0, //  Capture 100% of the transactions
-  // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+  tracesSampleRate: 0.5, 
   tracePropagationTargets: ["localhost", "https://vrsa.app/", /^https:\/\/yourserver\.io\/api/],
   // Session Replay
-  replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-  // Enable logs to be sent to Sentry
+  replaysSessionSampleRate: 0.5, 
+  replaysOnErrorSampleRate: 1.0, 
   enableLogs: true
 });
 

@@ -1,3 +1,27 @@
+/**
+ * MIT License
+ *
+ * Copyright (c) 2025 Christopher Dickinson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'; // <-- Import this
 import { CornerDownLeft, LoaderCircle, Menu, X } from 'lucide-react';
@@ -111,7 +135,7 @@ if (loading) {
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
           <p className="text-slate-400 mb-6">Please log in to access Ghostwriter mode.</p>
           <button
-            onClick={() => navigate('/login')} // <-- FIXED: Uses router navigation
+            onClick={() => navigate('/login')} 
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
             Log In / Sign Up
@@ -266,7 +290,7 @@ I understand not every song, genre uses every tag type. I will only include rele
       }
     }
     
-    // Reset UI messages (welcome message will still show)
+    // Reset UI messages
     setMessages([]);
   };
   
@@ -292,7 +316,7 @@ I understand not every song, genre uses every tag type. I will only include rele
       setSessionId(newSessionId);
     }
     
-    // Reset UI - empty messages since welcome message is always prepended
+    // Reset UI 
     setMessages([]);
     
     // Show success message
@@ -423,8 +447,6 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
     
     setEditingLine(null);
   };
-  
-
   
   // Export conversation history
   const handleExportConversation = (format = 'json') => {
