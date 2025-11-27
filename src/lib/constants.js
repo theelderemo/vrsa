@@ -1,5 +1,6 @@
 // Model options
 export const MODEL_OPTIONS = [
+  { id: 'claude-opus-4-5', name: 'Claude Opus 4.5 BETA TESTERS', premium: true, beta: true },
   { id: 'gpt-4.1', name: 'GPT 4.1', premium: false },
   { id: 'DeepSeek-R1', name: 'DeepSeek R1', premium: false },
   { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1', premium: false },

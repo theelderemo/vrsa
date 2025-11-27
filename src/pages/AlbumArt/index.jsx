@@ -88,6 +88,12 @@ if (!user) {
       return;
     }
 
+    // Check beta access for beta models
+    if (selectedModelData?.beta && profile.is_beta !== 'true') {
+      setError('This model requires beta access');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
     setGeneratedImage(null);
@@ -206,7 +212,7 @@ if (!user) {
             >
               {IMAGE_GENERATOR_OPTIONS.map((model) => (
                 <option key={model.id} value={model.id}>
-                  {model.name} {model.premium ? 'Studio Pass' : ''}
+                  {model.name} {model.premium ? 'Studio Pass' : model.beta ? 'Beta' : ''}
                 </option>
               ))}
             </select>

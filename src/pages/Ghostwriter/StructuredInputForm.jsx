@@ -67,6 +67,10 @@ const StructuredInputForm = ({
               if (model?.premium && profile.is_pro !== 'true') {
                 return;
               }
+              // Block beta models for non-beta users
+              if (model?.beta && profile.is_beta !== 'true') {
+                return;
+              }
               setSelectedModel(e.target.value);
             }} 
             className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -75,9 +79,9 @@ const StructuredInputForm = ({
               <option 
                 key={model.id} 
                 value={model.id} 
-                disabled={model.premium && profile.is_pro !== 'true'}
+                disabled={(model.premium && profile.is_pro !== 'true') || (model.beta && profile.is_beta !== 'true')}
               >
-                {model.name} {model.premium && profile.is_pro !== 'true' ? '(Studio Pass Only)' : ''}
+                {model.name} {model.premium && profile.is_pro !== 'true' ? '(Studio Pass Only)' : model.beta && profile.is_beta !== 'true' ? '(Beta Testers Only)' : ''}
               </option>
             ))}
           </select>

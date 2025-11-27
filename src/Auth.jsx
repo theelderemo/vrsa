@@ -269,11 +269,18 @@ export default function AuthComponent() {
               <p className="text-slate-400">
                 {profile?.username ? `@${profile.username}` : user.email}
               </p>
-              {profile?.is_pro === 'true' && (
-                <span className="inline-block mt-2 px-3 py-1 bg-indigo-600 text-white text-sm font-semibold rounded-full">
-                  Studio Pass Member
-                </span>
-              )}
+              <div className="flex flex-wrap gap-2 justify-center mt-2">
+                {profile?.is_pro === 'true' && (
+                  <span className="inline-block px-3 py-1 bg-indigo-600 text-white text-sm font-semibold rounded-full">
+                    Studio Pass Member
+                  </span>
+                )}
+                {profile?.is_beta === 'true' && (
+                  <span className="inline-block px-3 py-1 bg-purple-600 text-white text-sm font-semibold rounded-full">
+                    Beta Tester
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={async () => {
