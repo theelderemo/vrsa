@@ -1,13 +1,14 @@
 // Model options
 export const MODEL_OPTIONS = [
-  { id: 'gpt-4.1', name: 'GPT 4.1', premium: false },
+  { id: 'gpt-4o', name: 'gpt-4o', premium: false },
+  { id: 'gpt-4o-mini', name: 'gpt-4o-mini', premium: false},
   { id: 'DeepSeek-R1', name: 'DeepSeek R1', premium: false },
   { id: 'DeepSeek-V3.1', name: 'DeepSeek V3.1', premium: false },
   { id: 'claude-opus-4-5', name: 'Claude Opus 4.5', premium: false, beta: true },
   { id: 'DeepSeek-R1-0528', name: 'DeepSeek R1 0528', premium: true },
   { id: 'claude-3-opus', name: 'Claude 3 Opus', premium: true }, 
   { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', premium: true},
-  { id: 'gpt-4o-mini', name: 'gpt-4o-mini', premium: true},
+  { id: 'gpt-4.1', name: 'GPT 4.1', premium: true },
   { id: 'gpt-5.1-chat', name: 'GPT 5.1', premium: true}
 ];
 
