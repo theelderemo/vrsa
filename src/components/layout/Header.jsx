@@ -23,14 +23,13 @@
  */
 
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 
 const Header = () => {
-  const { user, signOut } = useUser();
+  const { user } = useUser();
   const location = useLocation();
-  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   
   const navItems = [
@@ -42,16 +41,15 @@ const Header = () => {
     { name: 'Terms', path: '/terms' }
   ];
   
+  // Add Profile or Login to the regular nav items
+  const allNavItems = user
+    ? [...navItems, { name: 'Profile', path: '/profile' }]
+    : [...navItems, { name: 'Login', path: '/login' }];
+  
   const isActive = (path) => location.pathname === path;
 
   const handleNavClick = () => {
     setMenuOpen(false);
-  };
-
-  const handleSignOut = async () => {
-    setMenuOpen(false);
-    await signOut();
-    navigate('/');
   };
 
   return (
@@ -92,8 +90,8 @@ const Header = () => {
       >
         <div className="flex flex-col h-full pt-20 px-6 pb-6 overflow-y-auto">
           {/* Navigation Items */}
-          <div className="space-y-2 flex-1">
-            {navItems.map(item => (
+          <div className="space-y-2">
+            {allNavItems.map(item => (
               <Link
                 key={item.name}
                 to={item.path}
@@ -107,36 +105,6 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
-          </div>
-
-          {/* Auth Section */}
-          <div className="border-t border-slate-700 pt-4 mt-4">
-            {user ? (
-              <div className="space-y-3">
-                <div className="px-4 py-2 bg-slate-800 rounded-lg">
-                  <p className="text-xs text-slate-500">Signed in as</p>
-                  <p className="text-sm text-white truncate">{user.email}</p>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full px-4 py-3 text-base font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                onClick={handleNavClick}
-                className={`block w-full px-4 py-3 text-base font-medium rounded-lg transition-colors text-center ${
-                  isActive('/login')
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-indigo-600/90 hover:bg-indigo-600 text-white'
-                }`}
-              >
-                Login
-              </Link>
-            )}
           </div>
         </div>
       </nav>

@@ -69,9 +69,15 @@ export function UserProvider({ children }) {
     setProfile(null);
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  };
+
   return (
     // Expose profile in the context
-    <UserContext.Provider value={{ user, profile, loading, signOut }}>
+    <UserContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
       {children}
     </UserContext.Provider>
   );

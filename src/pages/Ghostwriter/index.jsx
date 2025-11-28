@@ -820,10 +820,18 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 h-full overflow-hidden relative max-w-full">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <div
         className={
-          `md:col-span-1 xl:col-span-1 md:flex flex-col min-h-0 z-30 transition-transform duration-300 fixed md:static top-0 left-0 h-full w-4/5 max-w-xs md:w-auto bg-slate-900 border-r border-slate-700/50 ` +
+          `md:col-span-1 xl:col-span-1 flex flex-col min-h-0 z-30 transition-transform duration-300 fixed md:static top-0 left-0 h-full w-[85vw] max-w-[320px] md:w-auto bg-slate-900 border-r border-slate-700/50 ` +
           (sidebarOpen ? 'translate-x-0' : '-translate-x-full') +
           ' md:translate-x-0'
         }
