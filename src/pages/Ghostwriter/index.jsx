@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom'; // <-- Import this
 import { CornerDownLeft, LoaderCircle, Menu, X } from 'lucide-react';
 import * as Sentry from "@sentry/react";
@@ -41,7 +41,12 @@ import {
   appendMessage, 
   updateMemorySetting,
   clearChatHistory,
-  deleteAllUserSessions
+  deleteAllUserSessions,
+  getUserSessions,
+  createChatSession,
+  updateSessionSettings,
+  renameSession,
+  deleteChatSession
 } from '../../lib/chatSessions';
 import { 
   exportConversationAsTxt, 
@@ -90,34 +95,192 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Session management state
+  const [userSessions, setUserSessions] = useState([]);
+  const [currentSessionName, setCurrentSessionName] = useState('');
+  const settingsDebounceRef = useRef(null);
+
+  // Helper to get current settings as an object
+  const getCurrentSettings = useCallback(() => ({
+    artistName,
+    coreTheme,
+    moodTag,
+    bannedWords,
+    lengthHint,
+    isExplicit,
+    rhymeDensity,
+    rhymeComplexity,
+    selectedRhymeSchemes,
+    temperature,
+    topP,
+    selectedModel,
+    useStructuredInput
+  }), [artistName, coreTheme, moodTag, bannedWords, lengthHint, isExplicit, rhymeDensity, rhymeComplexity, selectedRhymeSchemes, temperature, topP, selectedModel, useStructuredInput]);
+
+  // Load settings from a session
+  const loadSettingsFromSession = useCallback((settings) => {
+    if (!settings) return;
+    if (settings.artistName !== undefined) setArtistName(settings.artistName);
+    if (settings.coreTheme !== undefined) setCoreTheme(settings.coreTheme);
+    if (settings.moodTag !== undefined) setMoodTag(settings.moodTag);
+    if (settings.bannedWords !== undefined) setBannedWords(settings.bannedWords);
+    if (settings.lengthHint !== undefined) setLengthHint(settings.lengthHint);
+    if (settings.isExplicit !== undefined) setIsExplicit(settings.isExplicit);
+    if (settings.rhymeDensity !== undefined) setRhymeDensity(settings.rhymeDensity);
+    if (settings.rhymeComplexity !== undefined) setRhymeComplexity(settings.rhymeComplexity);
+    if (settings.selectedRhymeSchemes !== undefined) setSelectedRhymeSchemes(settings.selectedRhymeSchemes);
+    if (settings.temperature !== undefined) setTemperature(settings.temperature);
+    if (settings.topP !== undefined) setTopP(settings.topP);
+    if (settings.selectedModel !== undefined) setSelectedModel(settings.selectedModel);
+    if (settings.useStructuredInput !== undefined) setUseStructuredInput(settings.useStructuredInput);
+  }, [setSelectedRhymeSchemes]);
+
+  // Debounced auto-save settings
+  useEffect(() => {
+    if (!sessionId) return;
+    
+    // Clear any pending debounce
+    if (settingsDebounceRef.current) {
+      clearTimeout(settingsDebounceRef.current);
+    }
+    
+    // Debounce the save by 1 second
+    settingsDebounceRef.current = setTimeout(async () => {
+      const settings = getCurrentSettings();
+      await updateSessionSettings(sessionId, settings);
+    }, 1000);
+    
+    return () => {
+      if (settingsDebounceRef.current) {
+        clearTimeout(settingsDebounceRef.current);
+      }
+    };
+  }, [sessionId, getCurrentSettings]);
+
+  // Fetch user sessions
+  const fetchUserSessions = useCallback(async () => {
+    if (!user) return;
+    const { sessions, error } = await getUserSessions(user.id);
+    if (!error) {
+      setUserSessions(sessions);
+    }
+  }, [user]);
+
+  // Load sessions on mount
+  useEffect(() => {
+    if (user) {
+      fetchUserSessions();
+    }
+  }, [user, fetchUserSessions]);
+
+  // Create a new session (new slot)
+  const handleCreateNewSession = async (name) => {
+    if (!user) return;
+    
+    const settings = getCurrentSettings();
+    const { id, name: sessionName, error } = await createChatSession(
+      user.id, 
+      memoryEnabled, 
+      10, 
+      { ...settings, name: name || `Project ${new Date().toLocaleDateString()}` }
+    );
+    
+    if (error) {
+      console.error('Failed to create new session:', error);
+      return;
+    }
+    
+    // Reset UI state
+    resetForm();
+    setMessages([]);
+    setSessionId(id);
+    setCurrentSessionName(sessionName);
+    
+    // Refresh sessions list
+    await fetchUserSessions();
+  };
+
+  // Switch to a different session
+  const handleSwitchSession = async (targetSessionId) => {
+    // Don't do anything if we're already in the same state (unless both are null on first click)
+    if (targetSessionId === sessionId && (targetSessionId !== null || messages.length === 0)) return;
+    
+    // Handle "No Project" mode
+    if (!targetSessionId) {
+      setSessionId(null);
+      setCurrentSessionName('');
+      setMessages([]);
+      setMemoryEnabled(false);
+      return;
+    }
+    
+    // Find the session in our list
+    const session = userSessions.find(s => s.id === targetSessionId);
+    if (!session) return;
+    
+    // Update state
+    setSessionId(targetSessionId);
+    setCurrentSessionName(session.name || '');
+    setMemoryEnabled(session.memory_enabled || false);
+    
+    // Load settings from the session
+    loadSettingsFromSession(session.settings);
+    
+    // Load messages
+    const { messages: savedMessages, error: msgError } = await getMessages(targetSessionId);
+    if (msgError) {
+      console.error('Failed to load messages:', msgError);
+      setMessages([]);
+    } else {
+      setMessages(savedMessages || []);
+    }
+  };
+
+  // Rename the current session
+  const handleRenameSession = async (newName) => {
+    if (!sessionId || !newName.trim()) return;
+    
+    const { error } = await renameSession(sessionId, newName.trim());
+    if (error) {
+      console.error('Failed to rename session:', error);
+      return;
+    }
+    
+    setCurrentSessionName(newName.trim());
+    await fetchUserSessions();
+  };
+
+  // Delete a specific session
+  const handleDeleteSession = async (sessionIdToDelete) => {
+    if (!sessionIdToDelete) return;
+    
+    const { error } = await deleteChatSession(sessionIdToDelete);
+    if (error) {
+      console.error('Failed to delete session:', error);
+      return;
+    }
+    
+    // If we deleted the current session, switch to "No Project" mode
+    if (sessionIdToDelete === sessionId) {
+      setSessionId(null);
+      setCurrentSessionName('');
+      setMessages([]);
+    }
+    
+    await fetchUserSessions();
+  };
+
   // Auto-scroll to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
     
-  // Initialize chat session
+  // Load user sessions on mount (but don't auto-select one - default to No Project)
   useEffect(() => {
-    if (user && !sessionId) {
-      getOrCreateSession(user.id).then(({ sessionId: id, error }) => {
-        if (error) {
-          console.error('Failed to initialize chat session:', error);
-          return;
-        }
-        setSessionId(id);
-        
-        // Load previous messages if any
-        getMessages(id).then(({ messages: savedMessages, error: msgError }) => {
-          if (msgError) {
-            console.error('Failed to load messages:', msgError);
-            return;
-          }
-          if (savedMessages.length > 0) {
-            setMessages(savedMessages);
-          }
-        });
-      });
+    if (user) {
+      fetchUserSessions();
     }
-  }, [user, sessionId]);
+  }, [user, fetchUserSessions]);
 
   // Auth check
 if (loading) {
@@ -269,6 +432,7 @@ I understand not every song, genre uses every tag type. I will only include rele
   const handleMemoryToggle = async (enabled) => {
     setMemoryEnabled(enabled);
     
+    // Only save to database if we have an active project
     if (sessionId) {
       const { error } = await updateMemorySetting(sessionId, enabled);
       if (error) {
@@ -300,6 +464,7 @@ I understand not every song, genre uses every tag type. I will only include rele
   
   // Clear conversation history
   const handleClearConversation = async () => {
+    // Clear from database only if we have an active project
     if (sessionId) {
       const { error } = await clearChatHistory(sessionId);
       if (error) {
@@ -469,7 +634,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
   // Export conversation history
   const handleExportConversation = (format = 'json') => {
     const metadata = {
-      sessionId,
+      sessionId: sessionId || 'no-project',
       memoryEnabled,
       exportedAt: new Date().toISOString()
     };
@@ -617,7 +782,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           
           setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
           
-          // Save messages to session if memory is enabled
+          // Save messages to session only if memory is enabled AND we have an active project
           if (memoryEnabled && sessionId) {
             await appendMessage(sessionId, userMessage);
             await appendMessage(sessionId, { role: 'assistant', content: botResponse });
@@ -654,7 +819,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 h-full overflow-hidden relative">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 h-full overflow-hidden relative max-w-full">
       {/* Sidebar */}
       <div
         className={
@@ -689,14 +854,21 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           onExportConversation={handleExportConversation}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
+          // Session management props
+          userSessions={userSessions}
+          currentSessionId={sessionId}
+          currentSessionName={currentSessionName}
+          onCreateNewSession={handleCreateNewSession}
+          onSwitchSession={handleSwitchSession}
+          onRenameSession={handleRenameSession}
+          onDeleteSession={handleDeleteSession}
         />
       </div>
-      {/* Hamburger menu for mobile */}
+      {/* Hamburger menu for mobile only */}
       <button
-        className="absolute top-4 left-4 z-40 md:hidden bg-slate-800 p-2 rounded-lg shadow-lg border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none"
+        className={`absolute top-4 left-4 z-40 bg-slate-800 p-2 rounded-lg shadow-lg border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none md:hidden ${sidebarOpen ? 'hidden' : 'block'}`}
         onClick={() => setSidebarOpen(true)}
         aria-label="Open sidebar"
-        style={{ display: sidebarOpen ? 'none' : 'block' }}
       >
         <Menu size={28} />
       </button>

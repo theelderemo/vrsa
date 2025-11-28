@@ -29,27 +29,36 @@ import { supabase } from './supabase';
  * @param {string} userId - The authenticated user's ID
  * @param {boolean} memoryEnabled - Whether context retention is enabled
  * @param {number} contextWindow - Number of messages to keep (default: 10)
+ * @param {object} initialSettings - Optional settings object to save with the session
  * @returns {Promise<{id: string, error: null} | {id: null, error: Error}>}
  */
-export async function createChatSession(userId, memoryEnabled = false, contextWindow = 10) {
+export async function createChatSession(userId, memoryEnabled = false, contextWindow = 10, initialSettings = null) {
   try {
+    const insertData = {
+      user_id: userId,
+      memory_enabled: memoryEnabled,
+      context_window: contextWindow,
+      messages: [],
+      name: initialSettings?.name || `Project ${new Date().toLocaleDateString()}`
+    };
+    
+    // Add settings if provided
+    if (initialSettings) {
+      insertData.settings = initialSettings;
+    }
+    
     const { data, error } = await supabase
       .from('chat_sessions')
-      .insert({
-        user_id: userId,
-        memory_enabled: memoryEnabled,
-        context_window: contextWindow,
-        messages: []
-      })
-      .select('id')
+      .insert(insertData)
+      .select('id, name')
       .single();
 
     if (error) throw error;
     
-    return { id: data.id, error: null };
+    return { id: data.id, name: data.name, error: null };
   } catch (error) {
     console.error('Error creating chat session:', error);
-    return { id: null, error };
+    return { id: null, name: null, error };
   }
 }
 
@@ -282,5 +291,78 @@ export async function getOrCreateSession(userId) {
   } catch (error) {
     console.error('Error getting or creating session:', error);
     return { sessionId: null, error };
+  }
+}
+
+/**
+ * Get all active sessions for a user (for session manager UI)
+ * @param {string} userId - The authenticated user's ID
+ * @returns {Promise<{sessions: array, error: null} | {sessions: [], error: Error}>}
+ */
+export async function getUserSessions(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('id, name, settings, memory_enabled, updated_at, expires_at')
+      .eq('user_id', userId)
+      .gt('expires_at', new Date().toISOString())
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return { sessions: data || [], error: null };
+  } catch (error) {
+    console.error('Error getting user sessions:', error);
+    return { sessions: [], error };
+  }
+}
+
+/**
+ * Update session settings (for auto-saving slider states)
+ * @param {string} sessionId - The session ID
+ * @param {object} settings - Settings object to save
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function updateSessionSettings(sessionId, settings) {
+  try {
+    const { error } = await supabase
+      .from('chat_sessions')
+      .update({ 
+        settings,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+
+    if (error) throw error;
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error updating session settings:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Rename a session
+ * @param {string} sessionId - The session ID
+ * @param {string} name - New name for the session
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function renameSession(sessionId, name) {
+  try {
+    const { error } = await supabase
+      .from('chat_sessions')
+      .update({ 
+        name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+
+    if (error) throw error;
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error renaming session:', error);
+    return { success: false, error };
   }
 }

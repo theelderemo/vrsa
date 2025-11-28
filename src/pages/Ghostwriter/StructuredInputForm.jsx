@@ -23,7 +23,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History } from 'lucide-react';
+import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History, FolderPlus, Pencil, Check } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
@@ -55,9 +55,20 @@ const StructuredInputForm = ({
   onShowPrivacy,
   onExportConversation,
   onReset,
-  onCloseMobile
+  onCloseMobile,
+  // Session management props
+  userSessions = [],
+  currentSessionId,
+  currentSessionName = '',
+  onCreateNewSession,
+  onSwitchSession,
+  onRenameSession,
+  onDeleteSession
 }) => {
   const [exportFormat, setExportFormat] = useState('json');
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState(currentSessionName);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   
   return (
     <div className="bg-slate-900 flex flex-col h-full border-r border-slate-700/50 relative">
@@ -79,6 +90,123 @@ const StructuredInputForm = ({
         </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4 space-y-4">
+        {/* Session Manager Section */}
+        <div className="space-y-2 bg-gradient-to-br from-indigo-900/30 to-slate-800/50 rounded-lg p-3 border border-indigo-600/30">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-indigo-300 flex items-center gap-2">
+              <FolderPlus size={14} />
+              My Projects
+            </h3>
+            <span className="text-xs text-slate-500">{userSessions.length} saved</span>
+          </div>
+          
+          {/* Projects Dropdown with New Project option */}
+          {isRenaming ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                placeholder="Project name..."
+                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onRenameSession && onRenameSession(renameValue);
+                    setIsRenaming(false);
+                  } else if (e.key === 'Escape') {
+                    setRenameValue(currentSessionName);
+                    setIsRenaming(false);
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  onRenameSession && onRenameSession(renameValue);
+                  setIsRenaming(false);
+                }}
+                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white text-sm transition-colors"
+              >
+                <Check size={14} />
+              </button>
+              <button
+                onClick={() => {
+                  setRenameValue(currentSessionName);
+                  setIsRenaming(false);
+                }}
+                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 text-sm transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* New Project Button */}
+              <button
+                onClick={() => onCreateNewSession && onCreateNewSession()}
+                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg p-2 text-white text-sm font-medium transition-colors"
+              >
+                <FolderPlus size={14} />
+                New Project
+              </button>
+              
+              {/* No Project Option */}
+              <button
+                onClick={() => onSwitchSession && onSwitchSession(null)}
+                className={`w-full flex items-center justify-between gap-2 rounded-lg p-2 text-sm transition-colors ${
+                  !currentSessionId 
+                    ? 'bg-slate-700 text-white border border-indigo-500' 
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                }`}
+              >
+                <span className="flex-1 text-left">No Project</span>
+              </button>
+              
+              {/* Existing Projects List */}
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {userSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={`flex items-center gap-2 rounded-lg p-2 text-sm transition-colors group ${
+                      currentSessionId === session.id 
+                        ? 'bg-slate-700 text-white border border-indigo-500' 
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                    }`}
+                  >
+                    <button
+                      onClick={() => onSwitchSession && onSwitchSession(session.id)}
+                      className="flex-1 text-left truncate"
+                    >
+                      {session.name || `Project ${new Date(session.updated_at).toLocaleDateString()}`}
+                    </button>
+                    
+                    {currentSessionId === session.id && (
+                      <button
+                        onClick={() => {
+                          setRenameValue(currentSessionName);
+                          setIsRenaming(true);
+                        }}
+                        className="p-1 hover:bg-slate-600 rounded text-slate-400 hover:text-indigo-400 transition-colors"
+                        title="Rename project"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => setShowDeleteConfirm(session.id)}
+                      className="p-1 hover:bg-red-600/20 rounded text-slate-400 hover:text-red-400 transition-colors"
+                      title="Delete project"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Model Selection Dropdown */}
         <div className="relative">
           <label className="block text-sm font-medium text-slate-400 mb-2">AI Model</label>
@@ -338,6 +466,35 @@ const StructuredInputForm = ({
           />
         </div>
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-lg p-6 max-w-sm w-full border border-slate-700">
+            <h3 className="text-lg font-bold text-white mb-2">Delete Project?</h3>
+            <p className="text-slate-400 text-sm mb-4">
+              This will permanently delete this project and all its chat history. This action cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  onDeleteSession && onDeleteSession(showDeleteConfirm);
+                  setShowDeleteConfirm(null);
+                }}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

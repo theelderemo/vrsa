@@ -27,11 +27,26 @@ gtag('config', 'G-JN532845SM');
     <meta property="twitter:description" content="Stop using ChatGPT for lyrics. Generate authentic, style-specific bars with VRS/A." />
     <meta property="twitter:image" content="https://vrsa.app/og-image.jpg" />
     <style>
-      /* Adjust Buy Me a Coffee widget size to avoid overlap with Sentry */
+      /* Prevent horizontal scrolling on mobile */
+      html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+      }
+      
+      /* Buy Me a Coffee widget styling */
       #bmc-wbtn {
         transform: scale(0.85) !important;
         transform-origin: bottom right !important;
       }
+      
+      /* Hide BMC widget on mobile - it blocks UI elements. Users can use the link in chat instead */
+      @media (max-width: 768px) {
+        #bmc-wbtn {
+          display: none !important;
+        }
+      }
+      
       /* Ensure Sentry feedback button doesn't overlap */
       .widget__button {
         transform: scale(0.9) !important;
