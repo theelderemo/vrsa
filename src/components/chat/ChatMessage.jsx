@@ -25,6 +25,7 @@
 import React, { useState } from 'react';
 import { Bot, User, Copy, Check } from 'lucide-react';
 import EditableLine from './EditableLine';
+import { useTypewriter } from '../../hooks/useTypewriter';
 
 const ChatMessage = ({ 
   message, 
@@ -37,6 +38,17 @@ const ChatMessage = ({
   profile // For pro feature checks
 }) => {
   const [isCopied, setIsCopied] = useState(false);
+  
+  const isBotMessage = message.role === 'assistant';
+  // Enable typewriter effect only for bot messages (not initial welcome or user messages)
+  const shouldAnimate = isBotMessage && index > 0;
+  
+  // Apply typewriter effect to bot messages
+  const { displayedText, isTyping, skip } = useTypewriter(
+    message.content, 
+    20, // 20ms per character for smooth effect
+    shouldAnimate
+  );
 
   const handleCopy = () => {
     const textToCopy = message.content;
@@ -54,16 +66,21 @@ const ChatMessage = ({
     document.body.removeChild(textArea);
   };
 
-  const isBotMessage = message.role === 'assistant';
   // Show copy button only for bot messages and not for the initial welcome message (index 0)
   const showCopyButton = isBotMessage && index > 0;
   
   // The initial welcome message (index 0) should not be editable
   const isInitialMessage = index === 0;
   
+  // Use displayedText for typewriter effect or full message content
+  const contentToDisplay = shouldAnimate ? displayedText : message.content;
+  
   // Split bot messages into lines for inline editing (but not the initial message)
-  const lines = isBotMessage && !isInitialMessage ? message.content.split('\n').filter(line => line.trim()) : [];
-  const isMultiLine = lines.length > 1;
+  // Only split when animation is complete
+  const lines = isBotMessage && !isInitialMessage && !isTyping 
+    ? contentToDisplay.split('\n').filter(line => line.trim()) 
+    : [];
+  const isMultiLine = lines.length > 1 && !isTyping;
   const messageId = `msg-${index}`;
 
   // Function to render text with clickable links
@@ -104,8 +121,17 @@ const ChatMessage = ({
             {isCopied ? <Check size={16} className="text-green-400" /> : <Copy size={16} className="text-slate-400" />}
           </button>
         )}
+        {isTyping && shouldAnimate && (
+          <button
+            onClick={skip}
+            className="absolute top-2 right-10 px-2 py-1 text-xs rounded-md bg-indigo-600/80 hover:bg-indigo-500 text-white transition-colors"
+            aria-label="Skip animation"
+          >
+            Skip
+          </button>
+        )}
         
-        {/* Render bot messages with editable lines, user messages as plain text */}
+        {/* Render bot messages with editable lines (only when typing is complete), user messages as plain text */}
         {isBotMessage && isMultiLine ? (
           <div className="text-slate-200 font-mono text-sm md:text-base pr-8">
             {lines.map((line, lineIndex) => (
@@ -124,7 +150,8 @@ const ChatMessage = ({
           </div>
         ) : (
           <p className="text-slate-200 whitespace-pre-wrap font-mono text-sm md:text-base pr-8">
-            {renderMessageContent(message.content)}
+            {renderMessageContent(contentToDisplay)}
+            {isTyping && <span className="inline-block w-1 h-4 ml-1 bg-indigo-400 animate-pulse" />}
           </p>
         )}
       </div>

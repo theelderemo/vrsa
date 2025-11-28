@@ -28,6 +28,7 @@ import { LoaderCircle, Palette, Mic, FileText, ListCollapse, BrainCircuit } from
 import ReactMarkdown from 'react-markdown';
 import { useUser } from '../../hooks/useUser';
 import { callAI } from '../../lib/api';
+import TypewriterText from '../../components/ui/TypewriterText';
 
 const Analyzer = () => {
   const { user, loading } = useUser();
@@ -194,7 +195,7 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                   </h4>
                 </div>
                 <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{stylePaletteResult}</ReactMarkdown>
+                  <TypewriterText text={stylePaletteResult} markdown={true} speed={15} />
                 </div>
               </div>
             )}
@@ -208,7 +209,7 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                   </h4>
                 </div>
                 <div className="text-slate-200 text-sm font-mono prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{sunoTagsResult}</ReactMarkdown>
+                  <TypewriterText text={sunoTagsResult} markdown={true} speed={15} />
                 </div>
               </div>
             )}
@@ -222,7 +223,7 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                   </h4>
                 </div>
                 <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{statSheetResult}</ReactMarkdown>
+                  <TypewriterText text={statSheetResult} markdown={true} speed={15} />
                 </div>
               </div>
             )}
@@ -236,7 +237,7 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
                   </h4>
                 </div>
                 <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{rhymeVisualizerResult}</ReactMarkdown>
+                  <TypewriterText text={rhymeVisualizerResult} markdown={true} speed={15} />
                 </div>
               </div>
             )}
