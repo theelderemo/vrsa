@@ -25,6 +25,7 @@ export const PillBase = () => {
     { label: 'Ghostwriter', id: 'ghostwriter', path: '/ghostwriter' },
     { label: 'Analyzer', id: 'analyzer', path: '/analyzer' },
     { label: 'AlbumArt', id: 'albumart', path: '/albumart' },
+    { label: 'Projects', id: 'projects', path: '/projects' },
     { label: 'Guide', id: 'guide', path: '/guide' },
     { label: 'Studio Pass', id: 'studio-pass', path: '/studio-pass' },
   ];
@@ -50,7 +51,7 @@ export const PillBase = () => {
   useEffect(() => {
     if (hovering) {
       setExpanded(true);
-      pillWidth.set(680);
+      pillWidth.set(780);
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
