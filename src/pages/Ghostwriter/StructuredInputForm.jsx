@@ -23,11 +23,13 @@
  */
 
 import React, { useState } from 'react';
-import { X, Check, Pencil } from 'lucide-react';
+import { X, Check, Pencil, Smartphone, ArrowRight } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/Accordion';
+import { Banner } from '../../components/ui/Banner';
+import { Button } from '../../components/ui/Button';
 import { 
   MODEL_OPTIONS, 
   rhymePlacementOptions, 
@@ -70,9 +72,34 @@ const StructuredInputForm = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(currentSessionName);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showAndroidBanner, setShowAndroidBanner] = useState(true);
   
   return (
     <div className="bg-slate-900 flex flex-col h-full border-r border-slate-700/50 relative overflow-hidden">
+      {/* Android App Download Banner */}
+      <Banner
+        show={showAndroidBanner}
+        onHide={() => setShowAndroidBanner(false)}
+        variant="premium"
+        size="sm"
+        title="New Android App"
+        icon={<Smartphone size={16} className="text-purple-300" />}
+        closable={true}
+        showShade={true}
+        className="m-2 mb-0"
+        action={
+          <a
+            href="https://discord.gg/FQ6XGNf53P"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-md bg-purple-600/30 hover:bg-purple-600/50 px-2 py-1 text-xs font-medium text-purple-200 transition-colors"
+          >
+            Get it
+            <ArrowRight size={12} />
+          </a>
+        }
+      />
+      
       {/* Header with close button on mobile */}
       <div className="flex items-center justify-between gap-2 p-3 md:p-4 shrink-0 border-b border-slate-700/30">
         <h2 className="text-base sm:text-lg md:text-xl font-bold text-indigo-400 truncate min-w-0">Structured Input</h2>

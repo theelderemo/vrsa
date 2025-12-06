@@ -326,7 +326,7 @@ const StudioPass = () => {
           <p className="text-slate-400">
             Questions? Hit me up in{' '}
             <a
-              href="https://discord.gg/aRzgxjbj"
+              href="https://discord.gg/FQ6XGNf53P"
               target="_blank"
               rel="noopener noreferrer"
               className="text-indigo-400 hover:text-indigo-300 underline"

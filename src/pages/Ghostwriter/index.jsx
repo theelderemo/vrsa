@@ -75,7 +75,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       console.error('Failed to generate welcome:', error);
       setWelcomeMessage({
         role: 'assistant',
-        content: 'Ready to write some fire lyrics? Drop your request below.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj'
+        content: 'Ready to write some fire lyrics? Drop your request below.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/FQ6XGNf53P'
       });
     } finally {
       setWelcomeLoading(false);
@@ -988,7 +988,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
             </div>
             <div className="mt-3 text-center">
               <a 
-                href="https://discord.gg/N3SZkShj" 
+                href="https://discord.gg/FQ6XGNf53P" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-sm text-indigo-400 hover:text-indigo-300 underline"

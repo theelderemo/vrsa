@@ -142,7 +142,7 @@ export const generateWelcomeMessage = async () => {
 
 MUST ALWAYS end with EXACTLY this on its own line (including the links):
 
-Help keep this app alive: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj
+Help keep this app alive: https://buymeacoffee.com/theelderemo and Join the discord: https://discord.gg/FQ6XGNf53P (updated link)
 
 Be unhinged and witty but not mean. Keep it fun and welcoming.`;
 
@@ -167,11 +167,11 @@ Be unhinged and witty but not mean. Keep it fun and welcoming.`;
 
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
         const data = await response.json();
-        let result = data.content || 'Alright, let\'s see what chaos you\'re cooking up today.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+        let result = data.content || 'Alright, let\'s see what chaos you\'re cooking up today.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/FQ6XGNf53P';
         
         // Ensure the links are always present
         if (!result.includes('buymeacoffee.com/theelderemo')) {
-          result += '\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+          result += '\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/FQ6XGNf53P';
         }
         
         logger.info("Successfully generated welcome message", { 
@@ -188,7 +188,7 @@ Be unhinged and witty but not mean. Keep it fun and welcoming.`;
         });
         Sentry.captureException(error);
         console.error("Failed to generate welcome message:", error);
-        return 'Alright, let\'s see what you got. Time to make some questionable musical decisions together.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+        return 'Alright, let\'s see what you got. Time to make some questionable musical decisions together.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/FQ6XGNf53P';
       }
     }
   );
