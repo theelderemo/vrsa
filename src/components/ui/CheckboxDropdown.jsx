@@ -22,16 +22,57 @@
  * SOFTWARE.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholder = "Select options..." }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
+
+  // Calculate dropdown position based on button location
+  const updatePosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownHeight = Math.min(240, options.length * 36 + 16); // max-h-60 = 240px
+      
+      // Position above if not enough space below
+      const shouldPositionAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      
+      setDropdownPosition({
+        top: shouldPositionAbove ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [options.length]);
+
+  // Update position when opening and on scroll/resize
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [isOpen, updatePosition]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        buttonRef.current && 
+        !buttonRef.current.contains(event.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -42,10 +83,38 @@ const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholde
   const selectedCount = options.filter(opt => selectedValues.includes(opt)).length;
   const displayText = selectedCount > 0 ? `${selectedCount} selected` : placeholder;
 
+  const dropdownMenu = isOpen && createPortal(
+    <div 
+      ref={dropdownRef}
+      className="fixed z-[9999] bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+      style={{
+        top: dropdownPosition.top,
+        left: dropdownPosition.left,
+        width: dropdownPosition.width,
+      }}
+    >
+      <div className="p-2 space-y-1">
+        {options.map(option => (
+          <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs p-2 hover:bg-slate-700 rounded cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selectedValues.includes(option)}
+              onChange={() => onChange(option)}
+              className="accent-indigo-500"
+            />
+            <span>{option}</span>
+          </label>
+        ))}
+      </div>
+    </div>,
+    document.body
+  );
+
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       <label className="block text-xs font-semibold text-slate-400 mb-2">{label}</label>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-left text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-between"
@@ -53,23 +122,7 @@ const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholde
         <span className={selectedCount > 0 ? "text-white" : "text-slate-500"}>{displayText}</span>
         <span className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180 inline-block' : ''}`}>▼</span>
       </button>
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          <div className="p-2 space-y-1">
-            {options.map(option => (
-              <label key={option} className="flex items-center space-x-2 text-slate-300 text-xs p-2 hover:bg-slate-700 rounded cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(option)}
-                  onChange={() => onChange(option)}
-                  className="accent-indigo-500"
-                />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
+      {dropdownMenu}
     </div>
   );
 };
