@@ -27,25 +27,34 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import { PillBase } from '../ui/3d-adaptive-navigation-bar';
+import { NotificationAlertDialog } from '../ui/NotificationAlertDialog';
+import { ADMIN_EMAIL } from '../../lib/admin';
 
 const Header = () => {
   const { user } = useUser();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   
+  const isAdmin = user?.email === ADMIN_EMAIL;
+  
   const navItems = [
     { name: 'Ghostwriter', path: '/ghostwriter' },
     { name: 'Analyzer', path: '/analyzer' },
     { name: 'AlbumArt', path: '/albumart' },
+    { name: 'Projects', path: '/projects' },
     { name: 'Guide', path: '/guide' },
     { name: 'Studio Pass', path: '/studio-pass' },
     { name: 'Terms', path: '/terms' }
   ];
   
-  // Add Profile or Login to the regular nav items
-  const allNavItems = user
-    ? [...navItems, { name: 'Profile', path: '/profile' }]
-    : [...navItems, { name: 'Login', path: '/login' }];
+  // Add Admin link for admin user, then Profile or Login
+  let allNavItems = [...navItems];
+  if (isAdmin) {
+    allNavItems.push({ name: 'Admin', path: '/admin' });
+  }
+  allNavItems = user
+    ? [...allNavItems, { name: 'Profile', path: '/profile' }]
+    : [...allNavItems, { name: 'Login', path: '/login' }];
   
   const isActive = (path) => location.pathname === path;
 
@@ -69,15 +78,21 @@ const Header = () => {
         <div className="hidden md:flex items-center justify-center flex-1 px-8">
           <PillBase />
         </div>
-        
-        {/* Hamburger Menu Button - Mobile Only */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors z-50"
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+
+        {/* Notification Bell & Hamburger - Right side */}
+        <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          <NotificationAlertDialog />
+          
+          {/* Hamburger Menu Button - Mobile Only */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors z-50"
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}

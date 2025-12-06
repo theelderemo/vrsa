@@ -9,6 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
 import { useUser } from '../../hooks/useUser';
+import { ADMIN_EMAIL } from '../../lib/admin';
 
 export const PillBase = () => {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ export const PillBase = () => {
   const [hovering, setHovering] = useState(false);
   const containerRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
+
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   // Navigation items matching the app structure
   const baseNavItems = [
@@ -30,10 +33,14 @@ export const PillBase = () => {
     { label: 'Studio Pass', id: 'studio-pass', path: '/studio-pass' },
   ];
 
-  // Add Profile or Login based on auth state
-  const navItems = user
-    ? [...baseNavItems, { label: 'Profile', id: 'profile', path: '/profile' }]
-    : [...baseNavItems, { label: 'Login', id: 'login', path: '/login' }];
+  // Add Admin link for admin user, then Profile or Login based on auth state
+  let navItems = [...baseNavItems];
+  if (isAdmin) {
+    navItems.push({ label: 'Admin', id: 'admin', path: '/admin' });
+  }
+  navItems = user
+    ? [...navItems, { label: 'Profile', id: 'profile', path: '/profile' }]
+    : [...navItems, { label: 'Login', id: 'login', path: '/login' }];
 
   // Get active section from current path
   const getActiveSection = () => {
@@ -47,11 +54,14 @@ export const PillBase = () => {
   // Spring animations for smooth motion
   const pillWidth = useSpring(160, { stiffness: 220, damping: 25, mass: 1 });
 
+  // Calculate expanded width based on number of items
+  const expandedWidth = isAdmin ? 860 : 780;
+
   // Handle hover expansion
   useEffect(() => {
     if (hovering) {
       setExpanded(true);
-      pillWidth.set(780);
+      pillWidth.set(expandedWidth);
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
       }
@@ -67,7 +77,7 @@ export const PillBase = () => {
         clearTimeout(hoverTimeoutRef.current);
       }
     };
-  }, [hovering, pillWidth]);
+  }, [hovering, pillWidth, expandedWidth]);
 
   const handleMouseEnter = () => {
     setHovering(true);

@@ -36,6 +36,7 @@ import Privacy from './pages/Privacy';
 import StudioPass from './pages/StudioPass';
 import Profile from './pages/Profile';
 import Projects from './pages/Projects';
+import AdminPanel from './pages/AdminPanel';
 import AuthComponent from './Auth';
 
 const App = () => {
@@ -68,6 +69,7 @@ const App = () => {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<AuthComponent />} />
         </Route>
       </Routes>
