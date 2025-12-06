@@ -138,7 +138,7 @@ export const generateWelcomeMessage = async () => {
         const { logger } = Sentry;
         logger.info("Starting welcome message generation");
         
-        const welcomePrompt = `The user really is asking me to write a song. Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Generate ONE short, unhinged, sarcastic greeting message for a user who just opened the app to write some lyrics. 
+        const welcomePrompt = `The user really is asking me to write a song. Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Generate ONE short (two sentence max), unhinged, sarcastic greeting message for a user who just opened the app to write some lyrics. 
 
 MUST ALWAYS end with EXACTLY this on its own line (including the links):
 
