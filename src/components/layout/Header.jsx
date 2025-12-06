@@ -26,6 +26,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
+import { PillBase } from '../ui/3d-adaptive-navigation-bar';
 
 const Header = () => {
   const { user } = useUser();
@@ -64,10 +65,15 @@ const Header = () => {
           VRS/A
         </Link>
         
-        {/* Hamburger Menu Button */}
+        {/* 3D Adaptive Navigation Pill - Desktop */}
+        <div className="hidden md:flex items-center justify-center flex-1 px-8">
+          <PillBase />
+        </div>
+        
+        {/* Hamburger Menu Button - Mobile Only */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors z-50"
+          className="md:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors z-50"
           aria-label="Toggle menu"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -77,14 +83,14 @@ const Header = () => {
       {/* Mobile Menu Overlay */}
       {menuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
-      {/* Sliding Menu */}
+      {/* Sliding Menu - Mobile Only */}
       <nav
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-slate-900 border-l border-slate-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-slate-900 border-l border-slate-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 md:hidden ${
           menuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

@@ -64,3 +64,11 @@ The real feedback happens here. The mods on Reddit hate free tools, so we made o
 This thing runs on fumes and the occasional tip. If it helps you break a writer's block or you just want to fund my next burnout, it's appreciated.
 
 <a href="https://coff.ee/vrsa" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+Ghostwriter
+Analyzer
+AlbumArt
+Guide
+Studio Pass
+Terms
+Profile

@@ -23,10 +23,11 @@
  */
 
 import React, { useState } from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History, FolderPlus, Pencil, Check } from 'lucide-react';
+import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History, FolderPlus, Pencil, Check, Sliders, Music, Settings } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/Accordion';
 import { 
   MODEL_OPTIONS, 
   rhymePlacementOptions, 
@@ -205,274 +206,294 @@ const StructuredInputForm = ({
           )}
         </div>
 
-        {/* Model Selection Dropdown */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">AI Model</label>
-          <BrainCircuit className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
-          <select 
-            value={selectedModel} 
-            onChange={e => {
-              const model = MODEL_OPTIONS.find(m => m.id === e.target.value);
-              // Block premium models for non-pro users
-              if (model?.premium && profile.is_pro !== 'true') {
-                return;
-              }
-              // Block beta models for non-beta users
-              if (model?.beta && profile.is_beta !== 'true') {
-                return;
-              }
-              setSelectedModel(e.target.value);
-            }} 
-            className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {MODEL_OPTIONS.map(model => (
-              <option 
-                key={model.id} 
-                value={model.id} 
-                disabled={(model.premium && profile.is_pro !== 'true') || (model.beta && profile.is_beta !== 'true')}
-              >
-                {model.name} {model.premium && profile.is_pro !== 'true' ? '(Studio Pass Only)' : model.beta && profile.is_beta !== 'true' ? '(Beta Testers Only)' : ''}
-              </option>
-            ))}
-          </select>
-          {/* Upsell Link */}
-          {profile.is_pro !== 'true' && (
-            <a href="https://buymeacoffee.com/theelderemo/membership" target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-400 mt-1 hover:underline block">
-              Unlock Claude 3 Opus with Studio Pass
-            </a>
-          )}
-        </div>
-        
-        {/* Memory Toggle */}
-        <MemoryToggle 
-          enabled={memoryEnabled}
-          onChange={onMemoryToggle}
-          className="mb-2"
-        />
-        
-        {/* Structured Input Toggle */}
-        <StructuredInputToggle 
-          enabled={useStructuredInput}
-          onChange={onStructuredInputToggle}
-          className="mb-2"
-        />
-        
-        {/* Clear Conversation Button */}
-        {memoryEnabled && (
-          <button
-            onClick={onClearConversation}
-            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-sm"
-          >
-            <Trash2 size={14} />
-            Clear Conversation
-          </button>
-        )}
-        
-        {/* Privacy & Data Management */}
-        <div className="space-y-2 pt-2 border-t border-slate-700/50">
-          <button
-            onClick={onShowPrivacy}
-            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
-          >
-            <Shield size={14} />
-            Privacy & Data
-          </button>
-          
-          <button
-            onClick={onDeleteAllHistory}
-            className="w-full flex items-center justify-center gap-2 p-2.5 bg-red-900/20 hover:bg-red-900/30 border border-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition-colors text-sm"
-          >
-            <History size={14} />
-            Delete All History
-          </button>
-          
-          <button
-            onClick={onReset}
-            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
-          >
-            <RotateCcw size={14} />
-            Reset Form
-          </button>
-        </div>
-        
-        {/* Export Conversation */}
-        <div className="space-y-2 pt-2 border-t border-slate-700/50">
-          <label className="block text-sm font-medium text-slate-400 mb-1">Export Format</label>
-          <select
-            value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="json">JSON (structured data)</option>
-            <option value="txt">TXT (plain text)</option>
-            <option value="pdf">PDF (print to PDF)</option>
-          </select>
-          
-          <button
-            onClick={() => onExportConversation(exportFormat)}
-            className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-sm"
-          >
-            <Download size={14} />
-            Export Conversation
-          </button>
-        </div>
-        
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Artist Name</label>
-          <Mic className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
-          <input type="text" value={artistName} onChange={e => setArtistName(e.target.value)} placeholder="e.g., Frank Ocean" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Core Theme</label>
-          <FileText className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
-          <textarea value={coreTheme} onChange={e => setCoreTheme(e.target.value)} placeholder="e.g., Unrequited love in the digital age" rows="3" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
-        </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Mood Tag</label>
-          <Smile className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
-          <input type="text" value={moodTag} onChange={e => setMoodTag(e.target.value)} placeholder="e.g., melancholy, nostalgic" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Banned Words</label>
-          <textarea value={bannedWords} onChange={e => setBannedWords(e.target.value)} placeholder="e.g., love, heart, forever (comma-separated)" rows="2" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
-          <p className="text-xs text-slate-500 mt-1">Words to avoid in lyrics</p>
-        </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Length</label>
-          <ListCollapse className="absolute left-3 top-10 w-5 h-5 text-slate-500" />
-          <select value={lengthHint} onChange={e => setLengthHint(e.target.value)} className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2.5 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option>short</option><option>single</option><option>double</option><option>full song</option><option>hook</option><option>chorus</option><option>bridge</option><option>breakdown</option><option>outro</option>
-          </select>
-        </div>
-        <div>
-          <label className="flex items-center cursor-pointer">
-            <div className="relative">
-              <input type="checkbox" checked={isExplicit} onChange={e => setIsExplicit(e.target.checked)} className="sr-only" />
-              <div className={`block w-14 h-8 rounded-full ${isExplicit ? 'bg-indigo-600' : 'bg-slate-700'}`}></div>
-              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isExplicit ? 'transform translate-x-6' : ''}`}></div>
-            </div>
-            <div className="ml-3 text-slate-300 font-medium">Explicit Language</div>
-          </label>
-        </div>
-        
-        {/* Rhyme Control Section */}
-        <div className="space-y-3 sm:space-y-4 bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-700">
-          <h3 className="text-xs sm:text-sm font-bold text-indigo-300">Rhyme Controls</h3>
-          
-          {/* Rhyme Density Slider */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-              Rhyme Density: {rhymeDensity}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={rhymeDensity}
-              onChange={e => setRhymeDensity(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <p className="text-xs text-slate-500 mt-1">How frequently rhymes appear</p>
-          </div>
+        {/* Main Settings Accordion */}
+        <Accordion type="multiple" defaultValue={[]} className="w-full bg-slate-800/30">
+          {/* AI Model & Memory Settings */}
+          <AccordionItem value="model">
+            <AccordionTrigger icon={<BrainCircuit className="h-4 w-4" />}>
+              AI Model & Memory
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3">
+                {/* Model Selection Dropdown */}
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">AI Model</label>
+                  <select 
+                    value={selectedModel} 
+                    onChange={e => {
+                      const model = MODEL_OPTIONS.find(m => m.id === e.target.value);
+                      if (model?.premium && profile.is_pro !== 'true') return;
+                      if (model?.beta && profile.is_beta !== 'true') return;
+                      setSelectedModel(e.target.value);
+                    }} 
+                    className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {MODEL_OPTIONS.map(model => (
+                      <option 
+                        key={model.id} 
+                        value={model.id} 
+                        disabled={(model.premium && profile.is_pro !== 'true') || (model.beta && profile.is_beta !== 'true')}
+                      >
+                        {model.name} {model.premium && profile.is_pro !== 'true' ? '(Studio Pass Only)' : model.beta && profile.is_beta !== 'true' ? '(Beta Testers Only)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {profile.is_pro !== 'true' && (
+                    <a href="https://buymeacoffee.com/theelderemo/membership" target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-400 mt-1 hover:underline block">
+                      Unlock Claude 3 Opus with Studio Pass
+                    </a>
+                  )}
+                </div>
+                
+                <MemoryToggle 
+                  enabled={memoryEnabled}
+                  onChange={onMemoryToggle}
+                />
+                
+                <StructuredInputToggle 
+                  enabled={useStructuredInput}
+                  onChange={onStructuredInputToggle}
+                />
+                
+                {memoryEnabled && (
+                  <button
+                    onClick={onClearConversation}
+                    className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-xs"
+                  >
+                    <Trash2 size={12} />
+                    Clear Conversation
+                  </button>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* Rhyme Complexity Slider */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-              Rhyme Complexity: {rhymeComplexity}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={rhymeComplexity}
-              onChange={e => setRhymeComplexity(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <p className="text-xs text-slate-500 mt-1">Multisyllabic & intricate patterns</p>
-          </div>
+          {/* Lyrics Input Settings */}
+          <AccordionItem value="lyrics">
+            <AccordionTrigger icon={<Mic className="h-4 w-4" />}>
+              Lyrics Settings
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3">
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Artist Name</label>
+                  <input type="text" value={artistName} onChange={e => setArtistName(e.target.value)} placeholder="e.g., Frank Ocean" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Core Theme</label>
+                  <textarea value={coreTheme} onChange={e => setCoreTheme(e.target.value)} placeholder="e.g., Unrequited love in the digital age" rows="2" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Mood Tag</label>
+                  <input type="text" value={moodTag} onChange={e => setMoodTag(e.target.value)} placeholder="e.g., melancholy, nostalgic" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Banned Words</label>
+                  <textarea value={bannedWords} onChange={e => setBannedWords(e.target.value)} placeholder="e.g., love, heart, forever" rows="2" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                  <p className="text-xs text-slate-500 mt-1">Comma-separated words to avoid</p>
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Length</label>
+                  <select value={lengthHint} onChange={e => setLengthHint(e.target.value)} className="w-full appearance-none bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option>short</option><option>single</option><option>double</option><option>full song</option><option>hook</option><option>chorus</option><option>bridge</option><option>breakdown</option><option>outro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input type="checkbox" checked={isExplicit} onChange={e => setIsExplicit(e.target.checked)} className="sr-only" />
+                      <div className={`block w-12 h-6 rounded-full ${isExplicit ? 'bg-indigo-600' : 'bg-slate-700'}`}></div>
+                      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isExplicit ? 'transform translate-x-6' : ''}`}></div>
+                    </div>
+                    <div className="ml-3 text-slate-300 text-sm">Explicit Language</div>
+                  </label>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* Rhyme Placement */}
-          <CheckboxDropdown
-            label="Rhyme Placement"
-            options={rhymePlacementOptions}
-            selectedValues={selectedRhymeSchemes}
-            onChange={(option) => setSelectedRhymeSchemes(
-              selectedRhymeSchemes.includes(option)
-                ? selectedRhymeSchemes.filter(s => s !== option)
-                : [...selectedRhymeSchemes, option]
-            )}
-            placeholder="Select rhyme placement..."
-          />
+          {/* Rhyme Controls */}
+          <AccordionItem value="rhyme">
+            <AccordionTrigger icon={<Music className="h-4 w-4" />}>
+              Rhyme Controls
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    Rhyme Density: {rhymeDensity}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={rhymeDensity}
+                    onChange={e => setRhymeDensity(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">How frequently rhymes appear</p>
+                </div>
 
-          {/* Rhyme Quality */}
-          <CheckboxDropdown
-            label="Rhyme Quality"
-            options={rhymeQualityOptions}
-            selectedValues={selectedRhymeSchemes}
-            onChange={(option) => setSelectedRhymeSchemes(
-              selectedRhymeSchemes.includes(option)
-                ? selectedRhymeSchemes.filter(s => s !== option)
-                : [...selectedRhymeSchemes, option]
-            )}
-            placeholder="Select rhyme quality..."
-          />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    Rhyme Complexity: {rhymeComplexity}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={rhymeComplexity}
+                    onChange={e => setRhymeComplexity(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Multisyllabic & intricate patterns</p>
+                </div>
 
-          {/* Structure Patterns */}
-          <CheckboxDropdown
-            label="Structure Patterns"
-            options={rhymePatternOptions}
-            selectedValues={selectedRhymeSchemes}
-            onChange={(option) => setSelectedRhymeSchemes(
-              selectedRhymeSchemes.includes(option)
-                ? selectedRhymeSchemes.filter(s => s !== option)
-                : [...selectedRhymeSchemes, option]
-            )}
-            placeholder="Select rhyme patterns..."
-          />
+                <CheckboxDropdown
+                  label="Rhyme Placement"
+                  options={rhymePlacementOptions}
+                  selectedValues={selectedRhymeSchemes}
+                  onChange={(option) => setSelectedRhymeSchemes(
+                    selectedRhymeSchemes.includes(option)
+                      ? selectedRhymeSchemes.filter(s => s !== option)
+                      : [...selectedRhymeSchemes, option]
+                  )}
+                  placeholder="Select rhyme placement..."
+                />
 
-          {/* Poetic Forms */}
-          <CheckboxDropdown
-            label="Poetic Forms"
-            options={poeticFormOptions}
-            selectedValues={selectedRhymeSchemes}
-            onChange={(option) => setSelectedRhymeSchemes(
-              selectedRhymeSchemes.includes(option)
-                ? selectedRhymeSchemes.filter(s => s !== option)
-                : [...selectedRhymeSchemes, option]
-            )}
-            placeholder="Select poetic forms..."
-          />
-        </div>
+                <CheckboxDropdown
+                  label="Rhyme Quality"
+                  options={rhymeQualityOptions}
+                  selectedValues={selectedRhymeSchemes}
+                  onChange={(option) => setSelectedRhymeSchemes(
+                    selectedRhymeSchemes.includes(option)
+                      ? selectedRhymeSchemes.filter(s => s !== option)
+                      : [...selectedRhymeSchemes, option]
+                  )}
+                  placeholder="Select rhyme quality..."
+                />
 
-        {/* Temperature and Top-p sliders */}
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Temperature: {temperature}</label>
-            <input
-              type="range"
-              min="0.1"
-              max="2"
-              step="0.01"
-              value={temperature}
-              onChange={e => setTemperature(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Top-p: {topP}</label>
-            <input
-              type="range"
-              min="0.1"
-              max="1"
-              step="0.01"
-              value={topP}
-              onChange={e => setTopP(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-          </div>
-        </div>
+                <CheckboxDropdown
+                  label="Structure Patterns"
+                  options={rhymePatternOptions}
+                  selectedValues={selectedRhymeSchemes}
+                  onChange={(option) => setSelectedRhymeSchemes(
+                    selectedRhymeSchemes.includes(option)
+                      ? selectedRhymeSchemes.filter(s => s !== option)
+                      : [...selectedRhymeSchemes, option]
+                  )}
+                  placeholder="Select rhyme patterns..."
+                />
+
+                <CheckboxDropdown
+                  label="Poetic Forms"
+                  options={poeticFormOptions}
+                  selectedValues={selectedRhymeSchemes}
+                  onChange={(option) => setSelectedRhymeSchemes(
+                    selectedRhymeSchemes.includes(option)
+                      ? selectedRhymeSchemes.filter(s => s !== option)
+                      : [...selectedRhymeSchemes, option]
+                  )}
+                  placeholder="Select poetic forms..."
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Advanced Settings */}
+          <AccordionItem value="advanced">
+            <AccordionTrigger icon={<Sliders className="h-4 w-4" />}>
+              Advanced Settings
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">Temperature: {temperature}</label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="2"
+                    step="0.01"
+                    value={temperature}
+                    onChange={e => setTemperature(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Higher = more creative/random</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">Top-p: {topP}</label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.01"
+                    value={topP}
+                    onChange={e => setTopP(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Nucleus sampling threshold</p>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Data & Export */}
+          <AccordionItem value="data">
+            <AccordionTrigger icon={<Settings className="h-4 w-4" />}>
+              Data & Export
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                <button
+                  onClick={onShowPrivacy}
+                  className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                >
+                  <Shield size={12} />
+                  Privacy & Data
+                </button>
+                
+                <button
+                  onClick={onDeleteAllHistory}
+                  className="w-full flex items-center justify-center gap-2 p-2 bg-red-900/20 hover:bg-red-900/30 border border-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition-colors text-xs"
+                >
+                  <History size={12} />
+                  Delete All History
+                </button>
+                
+                <button
+                  onClick={onReset}
+                  className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                >
+                  <RotateCcw size={12} />
+                  Reset Form
+                </button>
+                
+                <div className="pt-2 border-t border-slate-700/50">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Export Format</label>
+                  <select
+                    value={exportFormat}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="json">JSON (structured data)</option>
+                    <option value="txt">TXT (plain text)</option>
+                    <option value="pdf">PDF (print to PDF)</option>
+                  </select>
+                  
+                  <button
+                    onClick={() => onExportConversation(exportFormat)}
+                    className="w-full mt-2 flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                  >
+                    <Download size={12} />
+                    Export Conversation
+                  </button>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
       
       {/* Delete Confirmation Dialog */}

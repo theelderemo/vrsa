@@ -37,6 +37,8 @@ export const useTypewriter = (text, speed = 20, enabled = true) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSkipped, setIsSkipped] = useState(false);
   const timeoutRef = useRef(null);
+  const hasAnimatedRef = useRef(false); // Track if we've already animated this message
+  const initialTextRef = useRef(text); // Track the original text to detect edits vs new messages
 
   // Function to skip animation
   const skip = () => {
@@ -44,6 +46,7 @@ export const useTypewriter = (text, speed = 20, enabled = true) => {
     setDisplayedText(text);
     setIsTyping(false);
     setCurrentIndex(text.length);
+    hasAnimatedRef.current = true;
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -57,7 +60,15 @@ export const useTypewriter = (text, speed = 20, enabled = true) => {
       return;
     }
 
-    // Reset when text changes
+    // If we've already animated this message and the text changed (due to editing),
+    // just update the displayed text without re-animating
+    if (hasAnimatedRef.current) {
+      setDisplayedText(text);
+      setIsTyping(false);
+      return;
+    }
+
+    // Only start animation for truly new messages (not edits)
     setDisplayedText('');
     setCurrentIndex(0);
     setIsTyping(true);
@@ -74,6 +85,7 @@ export const useTypewriter = (text, speed = 20, enabled = true) => {
     if (!enabled || !text || currentIndex >= text.length || isSkipped) {
       if (currentIndex >= text.length && text) {
         setIsTyping(false);
+        hasAnimatedRef.current = true; // Mark as animated when complete
       }
       return;
     }
