@@ -22,17 +22,25 @@
  * SOFTWARE.
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- Import
-import { LoaderCircle, Palette, Mic, FileText, ListCollapse, BrainCircuit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LoaderCircle, Palette, Mic, FileText, ListCollapse, BrainCircuit, Lock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useUser } from '../../hooks/useUser';
 import { callAI } from '../../lib/api';
+import { checkRateLimit, incrementUsage, RATE_LIMIT_FEATURES, DAILY_LIMITS, getRemainingUses } from '../../lib/rateLimits';
 
 const Analyzer = () => {
-  const { user, loading } = useUser();
-  const navigate = useNavigate(); // <-- Init hook
+  const { user, profile, loading } = useUser();
+  const navigate = useNavigate();
   const [lyricsInput, setLyricsInput] = useState('');
+  const [remainingAnalyses, setRemainingAnalyses] = useState(DAILY_LIMITS.ANALYZER);
+  
+  const isPro = profile?.is_pro === 'true';
+  
+  useEffect(() => {
+    setRemainingAnalyses(getRemainingUses(RATE_LIMIT_FEATURES.ANALYZER, DAILY_LIMITS.ANALYZER, isPro));
+  }, [isPro]);
   const [stylePaletteResult, setStylePaletteResult] = useState('');
   const [sunoTagsResult, setSunoTagsResult] = useState('');
   const [statSheetResult, setStatSheetResult] = useState('');
@@ -104,8 +112,18 @@ Format as a clean stat sheet. Be precise with numbers.`;
 For each category, list the rhyming pairs/groups you found, citing the specific words. Present this as a structured analysis that helps the user understand the rhyme structure.`;
 
   const handleStylePaletteAnalysis = () => {
+    const { canUse } = checkRateLimit(RATE_LIMIT_FEATURES.ANALYZER, DAILY_LIMITS.ANALYZER, isPro);
+    if (!canUse) {
+      alert('Daily limit reached. Upgrade to Studio Pass for unlimited analyses.');
+      return;
+    }
+    
     const prompt = `${STYLE_PALETTE_PROMPT}\n\nLyrics to analyze:\n${lyricsInput}`;
-    callAI(prompt, setIsAnalyzingStylePalette, setStylePaletteResult);
+    callAI(prompt, setIsAnalyzingStylePalette, (result) => {
+      setStylePaletteResult(result);
+      incrementUsage(RATE_LIMIT_FEATURES.ANALYZER);
+      setRemainingAnalyses(getRemainingUses(RATE_LIMIT_FEATURES.ANALYZER, DAILY_LIMITS.ANALYZER, isPro));
+    });
   };
 
   const handleGenerateSunoTags = () => {
@@ -132,7 +150,14 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="p-3 lg:p-6 border-b border-slate-700/50 bg-slate-900 shrink-0">
         <h2 className="text-xl lg:text-2xl font-bold text-indigo-400 mb-1">Lyric Analyzer</h2>
-        <p className="text-slate-400 text-xs lg:text-sm">Paste lyrics and analyze with AI tools</p>
+        <div className="flex items-center justify-between">
+          <p className="text-slate-400 text-xs lg:text-sm">Paste lyrics and analyze with AI tools</p>
+          {!isPro && (
+            <span className="text-xs text-amber-400">
+              {remainingAnalyses}/{DAILY_LIMITS.ANALYZER} analyses left today
+            </span>
+          )}
+        </div>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -148,7 +173,8 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
           <div className="mt-3 lg:mt-4 grid grid-cols-2 gap-2 lg:gap-3">
             <button
               onClick={handleStylePaletteAnalysis}
-              disabled={isAnalyzingStylePalette || !lyricsInput.trim()}
+              disabled={isAnalyzingStylePalette || !lyricsInput.trim() || (!isPro && remainingAnalyses <= 0)}
+              title={!isPro && remainingAnalyses <= 0 ? 'Daily limit reached' : 'Analyze style palette'}
               className="px-2 lg:px-4 py-2 lg:py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
               {isAnalyzingStylePalette ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <Palette size={16} className="lg:mr-2" />}
@@ -156,30 +182,33 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
               <span className="lg:hidden">Style</span>
             </button>
             <button
-              onClick={handleGenerateStatSheet}
-              disabled={isGeneratingStatSheet || !lyricsInput.trim()}
-              className="px-2 lg:px-4 py-2 lg:py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
+              onClick={isPro ? handleGenerateStatSheet : undefined}
+              disabled={isGeneratingStatSheet || !lyricsInput.trim() || !isPro}
+              title={!isPro ? 'Studio Pass Only' : 'Generate stat sheet'}
+              className="px-2 lg:px-4 py-2 lg:py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm relative"
             >
-              {isGeneratingStatSheet ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <FileText size={16} className="lg:mr-2" />}
-              <span className="hidden lg:inline">Stat-Sheet</span>
-              <span className="lg:hidden">Stats</span>
+              {isGeneratingStatSheet ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : !isPro ? <Lock size={16} className="lg:mr-2" /> : <FileText size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Stat-Sheet {!isPro && '🔒'}</span>
+              <span className="lg:hidden">Stats {!isPro && '🔒'}</span>
             </button>
             <button
-              onClick={handleRhymeVisualization}
-              disabled={isAnalyzingRhymes || !lyricsInput.trim()}
+              onClick={isPro ? handleRhymeVisualization : undefined}
+              disabled={isAnalyzingRhymes || !lyricsInput.trim() || !isPro}
+              title={!isPro ? 'Studio Pass Only' : 'Analyze rhymes'}
               className="px-2 lg:px-4 py-2 lg:py-3 bg-pink-600 hover:bg-pink-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isAnalyzingRhymes ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <ListCollapse size={16} className="lg:mr-2" />}
-              <span className="hidden lg:inline">Rhyme Analysis</span>
-              <span className="lg:hidden">Rhymes</span>
+              {isAnalyzingRhymes ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : !isPro ? <Lock size={16} className="lg:mr-2" /> : <ListCollapse size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Rhyme Analysis {!isPro && '🔒'}</span>
+              <span className="lg:hidden">Rhymes {!isPro && '🔒'}</span>
             </button>
             <button
-              onClick={handleGenerateSunoTags}
-              disabled={isGeneratingSunoTags || !lyricsInput.trim()}
+              onClick={isPro ? handleGenerateSunoTags : undefined}
+              disabled={isGeneratingSunoTags || !lyricsInput.trim() || !isPro}
+              title={!isPro ? 'Studio Pass Only' : 'Generate Suno tags'}
               className="px-2 lg:px-4 py-2 lg:py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isGeneratingSunoTags ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <Mic size={16} className="lg:mr-2" />}
-              <span className="hidden lg:inline">Suno Tags</span>
+              {isGeneratingSunoTags ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : !isPro ? <Lock size={16} className="lg:mr-2" /> : <Mic size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Suno Tags {!isPro && '🔒'}</span>
               <span className="lg:hidden">Tags</span>
             </button>
           </div>

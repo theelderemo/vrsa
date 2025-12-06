@@ -5,10 +5,16 @@
  */
 
 import React, { useState } from 'react';
-import { Lightbulb, LoaderCircle, Copy, Check, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Lightbulb, LoaderCircle, Copy, Check, RefreshCw, Lock } from 'lucide-react';
 import { callAI } from '../../lib/api';
+import { useUser } from '../../hooks/useUser';
 
 const HookGenerator = () => {
+  const { user, profile, loading: userLoading } = useUser();
+  const navigate = useNavigate();
+  const isPro = profile?.is_pro === 'true';
+  
   const [theme, setTheme] = useState('');
   const [genre, setGenre] = useState('');
   const [mood, setMood] = useState('');
@@ -51,7 +57,7 @@ const HookGenerator = () => {
 Format each hook clearly numbered 1-5. Include brief notes on how each hook could work melodically. Be creative and think radio-ready.`;
 
   const handleGenerate = () => {
-    if (!theme.trim()) return;
+    if (!theme.trim() || !isPro) return;
     
     let prompt = `${HOOK_PROMPT}\n\nTheme/Topic: "${theme}"`;
     if (genre) prompt += `\nGenre: ${genre}`;
@@ -61,7 +67,7 @@ Format each hook clearly numbered 1-5. Include brief notes on how each hook coul
   };
 
   const handleRegenerate = () => {
-    if (theme.trim()) {
+    if (theme.trim() && isPro) {
       handleGenerate();
     }
   };
@@ -71,6 +77,34 @@ Format each hook clearly numbered 1-5. Include brief notes on how each hook coul
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Loading state
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900">
+        <LoaderCircle className="animate-spin text-amber-400" size={48} />
+      </div>
+    );
+  }
+
+  // Pro-only gate
+  if (!isPro) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900 p-8">
+        <div className="max-w-md text-center">
+          <Lock size={48} className="mx-auto mb-4 text-amber-400 opacity-50" />
+          <h2 className="text-2xl font-bold text-white mb-4">Studio Pass Required</h2>
+          <p className="text-slate-400 mb-6">Hook Generator is a premium feature. Upgrade to Studio Pass to unlock AI-powered hook generation.</p>
+          <button
+            onClick={() => navigate('/studio-pass')}
+            className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            Get Studio Pass
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">

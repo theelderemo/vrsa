@@ -5,14 +5,20 @@
  */
 
 import React, { useState } from 'react';
-import { Sparkles, LoaderCircle, Copy, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, LoaderCircle, Copy, Check, Lock } from 'lucide-react';
 import { callAI } from '../../lib/api';
+import { useUser } from '../../hooks/useUser';
 
 const WordplaySuggester = () => {
+  const { user, profile, loading } = useUser();
+  const navigate = useNavigate();
+  const isPro = profile?.is_pro === 'true';
+  
   const [word, setWord] = useState('');
   const [context, setContext] = useState('');
   const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const WORDPLAY_PROMPT = `You are a creative wordplay expert specializing in songwriting. Given a word or phrase, generate creative wordplay suggestions including:
@@ -26,14 +32,14 @@ const WordplaySuggester = () => {
 Format each suggestion clearly. Be creative, clever, and think like a songwriter looking for that perfect turn of phrase. Keep suggestions relevant to songwriting.`;
 
   const handleGenerate = () => {
-    if (!word.trim()) return;
+    if (!word.trim() || !isPro) return;
     
     let prompt = `${WORDPLAY_PROMPT}\n\nWord/Phrase to work with: "${word}"`;
     if (context.trim()) {
       prompt += `\n\nContext/Theme: ${context}`;
     }
     
-    callAI(prompt, setLoading, setResult, { temperature: 0.9, top_p: 0.95 });
+    callAI(prompt, setIsLoading, setResult, { temperature: 0.9, top_p: 0.95 });
   };
 
   const handleCopy = () => {
@@ -48,6 +54,34 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
       handleGenerate();
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900">
+        <LoaderCircle className="animate-spin text-purple-400" size={48} />
+      </div>
+    );
+  }
+
+  // Pro-only gate
+  if (!isPro) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-900 p-8">
+        <div className="max-w-md text-center">
+          <Lock size={48} className="mx-auto mb-4 text-purple-400 opacity-50" />
+          <h2 className="text-2xl font-bold text-white mb-4">Studio Pass Required</h2>
+          <p className="text-slate-400 mb-6">Wordplay Suggester is a premium feature. Upgrade to Studio Pass to unlock creative wordplay suggestions.</p>
+          <button
+            onClick={() => navigate('/studio-pass')}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            Get Studio Pass
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -84,10 +118,10 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
 
             <button
               onClick={handleGenerate}
-              disabled={loading || !word.trim()}
+              disabled={isLoading || !word.trim()}
               className="w-full px-4 py-2 lg:py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <LoaderCircle size={18} className="animate-spin mr-2" />
                   <span className="hidden lg:inline">Generating...</span>

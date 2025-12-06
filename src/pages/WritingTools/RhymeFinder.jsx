@@ -4,8 +4,10 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, LoaderCircle, Volume2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { useUser } from '../../hooks/useUser';
+import { checkRateLimit, incrementUsage, RATE_LIMIT_FEATURES, DAILY_LIMITS, getRemainingUses } from '../../lib/rateLimits';
 
 const SEARCH_MODES = [
   { id: 'rel_rhy', label: 'Perfect Rhymes', description: 'Words that rhyme exactly', color: 'indigo', example: 'cat → hat, bat' },
@@ -40,6 +42,9 @@ const COLOR_CLASSES = {
 };
 
 const RhymeFinder = () => {
+  const { profile } = useUser();
+  const isPro = profile?.is_pro === 'true';
+  
   const [word, setWord] = useState('');
   const [topic, setTopic] = useState('');
   const [results, setResults] = useState([]);
@@ -48,11 +53,23 @@ const RhymeFinder = () => {
   const [searchMode, setSearchMode] = useState('rel_rhy');
   const [copiedWord, setCopiedWord] = useState(null);
   const [showAllModes, setShowAllModes] = useState(false);
+  const [remainingQueries, setRemainingQueries] = useState(DAILY_LIMITS.WORD_FINDER);
+
+  useEffect(() => {
+    setRemainingQueries(getRemainingUses(RATE_LIMIT_FEATURES.WORD_FINDER, DAILY_LIMITS.WORD_FINDER, isPro));
+  }, [isPro]);
 
   const currentMode = SEARCH_MODES.find(m => m.id === searchMode);
 
   const fetchWords = async () => {
     if (!word.trim()) return;
+    
+    // Check rate limit for free users
+    const { canUse } = checkRateLimit(RATE_LIMIT_FEATURES.WORD_FINDER, DAILY_LIMITS.WORD_FINDER, isPro);
+    if (!canUse) {
+      setError('Daily limit reached. Upgrade to Studio Pass for unlimited searches.');
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -70,6 +87,10 @@ const RhymeFinder = () => {
       const data = await response.json();
 
       setResults(data);
+      
+      // Increment usage after successful search
+      incrementUsage(RATE_LIMIT_FEATURES.WORD_FINDER);
+      setRemainingQueries(getRemainingUses(RATE_LIMIT_FEATURES.WORD_FINDER, DAILY_LIMITS.WORD_FINDER, isPro));
 
       if (data.length === 0) {
         setError(`No results found for "${word}". Try a different word or search mode.`);
@@ -109,7 +130,14 @@ const RhymeFinder = () => {
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
       <div className="p-3 lg:p-6 border-b border-slate-700/50 bg-slate-900 shrink-0">
-        <h2 className="text-xl lg:text-2xl font-bold text-indigo-400 mb-1">Word Finder</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl lg:text-2xl font-bold text-indigo-400 mb-1">Word Finder</h2>
+          {!isPro && (
+            <span className="text-xs text-amber-400">
+              {remainingQueries}/{DAILY_LIMITS.WORD_FINDER} searches left today
+            </span>
+          )}
+        </div>
       </div>
       
       {/* Mobile: Compact inline controls | Desktop: Side panel */}
@@ -133,7 +161,8 @@ const RhymeFinder = () => {
             </div>
             <button
               onClick={fetchWords}
-              disabled={loading || !word.trim()}
+              disabled={loading || !word.trim() || (!isPro && remainingQueries <= 0)}
+              title={!isPro && remainingQueries <= 0 ? 'Daily limit reached' : 'Search'}
               className="px-4 py-2 lg:w-full lg:py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             >
               {loading ? <LoaderCircle size={18} className="animate-spin" /> : <Search size={18} className="lg:mr-2" />}
