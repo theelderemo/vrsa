@@ -130,70 +130,74 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
-      <div className="p-4 lg:p-6 border-b border-slate-700/50 bg-slate-900">
-        <h2 className="text-2xl font-bold text-indigo-400 mb-2">Lyric Analyzer</h2>
-        <p className="text-slate-400 text-sm">Paste your lyrics below and deconstruct them with powerful AI analysis tools.</p>
+      <div className="p-3 lg:p-6 border-b border-slate-700/50 bg-slate-900 shrink-0">
+        <h2 className="text-xl lg:text-2xl font-bold text-indigo-400 mb-1">Lyric Analyzer</h2>
+        <p className="text-slate-400 text-xs lg:text-sm">Paste lyrics and analyze with AI tools</p>
       </div>
       
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         {/* Left Panel - Input Area */}
-        <div className="w-full lg:w-1/2 p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 flex flex-col">
-          <h3 className="text-lg font-semibold text-slate-300 mb-3">Paste Lyrics</h3>
+        <div className="shrink-0 lg:shrink lg:w-1/2 p-3 lg:p-6 border-b lg:border-b-0 lg:border-r border-slate-700/50 flex flex-col max-h-[40vh] lg:max-h-none">
+          <h3 className="text-base lg:text-lg font-semibold text-slate-300 mb-2 lg:mb-3">Paste Lyrics</h3>
           <textarea
             value={lyricsInput}
             onChange={(e) => setLyricsInput(e.target.value)}
-            placeholder="Paste your lyrics here for analysis..."
-            className="flex-1 w-full bg-slate-800 border border-slate-700 rounded-lg p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-sm"
+            placeholder="Paste your lyrics here..."
+            className="flex-1 w-full bg-slate-800 border border-slate-700 rounded-lg p-3 lg:p-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-xs lg:text-sm min-h-[80px]"
           />
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-3 lg:mt-4 grid grid-cols-2 gap-2 lg:gap-3">
             <button
               onClick={handleStylePaletteAnalysis}
               disabled={isAnalyzingStylePalette || !lyricsInput.trim()}
-              className="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="px-2 lg:px-4 py-2 lg:py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isAnalyzingStylePalette ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <Palette size={18} className="mr-2" />}
-              Style Palette
+              {isAnalyzingStylePalette ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <Palette size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Style Palette</span>
+              <span className="lg:hidden">Style</span>
             </button>
             <button
               onClick={handleGenerateStatSheet}
               disabled={isGeneratingStatSheet || !lyricsInput.trim()}
-              className="px-4 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="px-2 lg:px-4 py-2 lg:py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isGeneratingStatSheet ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <FileText size={18} className="mr-2" />}
-              Stat-Sheet
+              {isGeneratingStatSheet ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <FileText size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Stat-Sheet</span>
+              <span className="lg:hidden">Stats</span>
             </button>
             <button
               onClick={handleRhymeVisualization}
               disabled={isAnalyzingRhymes || !lyricsInput.trim()}
-              className="px-4 py-3 bg-pink-600 hover:bg-pink-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="px-2 lg:px-4 py-2 lg:py-3 bg-pink-600 hover:bg-pink-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isAnalyzingRhymes ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <ListCollapse size={18} className="mr-2" />}
-              Rhyme Analysis
+              {isAnalyzingRhymes ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <ListCollapse size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Rhyme Analysis</span>
+              <span className="lg:hidden">Rhymes</span>
             </button>
             <button
               onClick={handleGenerateSunoTags}
               disabled={isGeneratingSunoTags || !lyricsInput.trim()}
-              className="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="px-2 lg:px-4 py-2 lg:py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs lg:text-sm"
             >
-              {isGeneratingSunoTags ? <LoaderCircle size={18} className="animate-spin mr-2" /> : <Mic size={18} className="mr-2" />}
-              Suno Tags
+              {isGeneratingSunoTags ? <LoaderCircle size={16} className="animate-spin lg:mr-2" /> : <Mic size={16} className="lg:mr-2" />}
+              <span className="hidden lg:inline">Suno Tags</span>
+              <span className="lg:hidden">Tags</span>
             </button>
           </div>
         </div>
 
         {/* Right Panel - Results Area */}
-        <div className="w-full lg:w-1/2 p-4 lg:p-6 flex flex-col overflow-hidden">
-          <h3 className="text-lg font-semibold text-slate-300 mb-3">Analysis Results</h3>
-          <div className="flex-1 space-y-4 overflow-y-auto">
+        <div className="flex-1 min-h-0 p-3 lg:p-6 flex flex-col overflow-hidden">
+          <h3 className="text-base lg:text-lg font-semibold text-slate-300 mb-2 lg:mb-3 shrink-0">Analysis Results</h3>
+          <div className="flex-1 space-y-3 lg:space-y-4 overflow-y-auto min-h-0">
             {/* Style Palette Result */}
             {stylePaletteResult && (
-              <div className="bg-slate-800/50 border border-indigo-500/50 rounded-lg p-4">
+              <div className="bg-slate-800/50 border border-indigo-500/50 rounded-lg p-3 lg:p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-indigo-400 flex items-center">
-                    <Palette size={16} className="mr-2" /> Style Palette (Lyrical DNA)
+                  <h4 className="font-semibold text-indigo-400 flex items-center text-sm lg:text-base">
+                    <Palette size={14} className="mr-2" /> Style Palette
                   </h4>
                 </div>
-                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                <div className="text-slate-200 text-xs lg:text-sm prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown>{stylePaletteResult}</ReactMarkdown>
                 </div>
               </div>
@@ -201,13 +205,13 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
 
             {/* Suno Tags Result */}
             {sunoTagsResult && (
-              <div className="bg-slate-800/50 border border-emerald-500/50 rounded-lg p-4">
+              <div className="bg-slate-800/50 border border-emerald-500/50 rounded-lg p-3 lg:p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-emerald-400 flex items-center">
-                    <Mic size={16} className="mr-2" /> Suno AI Style Tags
+                  <h4 className="font-semibold text-emerald-400 flex items-center text-sm lg:text-base">
+                    <Mic size={14} className="mr-2" /> Suno Tags
                   </h4>
                 </div>
-                <div className="text-slate-200 text-sm font-mono prose prose-invert prose-sm max-w-none">
+                <div className="text-slate-200 text-xs lg:text-sm font-mono prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown>{sunoTagsResult}</ReactMarkdown>
                 </div>
               </div>
@@ -215,13 +219,13 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
 
             {/* Stat Sheet Result */}
             {statSheetResult && (
-              <div className="bg-slate-800/50 border border-purple-500/50 rounded-lg p-4">
+              <div className="bg-slate-800/50 border border-purple-500/50 rounded-lg p-3 lg:p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-purple-400 flex items-center">
-                    <FileText size={16} className="mr-2" /> Stat-Sheet
+                  <h4 className="font-semibold text-purple-400 flex items-center text-sm lg:text-base">
+                    <FileText size={14} className="mr-2" /> Stat-Sheet
                   </h4>
                 </div>
-                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                <div className="text-slate-200 text-xs lg:text-sm prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown>{statSheetResult}</ReactMarkdown>
                 </div>
               </div>
@@ -229,13 +233,13 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
 
             {/* Rhyme Visualizer Result */}
             {rhymeVisualizerResult && (
-              <div className="bg-slate-800/50 border border-pink-500/50 rounded-lg p-4">
+              <div className="bg-slate-800/50 border border-pink-500/50 rounded-lg p-3 lg:p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-pink-400 flex items-center">
-                    <ListCollapse size={16} className="mr-2" /> Rhyme Analysis
+                  <h4 className="font-semibold text-pink-400 flex items-center text-sm lg:text-base">
+                    <ListCollapse size={14} className="mr-2" /> Rhyme Analysis
                   </h4>
                 </div>
-                <div className="text-slate-200 text-sm prose prose-invert prose-sm max-w-none">
+                <div className="text-slate-200 text-xs lg:text-sm prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown>{rhymeVisualizerResult}</ReactMarkdown>
                 </div>
               </div>
@@ -244,9 +248,10 @@ For each category, list the rhyming pairs/groups you found, citing the specific 
             {/* Empty State */}
             {!stylePaletteResult && !sunoTagsResult && !statSheetResult && !rhymeVisualizerResult && (
               <div className="flex items-center justify-center h-full text-slate-500">
-                <div className="text-center">
-                  <BrainCircuit size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>Analysis results will appear here</p>
+                <div className="text-center px-4">
+                  <BrainCircuit size={36} className="mx-auto mb-3 opacity-50 lg:hidden" />
+                  <BrainCircuit size={48} className="mx-auto mb-4 opacity-50 hidden lg:block" />
+                  <p className="text-sm lg:text-base">Analysis results will appear here</p>
                 </div>
               </div>
             )}

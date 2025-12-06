@@ -71,10 +71,6 @@ const WritingTools = () => {
       {/* Dock at the top */}
       <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center mb-3">
-            <Wrench size={20} className="text-indigo-400 mr-2" />
-            <h1 className="text-lg font-semibold text-slate-300">Writing Tools</h1>
-          </div>
           <WritingToolsDock activeTool={activeTool} onToolSelect={handleToolSelect} />
         </div>
       </div>
