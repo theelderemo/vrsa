@@ -159,6 +159,7 @@ Be unhinged and witty but not mean. Keep it fun and welcoming.`;
           },
           body: JSON.stringify({ 
             messages: [{ role: 'user', content: welcomePrompt }], 
+            model: 'gpt-4o-mini',
             temperature: 0.9, 
             top_p: 0.95 
           })
