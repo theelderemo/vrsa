@@ -22,11 +22,32 @@
  * SOFTWARE.
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, Save, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  LogOut, 
+  Save, 
+  X, 
+  Plus, 
+  Disc3, 
+  ExternalLink, 
+  Trash2, 
+  Pencil,
+  Music,
+  Flame,
+  Loader2,
+  Image
+} from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
+import { 
+  getUserAlbums, 
+  createAlbum, 
+  updateAlbum,
+  deleteAlbum,
+  getUserStats,
+  getTracksByUser
+} from '../lib/social';
 
 const Profile = () => {
   const { user, profile, signOut, loading, refreshProfile } = useUser();
@@ -47,6 +68,86 @@ const Profile = () => {
   const [newUsername, setNewUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState('');
+
+  // Discography state
+  const [albums, setAlbums] = useState([]);
+  const [tracks, setTracks] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loadingDiscography, setLoadingDiscography] = useState(true);
+  const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+  const [newAlbumTitle, setNewAlbumTitle] = useState('');
+  const [newAlbumGenre, setNewAlbumGenre] = useState('');
+  const [albumError, setAlbumError] = useState('');
+  const [editingAlbum, setEditingAlbum] = useState(null);
+
+  // Load discography data
+  useEffect(() => {
+    if (user) {
+      loadDiscography();
+    }
+  }, [user]);
+
+  const loadDiscography = async () => {
+    setLoadingDiscography(true);
+    try {
+      const [albumsResult, tracksResult, statsResult] = await Promise.all([
+        getUserAlbums(user.id),
+        getTracksByUser(user.id),
+        getUserStats(user.id)
+      ]);
+      
+      setAlbums(albumsResult.albums || []);
+      setTracks(tracksResult.tracks || []);
+      setStats(statsResult.stats);
+    } catch (err) {
+      console.error('Error loading discography:', err);
+    } finally {
+      setLoadingDiscography(false);
+    }
+  };
+
+  const handleCreateAlbum = async () => {
+    if (!newAlbumTitle.trim()) {
+      setAlbumError('Album title is required');
+      return;
+    }
+    
+    setAlbumError('');
+    
+    const { album, error } = await createAlbum({
+      userId: user.id,
+      title: newAlbumTitle.trim(),
+      genreTag: newAlbumGenre.trim() || null,
+      isPublic: false
+    });
+    
+    if (error) {
+      setAlbumError(error.message || 'Failed to create album');
+      return;
+    }
+    
+    setAlbums([album, ...albums]);
+    setNewAlbumTitle('');
+    setNewAlbumGenre('');
+    setShowCreateAlbum(false);
+  };
+
+  const handleUpdateAlbum = async (albumId, updates) => {
+    const { error } = await updateAlbum(albumId, updates);
+    if (!error) {
+      setAlbums(albums.map(a => a.id === albumId ? { ...a, ...updates } : a));
+      setEditingAlbum(null);
+    }
+  };
+
+  const handleDeleteAlbum = async (albumId) => {
+    if (!confirm('Delete this album? Tracks will be unlinked but not deleted.')) return;
+    
+    const { error } = await deleteAlbum(albumId);
+    if (!error) {
+      setAlbums(albums.filter(a => a.id !== albumId));
+    }
+  };
 
   if (loading) {
     return (
@@ -361,6 +462,246 @@ const Profile = () => {
               Sign Out
             </button>
           </div>
+        </div>
+
+        {/* My Discography Section */}
+        <div className="bg-slate-800 rounded-lg p-6 mt-6 border border-slate-700">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-white">My Discography</h2>
+              <p className="text-sm text-slate-400 mt-1">
+                Manage your albums and published tracks
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {profile?.username && (
+                <Link
+                  to={`/u/${profile.username}`}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm"
+                >
+                  <ExternalLink size={16} />
+                  View Public Profile
+                </Link>
+              )}
+              <button
+                onClick={() => setShowCreateAlbum(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              >
+                <Plus size={16} />
+                New Album
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Summary */}
+          {stats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <Music className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
+                <span className="text-2xl font-bold text-white block">{stats.trackCount || 0}</span>
+                <span className="text-xs text-slate-400">Published Tracks</span>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <Disc3 className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                <span className="text-2xl font-bold text-white block">{albums.length}</span>
+                <span className="text-xs text-slate-400">Albums</span>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <Flame className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+                <span className="text-2xl font-bold text-white block">{stats.totalFires || 0}</span>
+                <span className="text-xs text-slate-400">Total Fires</span>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <Music className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                <span className="text-2xl font-bold text-white block">{stats.forkCount || 0}</span>
+                <span className="text-xs text-slate-400">Times Forked</span>
+              </div>
+            </div>
+          )}
+
+          {/* Create Album Modal */}
+          {showCreateAlbum && (
+            <div className="mb-6 p-4 bg-slate-900/50 rounded-lg border border-indigo-500/50">
+              <h3 className="text-lg font-semibold text-white mb-4">Create New Album</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Album Title *</label>
+                  <input
+                    type="text"
+                    value={newAlbumTitle}
+                    onChange={(e) => setNewAlbumTitle(e.target.value)}
+                    placeholder="My Mixtape Vol. 1"
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Genre (optional)</label>
+                  <input
+                    type="text"
+                    value={newAlbumGenre}
+                    onChange={(e) => setNewAlbumGenre(e.target.value)}
+                    placeholder="Hip-Hop, R&B, etc."
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                {albumError && <p className="text-red-400 text-sm">{albumError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreateAlbum}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  >
+                    <Save size={16} />
+                    Create Album
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCreateAlbum(false);
+                      setNewAlbumTitle('');
+                      setNewAlbumGenre('');
+                      setAlbumError('');
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                  >
+                    <X size={16} />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loadingDiscography ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+              <span className="ml-2 text-slate-400">Loading discography...</span>
+            </div>
+          ) : (
+            <>
+              {/* Albums Grid */}
+              {albums.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">Albums</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {albums.map(album => (
+                      <div
+                        key={album.id}
+                        className="bg-slate-900/50 rounded-lg border border-slate-700/50 p-4 hover:border-indigo-500/50 transition-colors group"
+                      >
+                        <div className="flex items-start gap-3">
+                          {album.cover_art_url ? (
+                            <img 
+                              src={album.cover_art_url} 
+                              alt={album.title}
+                              className="w-16 h-16 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-slate-800 flex items-center justify-center">
+                              <Disc3 className="w-8 h-8 text-slate-600" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {editingAlbum === album.id ? (
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  defaultValue={album.title}
+                                  className="w-full px-2 py-1 bg-slate-800 border border-indigo-500 rounded text-white text-sm focus:outline-none"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleUpdateAlbum(album.id, { title: e.target.value });
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setEditingAlbum(null);
+                                    }
+                                  }}
+                                  autoFocus
+                                />
+                              </div>
+                            ) : (
+                              <>
+                                <h4 className="font-medium text-white truncate">{album.title}</h4>
+                                {album.genre_tag && (
+                                  <span className="text-xs text-slate-500">{album.genre_tag}</span>
+                                )}
+                                <div className="flex items-center gap-1 mt-1">
+                                  <span className={`text-xs ${album.is_public ? 'text-green-400' : 'text-slate-500'}`}>
+                                    {album.is_public ? 'Public' : 'Private'}
+                                  </span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => setEditingAlbum(album.id)}
+                              className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleUpdateAlbum(album.id, { is_public: !album.is_public })}
+                              className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+                              title={album.is_public ? 'Make Private' : 'Make Public'}
+                            >
+                              <ExternalLink size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAlbum(album.id)}
+                              className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-red-400"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Published Tracks */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Published Tracks</h3>
+                {tracks.length > 0 ? (
+                  <div className="space-y-2">
+                    {tracks.map(track => (
+                      <Link
+                        key={track.id}
+                        to="/feed"
+                        className="flex items-center gap-4 p-3 bg-slate-900/50 rounded-lg border border-slate-700/50 hover:border-indigo-500/50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                          <Music size={18} className="text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-white truncate">{track.title}</h4>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            {track.primary_artist_style && (
+                              <span className="text-indigo-400">{track.primary_artist_style}</span>
+                            )}
+                            <span>•</span>
+                            <span>{new Date(track.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-400">
+                          <Flame size={16} className="text-orange-400" />
+                          <span className="text-sm">{track.fire_count || 0}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <Music className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p>No published tracks yet</p>
+                    <p className="text-sm mt-1">Use Ghostwriter to create and publish your first track!</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

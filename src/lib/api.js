@@ -286,3 +286,50 @@ Be unhinged and witty but not mean. Keep it fun and welcoming.`;
     }
   );
 };
+
+/**
+ * Generate an AI roast for a published track (for feed cards)
+ * @param {string} hookSnippet - The 4-line preview of the track
+ * @param {string} artistStyle - The artist style used
+ * @returns {Promise<string>} A short roast/comment
+ */
+export const generateTrackRoast = async (hookSnippet, artistStyle = '') => {
+  try {
+    const roastPrompt = `You're a brutally honest but funny AI music critic. Give a SHORT (max 10 words) sarcastic one-liner "review" of these lyrics. Be witty, not mean. Style used: "${artistStyle || 'Unknown'}". Lyrics preview: "${hookSnippet}". Just the roast, no quotes or explanation.`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({ 
+        messages: [{ role: 'user', content: roastPrompt }], 
+        temperature: 0.9, 
+        top_p: 0.95,
+        model: 'gpt-4o-mini'
+      })
+    });
+
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    const data = await response.json();
+    return data.content || 'This is surprisingly not terrible.';
+  } catch (error) {
+    console.error("Failed to generate track roast:", error);
+    // Return a random fallback roast
+    const fallbacks = [
+      "Surprisingly barely mid.",
+      "Your mom would be proud. Maybe.",
+      "The bars are giving... something.",
+      "AI approved. Barely.",
+      "It's giving main character energy.",
+      "The vibes are vibing, I guess."
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+};

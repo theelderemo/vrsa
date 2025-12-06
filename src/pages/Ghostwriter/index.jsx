@@ -35,6 +35,8 @@ import StructuredInputForm from './StructuredInputForm';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import PrivacyDisclaimer from '../../components/ui/PrivacyDisclaimer';
 import DeleteConfirmDialog from '../../components/ui/DeleteConfirmDialog';
+import PublishModal from '../../components/ui/PublishModal';
+import TakeHistory from '../../components/ui/TakeHistory';
 import { 
   getOrCreateSession, 
   getMessages, 
@@ -112,6 +114,12 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   // Privacy modal state
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Publish modal state
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  
+  // Take history sidebar state
+  const [showTakeHistory, setShowTakeHistory] = useState(false);
 
   // Session management state
   const [userSessions, setUserSessions] = useState([]);
@@ -316,6 +324,25 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       generateInitialWelcome();
     }
   }, [user, loading, generateInitialWelcome]);
+
+  // Handle fork settings from Feed/PublicProfile
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fork') === 'true') {
+      const forkSettings = sessionStorage.getItem('forkSettings');
+      if (forkSettings) {
+        try {
+          const settings = JSON.parse(forkSettings);
+          loadSettingsFromSession(settings);
+          sessionStorage.removeItem('forkSettings');
+          // Clean the URL
+          window.history.replaceState({}, '', '/ghostwriter');
+        } catch (e) {
+          console.error('Error loading fork settings:', e);
+        }
+      }
+    }
+  }, [loadSettingsFromSession]);
 
   // Auth check
 if (loading) {
@@ -898,6 +925,8 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           onDeleteAllHistory={() => setShowDeleteConfirm(true)}
           onShowPrivacy={() => setShowPrivacyModal(true)}
           onExportConversation={handleExportConversation}
+          onPublishTrack={() => setShowPublishModal(true)}
+          onShowTakeHistory={() => setShowTakeHistory(true)}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
           // Session management props
@@ -1015,6 +1044,31 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDeleteAllHistory}
+      />
+      
+      {/* Publish Track Modal */}
+      <PublishModal
+        isOpen={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        messages={messages}
+        sessionId={sessionId}
+        userId={user?.id}
+        settings={getCurrentSettings()}
+        onPublishSuccess={(track) => {
+          console.log('Track published:', track);
+          setShowPublishModal(false);
+        }}
+      />
+      
+      {/* Take History Sidebar */}
+      <TakeHistory
+        messages={messages}
+        isOpen={showTakeHistory}
+        onClose={() => setShowTakeHistory(false)}
+        onRestoreTake={(take) => {
+          // Could implement restore functionality here
+          console.log('Restore take:', take);
+        }}
       />
     </div>
   );

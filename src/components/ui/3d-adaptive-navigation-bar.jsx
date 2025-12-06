@@ -26,6 +26,7 @@ export const PillBase = () => {
   const baseNavItems = [
     { label: 'Home', id: 'home', path: '/' },
     { label: 'Ghostwriter', id: 'ghostwriter', path: '/ghostwriter' },
+    { label: 'Feed', id: 'feed', path: '/feed' },
     { label: 'Writing Tools', id: 'writing-tools', path: '/writing-tools' },
     { label: 'AlbumArt', id: 'albumart', path: '/albumart' },
     { label: 'Projects', id: 'projects', path: '/projects' },
@@ -55,7 +56,7 @@ export const PillBase = () => {
   const pillWidth = useSpring(160, { stiffness: 220, damping: 25, mass: 1 });
 
   // Calculate expanded width based on number of items
-  const expandedWidth = isAdmin ? 860 : 780;
+  const expandedWidth = isAdmin ? 920 : 860;
 
   // Handle hover expansion
   useEffect(() => {

@@ -23,7 +23,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, Check, Pencil, Smartphone, ArrowRight } from 'lucide-react';
+import { X, Check, Pencil, Smartphone, ArrowRight, Flame, History } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
@@ -57,6 +57,8 @@ const StructuredInputForm = ({
   onDeleteAllHistory,
   onShowPrivacy,
   onExportConversation,
+  onPublishTrack,
+  onShowTakeHistory,
   onReset,
   onCloseMobile,
   // Session management props
@@ -509,6 +511,34 @@ const StructuredInputForm = ({
                   >
                     Export Conversation
                   </button>
+                </div>
+                
+                {/* Publish Track Button */}
+                <div className="pt-2 border-t border-slate-700/50">
+                  <button
+                    onClick={onPublishTrack}
+                    className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-orange-500/20 to-red-600/20 hover:from-orange-500/30 hover:to-red-600/30 border border-orange-500/50 rounded-lg text-orange-400 hover:text-orange-300 transition-all text-sm font-medium"
+                  >
+                    <Flame size={16} />
+                    Release Track to Feed
+                  </button>
+                  <p className="text-xs text-slate-500 mt-1 text-center">
+                    Share your work with the community
+                  </p>
+                </div>
+                
+                {/* Take History Button */}
+                <div className="pt-2 border-t border-slate-700/50">
+                  <button
+                    onClick={onShowTakeHistory}
+                    className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                  >
+                    <History size={14} />
+                    View Take History
+                  </button>
+                  <p className="text-xs text-slate-500 mt-1 text-center">
+                    See all your generations
+                  </p>
                 </div>
               </div>
             </AccordionContent>

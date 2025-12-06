@@ -35,6 +35,8 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import StudioPass from './pages/StudioPass';
 import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
+import Feed from './pages/Feed';
 import Projects from './pages/Projects';
 import AdminPanel from './pages/AdminPanel';
 import AuthComponent from './Auth';
@@ -64,11 +66,13 @@ const App = () => {
           <Route path="/writing-tools" element={<WritingTools />} />
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/studio-pass" element={<StudioPass />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/u/:username" element={<PublicProfile />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<AuthComponent />} />
         </Route>
