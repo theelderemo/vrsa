@@ -27,7 +27,7 @@ import { useNavigate } from 'react-router-dom'; // <-- Import this
 import { CornerDownLeft, LoaderCircle, Menu, X } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
-import { generateSarcasticComment } from '../../lib/api';
+import { generateSarcasticComment, generateWelcomeMessage } from '../../lib/api';
 import { MODEL_OPTIONS } from '../../lib/constants';
 import { parseEditCommand, buildEditPrompt } from '../../lib/editCommands';
 import ChatMessage from '../../components/chat/ChatMessage';
@@ -58,11 +58,29 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
   const navigate = useNavigate(); // <-- Initialize hook
   
-  // Welcome message that's always shown but never saved
-  const welcomeMessage = {
-    role: 'assistant',
-    content: 'Im back in active development on the app. Sorry. Enjoy the latest updates, more coming weekly. \n\nEnjoying it? Help keep this app free and growing. Because of donations, I can keep expanding the model selection :) I updated my new coffee link but accidentally forgot to change it in-app (lol), so here\'s the correct one: https://buymeacoffee.com/theelderemo and find the discord here: https://discord.gg/aRzgxjbj'
-  };
+  // Dynamic welcome message state (null = loading, string = content)
+  const [welcomeMessage, setWelcomeMessage] = useState(null);
+  const [welcomeLoading, setWelcomeLoading] = useState(true);
+  
+  // Function to generate a new welcome message
+  const generateInitialWelcome = useCallback(async () => {
+    setWelcomeLoading(true);
+    try {
+      const welcomeContent = await generateWelcomeMessage();
+      setWelcomeMessage({
+        role: 'assistant',
+        content: welcomeContent
+      });
+    } catch (error) {
+      console.error('Failed to generate welcome:', error);
+      setWelcomeMessage({
+        role: 'assistant',
+        content: 'Ready to write some fire lyrics? Drop your request below.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj'
+      });
+    } finally {
+      setWelcomeLoading(false);
+    }
+  }, []);
   
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -196,6 +214,9 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
     setSessionId(id);
     setCurrentSessionName(sessionName);
     
+    // Generate fresh welcome message for new project
+    generateInitialWelcome();
+    
     // Refresh sessions list
     await fetchUserSessions();
   };
@@ -211,6 +232,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       setCurrentSessionName('');
       setMessages([]);
       setMemoryEnabled(false);
+      generateInitialWelcome();
       return;
     }
     
@@ -231,8 +253,13 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
     if (msgError) {
       console.error('Failed to load messages:', msgError);
       setMessages([]);
+      generateInitialWelcome();
     } else {
       setMessages(savedMessages || []);
+      // Generate fresh welcome if session has no messages
+      if (!savedMessages || savedMessages.length === 0) {
+        generateInitialWelcome();
+      }
     }
   };
 
@@ -265,6 +292,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       setSessionId(null);
       setCurrentSessionName('');
       setMessages([]);
+      generateInitialWelcome();
     }
     
     await fetchUserSessions();
@@ -281,6 +309,13 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
       fetchUserSessions();
     }
   }, [user, fetchUserSessions]);
+
+  // Generate initial welcome message on mount
+  useEffect(() => {
+    if (user && !loading) {
+      generateInitialWelcome();
+    }
+  }, [user, loading, generateInitialWelcome]);
 
   // Auth check
 if (loading) {
@@ -475,6 +510,9 @@ I understand not every song, genre uses every tag type. I will only include rele
     
     // Reset UI messages
     setMessages([]);
+    
+    // Generate fresh welcome message
+    generateInitialWelcome();
   };
   
   // Delete all user chat history
@@ -885,11 +923,22 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-4xl mx-auto">
             {/* Always show welcome message first */}
-            <ChatMessage 
-              key="welcome" 
-              message={welcomeMessage} 
-              index={0}
-            />
+            {welcomeLoading ? (
+              <div className="flex items-start gap-4 my-6 pr-8">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-indigo-600">
+                  <LoaderCircle className="text-white animate-spin" />
+                </div>
+                <div className="p-4 rounded-lg w-full bg-slate-800 flex items-center">
+                  <p className="text-slate-400 font-mono">VRS/A is waking up...</p>
+                </div>
+              </div>
+            ) : welcomeMessage && (
+              <ChatMessage 
+                key="welcome" 
+                message={welcomeMessage} 
+                index={0}
+              />
+            )}
             {/* Then show chat history */}
             {messages.map((msg, index) => (
               <ChatMessage 

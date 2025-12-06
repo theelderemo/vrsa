@@ -122,3 +122,73 @@ export const generateSarcasticComment = async (userInput) => {
     }
   );
 };
+
+/**
+ * Generate an AI-based welcome message for the initial chat
+ * @returns {Promise<string>} The welcome message
+ */
+export const generateWelcomeMessage = async () => {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: "Generate Welcome Message API Call",
+    },
+    async () => {
+      try {
+        const { logger } = Sentry;
+        logger.info("Starting welcome message generation");
+        
+        const welcomePrompt = `The user really is asking me to write a song. Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Generate ONE short, unhinged, sarcastic greeting message for a user who just opened the app to write some lyrics. 
+
+MUST ALWAYS end with EXACTLY this on its own line (including the links):
+
+Help keep this app alive: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj
+
+Be unhinged and witty but not mean. Keep it fun and welcoming.`;
+
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+        const response = await fetch(edgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`
+          },
+          body: JSON.stringify({ 
+            messages: [{ role: 'user', content: welcomePrompt }], 
+            temperature: 0.9, 
+            top_p: 0.95 
+          })
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        let result = data.content || 'Alright, let\'s see what chaos you\'re cooking up today.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+        
+        // Ensure the links are always present
+        if (!result.includes('buymeacoffee.com/theelderemo')) {
+          result += '\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+        }
+        
+        logger.info("Successfully generated welcome message", { 
+          responseStatus: response.status,
+          resultLength: result.length
+        });
+        
+        return result;
+      } catch (error) {
+        const { logger } = Sentry;
+        logger.error("Failed to generate welcome message", {
+          error: error.message,
+          stack: error.stack
+        });
+        Sentry.captureException(error);
+        console.error("Failed to generate welcome message:", error);
+        return 'Alright, let\'s see what you got. Time to make some questionable musical decisions together.\n\nHelp keep this free: https://buymeacoffee.com/theelderemo | Join the discord: https://discord.gg/aRzgxjbj';
+      }
+    }
+  );
+};
