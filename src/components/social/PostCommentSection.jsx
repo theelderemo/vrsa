@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /**
  * PostCommentSection - Threaded comments for social posts
- * Features: Add comments, reply to comments, delete own comments
+ * Features: Add comments, reply to comments, delete own comments, @ mentions, bot responses
  */
 
 import React, { useState, useEffect } from 'react';
@@ -21,8 +21,13 @@ import { useUser } from '../../hooks/useUser';
 import {
   getPostComments,
   addPostComment,
-  deletePostComment
+  deletePostComment,
+  processMentions,
+  isBotMentioned,
+  VRSA_BOT_NAME,
+  VRSA_BOT_AVATAR_URL
 } from '../../lib/social';
+import { generateBotMentionResponse } from '../../lib/api';
 
 /**
  * Single Comment Component with reply support
@@ -40,6 +45,7 @@ const PostComment = ({
   const [replyContent, setReplyContent] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
 
+  const isBotComment = comment.is_bot_comment;
   const isOwnComment = currentUserId && comment.user_id === currentUserId;
   const hasReplies = comment.replies && comment.replies.length > 0;
   const maxDepth = 3;
@@ -55,7 +61,13 @@ const PostComment = ({
     setSubmittingReply(false);
   };
 
-  const displayName = comment.profiles?.username || 'Anonymous';
+  const displayName = isBotComment 
+    ? VRSA_BOT_NAME 
+    : (comment.profiles?.username || 'Anonymous');
+  
+  const profilePicUrl = isBotComment 
+    ? null 
+    : comment.profiles?.profile_picture_url;
 
   return (
     <motion.div
@@ -64,20 +76,44 @@ const PostComment = ({
       exit={{ opacity: 0, y: -10 }}
       className={`${depth > 0 ? 'ml-6 pl-4 border-l-2 border-slate-700/50' : ''}`}
     >
-      <div className="p-3 rounded-xl mb-2 bg-slate-800/50 border border-slate-700/30">
+      <div className={`p-3 rounded-xl mb-2 border ${
+        isBotComment 
+          ? 'bg-yellow-500/5 border-yellow-500/20' 
+          : 'bg-slate-800/50 border-slate-700/30'
+      }`}>
         {/* Comment Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
-              <User size={14} className="text-indigo-400" />
-            </div>
+            {isBotComment ? (
+              <img 
+                src={VRSA_BOT_AVATAR_URL} 
+                alt="VRSA Bot"
+                className="w-6 h-6 rounded-full object-cover"
+              />
+            ) : profilePicUrl ? (
+              <img 
+                src={profilePicUrl} 
+                alt={displayName}
+                className="w-6 h-6 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                <User size={14} className="text-indigo-400" />
+              </div>
+            )}
             
-            <Link 
-              to={`/u/${comment.profiles?.username}`}
-              className="text-sm font-medium text-slate-300 hover:text-indigo-400 transition-colors"
-            >
-              @{displayName}
-            </Link>
+            {isBotComment ? (
+              <span className="text-sm font-medium text-yellow-400">
+                {displayName}
+              </span>
+            ) : (
+              <Link 
+                to={`/u/${comment.profiles?.username}`}
+                className="text-sm font-medium text-slate-300 hover:text-indigo-400 transition-colors"
+              >
+                @{displayName}
+              </Link>
+            )}
             
             <span className="text-xs text-slate-500">
               {new Date(comment.created_at).toLocaleDateString()}
@@ -86,7 +122,7 @@ const PostComment = ({
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            {isOwnComment && (
+            {isOwnComment && !isBotComment && (
               <button
                 onClick={() => onDelete(comment.id)}
                 disabled={isDeleting}
@@ -194,8 +230,8 @@ const PostComment = ({
 /**
  * Main Post Comment Section Component
  */
-const PostCommentSection = ({ postId, isExpanded = false }) => {
-  const { user } = useUser();
+const PostCommentSection = ({ postId, postContent = '', isExpanded = false }) => {
+  const { user, profile } = useUser();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -217,20 +253,66 @@ const PostCommentSection = ({ postId, isExpanded = false }) => {
     }
   }, [postId]);
 
+  // Helper to add a bot reply to a comment
+  const addBotReplyToComment = async (commentId, mentionContent) => {
+    try {
+      const botResponse = await generateBotMentionResponse(mentionContent, postContent);
+      
+      // Add bot comment as a reply
+      const { data: botComment, error } = await import('../../lib/supabase').then(({ supabase }) => 
+        supabase
+          .from('post_comments')
+          .insert({
+            post_id: postId,
+            user_id: null,
+            content: botResponse,
+            parent_comment_id: commentId,
+            is_bot_comment: true,
+            bot_name: VRSA_BOT_NAME
+          })
+          .select()
+          .single()
+      );
+
+      if (!error && botComment) {
+        const botReply = { 
+          ...botComment, 
+          is_bot_comment: true,
+          bot_name: VRSA_BOT_NAME,
+          replies: [] 
+        };
+        setComments(prev => addReplyToTree(prev, commentId, botReply));
+      }
+    } catch (err) {
+      console.error('Error adding bot reply:', err);
+    }
+  };
+
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !user || submitting) return;
 
     setSubmitting(true);
+    const commentContent = newComment.trim();
+    
     const { comment, error } = await addPostComment({
       postId,
       userId: user.id,
-      content: newComment.trim()
+      content: commentContent
     });
 
     if (!error && comment) {
       setComments(prev => [...prev, { ...comment, replies: [] }]);
       setNewComment('');
+      
+      // Process @ mentions and create notifications
+      const username = profile?.username || 'Someone';
+      await processMentions(commentContent, user.id, 'post_comment', comment.id, username);
+      
+      // Check if bot was mentioned and generate response
+      if (isBotMentioned(commentContent)) {
+        setTimeout(() => addBotReplyToComment(comment.id, commentContent), 1000);
+      }
     }
     setSubmitting(false);
   };
@@ -247,6 +329,15 @@ const PostCommentSection = ({ postId, isExpanded = false }) => {
 
     if (!error && comment) {
       setComments(prev => addReplyToTree(prev, parentCommentId, { ...comment, replies: [] }));
+      
+      // Process @ mentions and create notifications
+      const username = profile?.username || 'Someone';
+      await processMentions(content, user.id, 'post_comment', comment.id, username);
+      
+      // Check if bot was mentioned and generate response
+      if (isBotMentioned(content)) {
+        setTimeout(() => addBotReplyToComment(comment.id, content), 1000);
+      }
     }
   };
 

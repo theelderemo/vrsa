@@ -333,3 +333,93 @@ export const generateTrackRoast = async (hookSnippet, artistStyle = '') => {
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 };
+
+/**
+ * Generate an AI comment for a social post
+ * @param {string} postContent - The post content
+ * @returns {Promise<string>} A short witty comment
+ */
+export const generatePostComment = async (postContent) => {
+  try {
+    const commentPrompt = `You're VRSA Bot, a friendly but sarcastic AI assistant on a music/lyrics platform. Give a SHORT (max 15 words) witty, playful comment on this social post. Be engaging and fun, not mean. Just reply naturally like a friend would. Post: "${postContent}". Just the comment, no quotes.`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({ 
+        messages: [{ role: 'user', content: commentPrompt }], 
+        temperature: 0.9, 
+        top_p: 0.95,
+        model: 'gpt-4o-mini'
+      })
+    });
+
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    const data = await response.json();
+    return data.content || 'Interesting take! 🎵';
+  } catch (error) {
+    console.error("Failed to generate post comment:", error);
+    const fallbacks = [
+      "Now THIS is the content I'm here for 🔥",
+      "Real talk! 💯",
+      "The energy is immaculate ✨",
+      "Valid. Very valid.",
+      "Speak on it! 🎤",
+      "This hits different fr"
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+};
+
+/**
+ * Generate an AI response to a user's @ mention
+ * @param {string} mentionContent - The comment that mentioned the bot
+ * @param {string} context - Optional context (post content, etc.)
+ * @returns {Promise<string>} A conversational response
+ */
+export const generateBotMentionResponse = async (mentionContent, context = '') => {
+  try {
+    const responsePrompt = `You're VRSA Bot, a friendly and helpful AI assistant on a music/lyrics platform. Someone @mentioned you in a comment. Give a SHORT (max 20 words) helpful, friendly response. Be conversational and engaging. ${context ? `Context: "${context}". ` : ''}Their comment: "${mentionContent}". Just your response, no quotes.`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({ 
+        messages: [{ role: 'user', content: responsePrompt }], 
+        temperature: 0.85, 
+        top_p: 0.9,
+        model: 'gpt-4o-mini'
+      })
+    });
+
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    const data = await response.json();
+    return data.content || 'Hey! Thanks for the mention! 👋';
+  } catch (error) {
+    console.error("Failed to generate bot mention response:", error);
+    const fallbacks = [
+      "Hey! I'm here 👋 What's good?",
+      "You rang? 🎵",
+      "At your service! How can I help?",
+      "Present! 🙋‍♂️",
+      "Yo! What's up?"
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+};

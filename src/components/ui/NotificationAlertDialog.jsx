@@ -1,11 +1,12 @@
 /**
- * NotificationAlertDialog - Dev Notes notification system for VRS/A
- * Shows updates, announcements, and notes from the developer
+ * NotificationAlertDialog - Unified notification system for VRS/A
+ * Shows dev notes, @ mentions, and other user notifications
  * Fetches notifications from Supabase
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BellRing, X, Clock, Check, Sparkles, Music, Wrench, Heart, Loader2 } from 'lucide-react';
+import { BellRing, X, Clock, Check, Sparkles, Music, Wrench, Heart, Loader2, AtSign, MessageCircle, UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,18 +21,28 @@ import {
 import { Button } from './Button';
 import { cn } from '../../lib/utils';
 import { getActiveDevNotes } from '../../lib/admin';
+import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '../../lib/social';
+import { useUser } from '../../hooks/useUser';
 
 // Notification types with icons
 const NOTIFICATION_ICONS = {
+  // Dev note types
   update: Wrench,
   feature: Sparkles,
   music: Music,
   thanks: Heart,
+  // User notification types
+  mention: AtSign,
+  comment: MessageCircle,
+  follow: UserPlus,
+  like: Heart,
+  bot_response: Sparkles,
+  system: BellRing,
   default: BellRing,
 };
 
 // Storage key for persisting read state
-const STORAGE_KEY = 'vrsa-dev-notes-read';
+const STORAGE_KEY = 'vrsa-notifications-read';
 
 // Helper to format relative time
 const formatRelativeTime = (dateString) => {
@@ -50,71 +61,117 @@ const formatRelativeTime = (dateString) => {
 };
 
 export function NotificationAlertDialog() {
+  const { user } = useUser();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
 
-  // Fetch notifications from Supabase
+  // Fetch notifications from Supabase (dev notes + user notifications)
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
-    const { notes, error } = await getActiveDevNotes();
     
-    if (!error && notes) {
-      // Load read state from localStorage
-      let readIds = [];
-      try {
-        const savedReadState = localStorage.getItem(STORAGE_KEY);
-        if (savedReadState) {
-          readIds = JSON.parse(savedReadState);
-        }
-      } catch (e) {
-        console.error('Failed to load notification state:', e);
+    // Load read state for dev notes from localStorage
+    let devNoteReadIds = [];
+    try {
+      const savedReadState = localStorage.getItem(STORAGE_KEY);
+      if (savedReadState) {
+        devNoteReadIds = JSON.parse(savedReadState);
       }
-
-      // Transform notes for display
-      const transformedNotes = notes.map(note => ({
-        id: note.id,
-        type: note.type,
-        title: note.title,
-        message: note.message,
-        link: note.link,
-        linkText: note.link_text,
-        time: formatRelativeTime(note.created_at),
-        read: readIds.includes(note.id),
-      }));
-      
-      setNotifications(transformedNotes);
+    } catch (e) {
+      console.error('Failed to load notification state:', e);
     }
+
+    // Fetch dev notes
+    const { notes: devNotes, error: devError } = await getActiveDevNotes();
+    
+    const transformedDevNotes = (!devError && devNotes) ? devNotes.map(note => ({
+      id: `dev-${note.id}`,
+      originalId: note.id,
+      type: note.type,
+      category: 'dev',
+      title: note.title,
+      message: note.message,
+      link: note.link,
+      linkText: note.link_text,
+      time: formatRelativeTime(note.created_at),
+      createdAt: new Date(note.created_at),
+      read: devNoteReadIds.includes(`dev-${note.id}`),
+    })) : [];
+
+    // Fetch user notifications if logged in
+    let userNotifs = [];
+    if (user?.id) {
+      const { notifications: fetchedNotifs } = await getUserNotifications(user.id, 50);
+      userNotifs = fetchedNotifs?.map(notif => ({
+        id: `user-${notif.id}`,
+        originalId: notif.id,
+        type: notif.type,
+        category: 'user',
+        title: notif.type === 'mention' ? 'You were mentioned' : 
+               notif.type === 'follow' ? 'New follower' :
+               notif.type === 'like' ? 'Someone liked your post' :
+               notif.type === 'bot_response' ? 'VRSA Bot replied' :
+               'New notification',
+        message: notif.content,
+        fromUser: notif.from_user,
+        sourceType: notif.source_type,
+        sourceId: notif.source_id,
+        time: formatRelativeTime(notif.created_at),
+        createdAt: new Date(notif.created_at),
+        read: notif.is_read,
+      })) || [];
+    }
+
+    // Combine and sort by date (newest first)
+    const allNotifications = [...transformedDevNotes, ...userNotifs]
+      .sort((a, b) => b.createdAt - a.createdAt);
+    
+    setNotifications(allNotifications);
     setLoading(false);
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Save read state to localStorage
-  const saveReadState = (notifs) => {
+  // Save read state to localStorage (for dev notes only, user notifs are in DB)
+  const saveDevNoteReadState = (notifs) => {
     try {
-      const readIds = notifs.filter(n => n.read).map(n => n.id);
+      const readIds = notifs
+        .filter(n => n.category === 'dev' && n.read)
+        .map(n => n.id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(readIds));
     } catch (e) {
       console.error('Failed to save notification state:', e);
     }
   };
 
-  const markAsRead = (id) => {
-    const updated = notifications.map((notification) => 
-      notification.id === id ? { ...notification, read: true } : notification
+  const markAsRead = async (id) => {
+    const notification = notifications.find(n => n.id === id);
+    if (!notification) return;
+
+    // For user notifications, update in database
+    if (notification.category === 'user' && !notification.read) {
+      await markNotificationRead(notification.originalId);
+    }
+
+    const updated = notifications.map((n) => 
+      n.id === id ? { ...n, read: true } : n
     );
     setNotifications(updated);
-    saveReadState(updated);
+    saveDevNoteReadState(updated);
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // Mark user notifications as read in DB
+    if (user?.id) {
+      await markAllNotificationsRead(user.id);
+    }
+    
     const updated = notifications.map((notification) => ({ ...notification, read: true }));
     setNotifications(updated);
-    saveReadState(updated);
+    saveDevNoteReadState(updated);
   };
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
@@ -146,7 +203,7 @@ export function NotificationAlertDialog() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BellRing className="h-5 w-5 text-indigo-400" />
-                <AlertDialogTitle>Dev Notes</AlertDialogTitle>
+                <AlertDialogTitle>Notifications</AlertDialogTitle>
               </div>
               {unreadCount > 0 && (
                 <Button
@@ -163,7 +220,7 @@ export function NotificationAlertDialog() {
               {loading 
                 ? 'Loading notifications...'
                 : unreadCount > 0 
-                  ? `You have ${unreadCount} unread ${unreadCount === 1 ? 'note' : 'notes'} from the developer.`
+                  ? `You have ${unreadCount} unread ${unreadCount === 1 ? 'notification' : 'notifications'}.`
                   : "You're all caught up! Check back for future updates."
               }
             </AlertDialogDescription>
@@ -271,7 +328,7 @@ export function NotificationAlertDialog() {
             <div className="p-4 border-b border-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BellRing className="h-5 w-5 text-indigo-400" />
-                <h2 className="text-lg font-semibold text-white">All Dev Notes</h2>
+                <h2 className="text-lg font-semibold text-white">All Notifications</h2>
               </div>
               <Button
                 variant="ghost"

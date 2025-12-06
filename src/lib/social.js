@@ -1272,3 +1272,297 @@ export async function getPostCommentCount(postId) {
     return 0;
   }
 }
+
+// ============================================
+// POST BOT COMMENTS
+// ============================================
+
+/**
+ * Check if a post already has a bot comment
+ * @param {string} postId - Post ID
+ * @returns {Promise<{hasComment: boolean, comment: object | null}>}
+ */
+export async function checkPostBotComment(postId) {
+  try {
+    const { data, error } = await supabase
+      .from('post_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('is_bot_comment', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return { hasComment: !!data, comment: data };
+  } catch (error) {
+    console.error('Error checking post bot comment:', error);
+    return { hasComment: false, comment: null };
+  }
+}
+
+/**
+ * Add bot comment to a post (should only be called once per post)
+ * @param {string} postId - Post ID
+ * @param {string} content - The bot comment content
+ * @returns {Promise<{comment: object, error: Error | null}>}
+ */
+export async function addPostBotComment(postId, content) {
+  try {
+    // First check if bot comment already exists
+    const { hasComment } = await checkPostBotComment(postId);
+    if (hasComment) {
+      return { comment: null, error: new Error('Post already has a bot comment') };
+    }
+
+    const { data, error } = await supabase
+      .from('post_comments')
+      .insert({
+        post_id: postId,
+        user_id: null,
+        content,
+        is_bot_comment: true,
+        bot_name: VRSA_BOT_NAME
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { comment: data, error: null };
+  } catch (error) {
+    console.error('Error adding post bot comment:', error);
+    return { comment: null, error };
+  }
+}
+
+// ============================================
+// NOTIFICATIONS SYSTEM
+// ============================================
+
+/**
+ * Create a notification for a user
+ * @param {object} notificationData - Notification data
+ * @returns {Promise<{notification: object, error: Error | null}>}
+ */
+export async function createNotification({
+  userId,
+  type,
+  content,
+  sourceType = null,
+  sourceId = null,
+  fromUserId = null
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        content,
+        source_type: sourceType,
+        source_id: sourceId,
+        from_user_id: fromUserId
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { notification: data, error: null };
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return { notification: null, error };
+  }
+}
+
+/**
+ * Get notifications for a user
+ * @param {string} userId - User ID
+ * @param {number} limit - Max results
+ * @param {boolean} unreadOnly - Only get unread notifications
+ * @returns {Promise<{notifications: array, error: Error | null}>}
+ */
+export async function getUserNotifications(userId, limit = 50, unreadOnly = false) {
+  try {
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (unreadOnly) {
+      query = query.eq('is_read', false);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    
+    // Fetch profiles for from_user_id separately
+    const fromUserIds = [...new Set(data?.filter(n => n.from_user_id).map(n => n.from_user_id) || [])];
+    let profileMap = new Map();
+    
+    if (fromUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, profile_picture_url')
+        .in('id', fromUserIds);
+      
+      if (profiles) {
+        profileMap = new Map(profiles.map(p => [p.id, p]));
+      }
+    }
+    
+    // Add profile data to notifications
+    const notificationsWithProfiles = data?.map(notif => ({
+      ...notif,
+      from_user: notif.from_user_id ? profileMap.get(notif.from_user_id) : null
+    })) || [];
+
+    return { notifications: notificationsWithProfiles, error: null };
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return { notifications: [], error };
+  }
+}
+
+/**
+ * Get unread notification count for a user
+ * @param {string} userId - User ID
+ * @returns {Promise<number>}
+ */
+export async function getUnreadNotificationCount(userId) {
+  try {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting unread notification count:', error);
+    return 0;
+  }
+}
+
+/**
+ * Mark a notification as read
+ * @param {string} notificationId - Notification ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function markNotificationRead(notificationId) {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Mark all notifications as read for a user
+ * @param {string} userId - User ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function markAllNotificationsRead(userId) {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Parse @ mentions from text and return array of usernames
+ * @param {string} text - Text to parse
+ * @returns {string[]} Array of mentioned usernames (without @)
+ */
+export function parseMentions(text) {
+  const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+  const matches = text.match(mentionRegex);
+  if (!matches) return [];
+  return [...new Set(matches.map(m => m.substring(1)))];
+}
+
+/**
+ * Check if VRSA bot is mentioned in text
+ * @param {string} text - Text to check
+ * @returns {boolean}
+ */
+export function isBotMentioned(text) {
+  const botMentions = ['@vrsa', '@vrsabot', '@vrsa_bot', '@vrsaofficial'];
+  const lowerText = text.toLowerCase();
+  return botMentions.some(mention => lowerText.includes(mention));
+}
+
+/**
+ * Get user ID by username
+ * @param {string} username - Username to lookup
+ * @returns {Promise<string | null>}
+ */
+export async function getUserIdByUsername(username) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data?.id || null;
+  } catch (error) {
+    console.error('Error looking up user by username:', error);
+    return null;
+  }
+}
+
+/**
+ * Process mentions in a comment and create notifications
+ * @param {string} content - Comment content
+ * @param {string} fromUserId - User who made the comment
+ * @param {string} sourceType - 'post_comment' or 'track_comment'
+ * @param {string} sourceId - ID of the comment
+ * @param {string} fromUsername - Username of commenter (for notification content)
+ * @returns {Promise<{mentionedBot: boolean, notificationsSent: number}>}
+ */
+export async function processMentions(content, fromUserId, sourceType, sourceId, fromUsername) {
+  const mentions = parseMentions(content);
+  const mentionedBot = isBotMentioned(content);
+  let notificationsSent = 0;
+
+  for (const username of mentions) {
+    // Skip bot mentions (handled separately)
+    if (['vrsa', 'vrsabot', 'vrsa_bot', 'vrsaofficial'].includes(username.toLowerCase())) {
+      continue;
+    }
+
+    const mentionedUserId = await getUserIdByUsername(username);
+    if (mentionedUserId && mentionedUserId !== fromUserId) {
+      await createNotification({
+        userId: mentionedUserId,
+        type: 'mention',
+        content: `@${fromUsername} mentioned you in a comment`,
+        sourceType,
+        sourceId,
+        fromUserId
+      });
+      notificationsSent++;
+    }
+  }
+
+  return { mentionedBot, notificationsSent };
+}

@@ -41,10 +41,12 @@ import {
   getCommentCount,
   checkBotRoast,
   addBotRoast,
+  checkPostBotComment,
+  addPostBotComment,
   VRSA_BOT_NAME,
   VRSA_BOT_AVATAR_URL
 } from '../lib/social';
-import { generateTrackRoast } from '../lib/api';
+import { generateTrackRoast, generatePostComment } from '../lib/api';
 import CommentSection from '../components/social/CommentSection';
 import PostCommentSection from '../components/social/PostCommentSection';
 import CreatePost from '../components/social/CreatePost';
@@ -58,12 +60,49 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
   const [localLikeCount, setLocalLikeCount] = useState(post.like_count || 0);
   const [showComments, setShowComments] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [botComment, setBotComment] = useState(null);
+  const [loadingBotComment, setLoadingBotComment] = useState(false);
   const commentCount = post.comment_count || 0;
   const isOwnPost = user && post.user_id === user.id;
 
   useEffect(() => {
     setLocalLiked(isLiked);
   }, [isLiked]);
+
+  // Fetch or generate bot comment on mount
+  useEffect(() => {
+    const fetchBotComment = async () => {
+      // Check for existing bot comment
+      const { hasComment, comment } = await checkPostBotComment(post.id);
+      if (hasComment && comment) {
+        setBotComment(comment.content);
+      } else {
+        // Generate and save bot comment (only once per post)
+        generateBotComment();
+      }
+    };
+    
+    const generateBotComment = async () => {
+      setLoadingBotComment(true);
+      try {
+        const commentContent = await generatePostComment(post.content);
+        
+        const { comment, error } = await addPostBotComment(post.id, commentContent);
+        if (!error && comment) {
+          setBotComment(commentContent);
+        } else if (error?.message === 'Post already has a bot comment') {
+          const { comment: existingComment } = await checkPostBotComment(post.id);
+          if (existingComment) setBotComment(existingComment.content);
+        }
+      } catch (err) {
+        console.error('Error generating bot comment:', err);
+      } finally {
+        setLoadingBotComment(false);
+      }
+    };
+
+    fetchBotComment();
+  }, [post.id, post.content]);
 
   const handleLikeClick = async (e) => {
     e.stopPropagation();
@@ -138,6 +177,28 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
               {post.content}
             </p>
 
+            {/* Bot Comment - Compact */}
+            {(botComment || loadingBotComment) && (
+              <div className="flex items-start gap-2 mt-3 p-2 bg-yellow-500/5 rounded-lg border border-yellow-500/10">
+                <img 
+                  src={VRSA_BOT_AVATAR_URL} 
+                  alt="VRSA Bot"
+                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-medium text-yellow-400">{VRSA_BOT_NAME}</span>
+                  {loadingBotComment ? (
+                    <p className="text-xs text-yellow-200/60 italic flex items-center gap-1 mt-0.5">
+                      <Loader2 size={10} className="animate-spin" />
+                      Thinking...
+                    </p>
+                  ) : (
+                    <p className="text-xs text-yellow-200/80 italic mt-0.5 line-clamp-2">"{botComment}"</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Action Bar */}
             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/30">
               {/* Like Button */}
@@ -210,7 +271,7 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-slate-700/50"
           >
-            <PostCommentSection postId={post.id} isExpanded={true} />
+            <PostCommentSection postId={post.id} postContent={post.content} isExpanded={true} />
           </motion.div>
         )}
       </AnimatePresence>
