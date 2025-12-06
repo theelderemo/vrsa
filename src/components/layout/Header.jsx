@@ -39,7 +39,7 @@ const Header = () => {
   
   const navItems = [
     { name: 'Ghostwriter', path: '/ghostwriter' },
-    { name: 'Analyzer', path: '/analyzer' },
+    { name: 'Writing Tools', path: '/writing-tools' },
     { name: 'AlbumArt', path: '/albumart' },
     { name: 'Projects', path: '/projects' },
     { name: 'Guide', path: '/guide' },

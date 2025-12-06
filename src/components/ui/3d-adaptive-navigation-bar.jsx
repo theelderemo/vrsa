@@ -26,7 +26,7 @@ export const PillBase = () => {
   const baseNavItems = [
     { label: 'Home', id: 'home', path: '/' },
     { label: 'Ghostwriter', id: 'ghostwriter', path: '/ghostwriter' },
-    { label: 'Analyzer', id: 'analyzer', path: '/analyzer' },
+    { label: 'Writing Tools', id: 'writing-tools', path: '/writing-tools' },
     { label: 'AlbumArt', id: 'albumart', path: '/albumart' },
     { label: 'Projects', id: 'projects', path: '/projects' },
     { label: 'Guide', id: 'guide', path: '/guide' },

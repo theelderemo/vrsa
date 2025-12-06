@@ -28,7 +28,7 @@ import AppProviders from './providers/AppProviders';
 import MainLayout from './components/layout/MainLayout';
 import Landing from './pages/Landing';
 import Ghostwriter from './pages/Ghostwriter';
-import Analyzer from './pages/Analyzer';
+import WritingTools from './pages/WritingTools';
 import AlbumArt from './pages/AlbumArt';
 import Guide from './pages/Guide';
 import Terms from './pages/Terms';
@@ -61,7 +61,7 @@ const App = () => {
               setSelectedRhymeSchemes={setSelectedRhymeSchemes} 
             />
           } />
-          <Route path="/analyzer" element={<Analyzer />} />
+          <Route path="/writing-tools" element={<WritingTools />} />
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/guide" element={<Guide />} />
