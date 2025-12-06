@@ -23,9 +23,10 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import { User, Copy, Check } from 'lucide-react';
 import EditableLine from './EditableLine';
 import { useTypewriter } from '../../hooks/useTypewriter';
+import { VRSA_BOT_AVATAR_URL } from '../../lib/social';
 
 const ChatMessage = ({ 
   message, 
@@ -108,9 +109,17 @@ const ChatMessage = ({
 
   return (
     <div className={`flex items-start gap-4 my-6 ${isBotMessage ? 'pr-8' : 'pl-8'}`}>
-      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isBotMessage ? 'bg-indigo-600' : 'bg-slate-700'}`}>
-        {isBotMessage ? <Bot className="text-white" /> : <User className="text-white" />}
-      </div>
+      {isBotMessage ? (
+        <img 
+          src={VRSA_BOT_AVATAR_URL} 
+          alt="VRSA Bot"
+          className="flex-shrink-0 w-10 h-10 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-slate-700">
+          <User className="text-white" />
+        </div>
+      )}
       <div className={`relative p-4 rounded-lg w-full ${isBotMessage ? 'bg-slate-800' : 'bg-slate-700/50'}`}>
         {showCopyButton && (
           <button 

@@ -12,6 +12,9 @@ import { supabase } from './supabase';
 // Bot identifier for AI roast comments
 export const VRSA_BOT_NAME = '@VRSA Official Bot';
 
+// Official VRSA bot profile picture URL
+export const VRSA_BOT_AVATAR_URL = 'https://hsujkvvbwcomdcdcmlfx.supabase.co/storage/v1/object/public/profile-pictures/officialvrsa.jpeg';
+
 // ============================================
 // FOLLOWERS SYSTEM
 // ============================================
@@ -441,7 +444,7 @@ export async function getFeedTracks({
     // Fetch profiles for those users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, profile_picture_url')
       .in('id', userIds);
     
     if (profilesError) {
@@ -502,7 +505,7 @@ export async function getTrackById(trackId) {
     if (track?.user_id) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, profile_picture_url')
         .eq('id', track.user_id)
         .single();
       
@@ -755,7 +758,7 @@ export async function getPublicProfileByUsername(username) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, created_at, membership_tier')
+      .select('id, username, created_at, membership_tier, profile_picture_url')
       .eq('username', username)
       .single();
 
@@ -853,7 +856,7 @@ export async function createPost({ userId, content, privacy = 'public' }) {
     // Fetch the profile separately
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
@@ -886,7 +889,7 @@ export async function getPostById(postId) {
     if (post?.user_id) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, profile_picture_url')
         .eq('id', post.user_id)
         .single();
       
@@ -1045,7 +1048,7 @@ export async function getUnifiedFeed({
     if (allUserIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, profile_picture_url')
         .in('id', allUserIds);
 
       if (!profilesError && profiles) {
@@ -1106,7 +1109,7 @@ export async function getPostsByUser(userId, limit = 20) {
     // Fetch the profile for this user
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
@@ -1150,7 +1153,7 @@ export async function addPostComment({ postId, userId, content, parentCommentId 
     // Fetch the profile separately
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
@@ -1207,7 +1210,7 @@ export async function getPostComments(postId) {
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, username')
+        .select('id, username, profile_picture_url')
         .in('id', userIds);
       
       if (profiles) {

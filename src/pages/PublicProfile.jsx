@@ -21,7 +21,11 @@ import {
   Zap,
   Moon,
   Feather,
-  Star
+  Star,
+  MessageCircle,
+  Heart,
+  User,
+  FileText
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { 
@@ -29,9 +33,14 @@ import {
   getTracksByUser, 
   getUserStats,
   getPublicAlbumsByUser,
-  getFollowCounts
+  getFollowCounts,
+  getPostsByUser,
+  likePost,
+  unlikePost,
+  getUserLikedPostIds
 } from '../lib/social';
 import FollowButton from '../components/social/FollowButton';
+import PostCommentSection from '../components/social/PostCommentSection';
 
 /**
  * Achievement Badge - Display an earned badge
@@ -290,12 +299,15 @@ const PublicProfile = () => {
   
   const [profile, setProfile] = useState(null);
   const [tracks, setTracks] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [stats, setStats] = useState({ trackCount: 0, totalFire: 0, avgRhymeDensity: null });
   const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [likedPostIds, setLikedPostIds] = useState(new Set());
+  const [activeTab, setActiveTab] = useState('posts'); // 'posts' or 'tracks'
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -311,18 +323,26 @@ const PublicProfile = () => {
         }
         setProfile(profileData);
 
-        // Fetch tracks, stats, albums, and follow counts in parallel
-        const [tracksResult, statsResult, albumsResult, followCounts] = await Promise.all([
+        // Fetch tracks, stats, albums, posts, and follow counts in parallel
+        const [tracksResult, statsResult, albumsResult, followCounts, postsResult] = await Promise.all([
           getTracksByUser(profileData.id),
           getUserStats(profileData.id),
           getPublicAlbumsByUser(profileData.id),
-          getFollowCounts(profileData.id)
+          getFollowCounts(profileData.id),
+          getPostsByUser(profileData.id)
         ]);
 
         setTracks(tracksResult.tracks || []);
         setStats(statsResult);
         setAlbums(albumsResult.albums || []);
         setFollowStats(followCounts);
+        setPosts(postsResult.posts || []);
+
+        // Fetch liked posts for current user
+        if (user) {
+          const likedIds = await getUserLikedPostIds(user.id);
+          setLikedPostIds(likedIds);
+        }
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Failed to load profile');
@@ -334,13 +354,35 @@ const PublicProfile = () => {
     if (username) {
       fetchProfileData();
     }
-  }, [username]);
+  }, [username, user]);
 
   const handleFork = (track) => {
     // Store fork settings in sessionStorage and navigate to Ghostwriter
     const forkSettings = track.generation_settings || {};
     sessionStorage.setItem('forkSettings', JSON.stringify(forkSettings));
     window.location.href = '/ghostwriter?fork=true';
+  };
+
+  const handleLikePost = async (postId) => {
+    if (!user) return;
+    await likePost(user.id, postId);
+    setLikedPostIds(prev => new Set([...prev, postId]));
+    setPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, like_count: (p.like_count || 0) + 1 } : p
+    ));
+  };
+
+  const handleUnlikePost = async (postId) => {
+    if (!user) return;
+    await unlikePost(user.id, postId);
+    setLikedPostIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(postId);
+      return newSet;
+    });
+    setPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, like_count: Math.max(0, (p.like_count || 0) - 1) } : p
+    ));
   };
 
   const isOwnProfile = user && profile && user.id === profile.id;
@@ -395,9 +437,17 @@ const PublicProfile = () => {
         >
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white">
-              {profile.username?.charAt(0).toUpperCase() || '?'}
-            </div>
+            {profile.profile_picture_url ? (
+              <img 
+                src={profile.profile_picture_url}
+                alt={profile.username}
+                className="w-24 h-24 rounded-full object-cover border-4 border-slate-700"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl font-bold text-white">
+                {profile.username?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
 
             {/* Info */}
             <div className="flex-1">
@@ -503,37 +553,106 @@ const PublicProfile = () => {
           })()}
         </motion.div>
 
-        {/* Tracks Section */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">
-            Released Tracks ({tracks.length})
-          </h2>
-          
-          {tracks.length === 0 ? (
-            <div className="text-center py-12 bg-slate-800/30 rounded-xl border border-slate-700/50">
-              <Music size={48} className="mx-auto text-slate-600 mb-4" />
-              <p className="text-slate-400">No tracks released yet</p>
-              {isOwnProfile && (
-                <Link
-                  to="/ghostwriter"
-                  className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  Create Your First Track
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tracks.map((track) => (
-                <TrackCard 
-                  key={track.id} 
-                  track={track}
-                  onClick={setSelectedTrack}
-                />
-              ))}
-            </div>
-          )}
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 mb-6 bg-slate-800/50 p-1 rounded-xl border border-slate-700/50">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              activeTab === 'posts'
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            <FileText size={18} />
+            Posts ({posts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('tracks')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              activeTab === 'tracks'
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            <Music size={18} />
+            Tracks ({tracks.length})
+          </button>
         </div>
+
+        {/* Posts Section */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'posts' && (
+            <motion.div
+              key="posts"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {posts.length === 0 ? (
+                <div className="text-center py-12 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                  <FileText size={48} className="mx-auto text-slate-600 mb-4" />
+                  <p className="text-slate-400">No posts yet</p>
+                  {isOwnProfile && (
+                    <Link
+                      to="/feed"
+                      className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      Create Your First Post
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <ProfilePostCard 
+                      key={post.id}
+                      post={post}
+                      isLiked={likedPostIds.has(post.id)}
+                      onLike={handleLikePost}
+                      onUnlike={handleUnlikePost}
+                      user={user}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Tracks Section */}
+          {activeTab === 'tracks' && (
+            <motion.div
+              key="tracks"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {tracks.length === 0 ? (
+                <div className="text-center py-12 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                  <Music size={48} className="mx-auto text-slate-600 mb-4" />
+                  <p className="text-slate-400">No tracks released yet</p>
+                  {isOwnProfile && (
+                    <Link
+                      to="/ghostwriter"
+                      className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      Create Your First Track
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {tracks.map((track) => (
+                    <TrackCard 
+                      key={track.id} 
+                      track={track}
+                      onClick={setSelectedTrack}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Track Modal */}
         <TrackModal
@@ -544,6 +663,101 @@ const PublicProfile = () => {
         />
       </div>
     </div>
+  );
+};
+
+/**
+ * Profile Post Card - For displaying posts on a user's profile
+ */
+const ProfilePostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
+  const [localLiked, setLocalLiked] = useState(isLiked);
+  const [localLikeCount, setLocalLikeCount] = useState(post.like_count || 0);
+  const [showComments, setShowComments] = useState(false);
+
+  useEffect(() => {
+    setLocalLiked(isLiked);
+  }, [isLiked]);
+
+  const handleLikeClick = async () => {
+    if (!user) return;
+    
+    if (localLiked) {
+      setLocalLiked(false);
+      setLocalLikeCount(prev => Math.max(0, prev - 1));
+      await onUnlike(post.id);
+    } else {
+      setLocalLiked(true);
+      setLocalLikeCount(prev => prev + 1);
+      await onLike(post.id);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-slate-800/40 border border-slate-700/40 rounded-xl overflow-hidden"
+    >
+      <div className="p-4">
+        {/* Post Content */}
+        <p className="text-slate-200 text-sm whitespace-pre-wrap break-words leading-relaxed">
+          {post.content}
+        </p>
+
+        {/* Timestamp */}
+        <p className="text-xs text-slate-500 mt-3">
+          {new Date(post.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })}
+        </p>
+
+        {/* Action Bar */}
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/30">
+          {/* Like Button */}
+          <button
+            onClick={handleLikeClick}
+            disabled={!user}
+            className={`flex items-center gap-1.5 text-sm transition-all ${
+              localLiked 
+                ? 'text-pink-400' 
+                : 'text-slate-500 hover:text-pink-400'
+            } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Heart size={16} className={localLiked ? 'fill-current' : ''} />
+            <span>{localLikeCount}</span>
+          </button>
+
+          {/* Comment Toggle */}
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1.5 text-sm transition-all ${
+              showComments ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-400'
+            }`}
+          >
+            <MessageCircle size={16} />
+            <span>{post.comment_count || 0}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Comments Section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-slate-700/50"
+          >
+            <PostCommentSection postId={post.id} isExpanded={true} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

@@ -25,7 +25,8 @@ import {
   Settings,
   Sparkles,
   Users,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { 
@@ -34,12 +35,14 @@ import {
   unlikeTrack,
   likePost,
   unlikePost,
+  deletePost,
   getUserLikedTrackIds,
   getUserLikedPostIds,
   getCommentCount,
   checkBotRoast,
   addBotRoast,
-  VRSA_BOT_NAME
+  VRSA_BOT_NAME,
+  VRSA_BOT_AVATAR_URL
 } from '../lib/social';
 import { generateTrackRoast } from '../lib/api';
 import CommentSection from '../components/social/CommentSection';
@@ -50,11 +53,13 @@ import FollowButton from '../components/social/FollowButton';
 /**
  * Compact Post Card - For regular text posts
  */
-const PostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
+const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
   const [localLiked, setLocalLiked] = useState(isLiked);
   const [localLikeCount, setLocalLikeCount] = useState(post.like_count || 0);
   const [showComments, setShowComments] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const commentCount = post.comment_count || 0;
+  const isOwnPost = user && post.user_id === user.id;
 
   useEffect(() => {
     setLocalLiked(isLiked);
@@ -76,6 +81,7 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
   };
 
   const isFollowersOnly = post.privacy === 'followers_only';
+  const profilePicUrl = post.profiles?.profile_picture_url;
 
   return (
     <motion.div
@@ -88,9 +94,17 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
         <div className="flex items-start gap-3">
           {/* Avatar */}
           <Link to={`/u/${post.profiles?.username}`} className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <User size={18} className="text-white" />
-            </div>
+            {profilePicUrl ? (
+              <img 
+                src={profilePicUrl} 
+                alt={post.profiles?.username || 'User'}
+                className="w-10 h-10 rounded-full object-cover border-2 border-slate-700"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <User size={18} className="text-white" />
+              </div>
+            )}
           </Link>
 
           {/* Content */}
@@ -159,6 +173,28 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
                   size="small"
                   variant="ghost"
                 />
+              )}
+
+              {/* Delete Button - Only for own posts */}
+              {isOwnPost && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!confirm('Delete this post? This cannot be undone.')) return;
+                    setIsDeleting(true);
+                    await onDelete(post.id);
+                    setIsDeleting(false);
+                  }}
+                  disabled={isDeleting}
+                  className="ml-auto flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-400 transition-all disabled:opacity-50"
+                  title="Delete post"
+                >
+                  {isDeleting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                </button>
               )}
             </div>
           </div>
@@ -253,6 +289,7 @@ const TrackCard = ({ track, isLiked, onLike, onUnlike, onClick, user }) => {
   };
 
   const isGhostMode = track.is_anonymous;
+  const profilePicUrl = track.profiles?.profile_picture_url;
 
   return (
     <motion.div
@@ -269,6 +306,14 @@ const TrackCard = ({ track, isLiked, onLike, onUnlike, onClick, user }) => {
               <div className="w-10 h-10 rounded-full bg-slate-700/50 border border-slate-600 flex items-center justify-center">
                 <Ghost size={18} className="text-slate-400" />
               </div>
+            ) : profilePicUrl ? (
+              <Link to={`/u/${track.profiles?.username}`}>
+                <img 
+                  src={profilePicUrl} 
+                  alt={track.profiles?.username || 'User'}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-slate-700"
+                />
+              </Link>
             ) : (
               <Link to={`/u/${track.profiles?.username}`}>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -344,7 +389,11 @@ const TrackCard = ({ track, isLiked, onLike, onUnlike, onClick, user }) => {
             {/* Bot Roast - Compact */}
             {(botRoast || loadingRoast) && (
               <div className="flex items-start gap-2 mt-3 p-2 bg-yellow-500/5 rounded-lg border border-yellow-500/10">
-                <Sparkles size={14} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                <img 
+                  src={VRSA_BOT_AVATAR_URL} 
+                  alt="VRSA Bot"
+                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <span className="text-xs font-medium text-yellow-400">{VRSA_BOT_NAME}</span>
                   {loadingRoast ? (
@@ -709,6 +758,14 @@ const Feed = () => {
     });
   };
 
+  const handleDeletePost = async (postId) => {
+    if (!user) return;
+    const { success } = await deletePost(postId);
+    if (success) {
+      setFeedItems(prev => prev.filter(item => !(item.type === 'post' && item.id === postId)));
+    }
+  };
+
   const handlePostCreated = (newPost) => {
     // Add the new post to the top of the feed
     setFeedItems(prev => [{ ...newPost, type: 'post' }, ...prev]);
@@ -805,6 +862,7 @@ const Feed = () => {
                     isLiked={likedPostIds.has(item.id)}
                     onLike={handleLikePost}
                     onUnlike={handleUnlikePost}
+                    onDelete={handleDeletePost}
                     user={user}
                   />
                 ) : (

@@ -24,7 +24,8 @@ import {
   getTrackComments,
   addComment,
   deleteComment,
-  VRSA_BOT_NAME
+  VRSA_BOT_NAME,
+  VRSA_BOT_AVATAR_URL
 } from '../../lib/social';
 
 /**
@@ -62,6 +63,8 @@ const Comment = ({
   const displayName = isBotComment 
     ? comment.bot_name || VRSA_BOT_NAME
     : comment.profiles?.username || 'Anonymous';
+  
+  const profilePicUrl = comment.profiles?.profile_picture_url;
 
   return (
     <motion.div
@@ -79,9 +82,17 @@ const Comment = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {isBotComment ? (
-              <div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <Sparkles size={14} className="text-yellow-400" />
-              </div>
+              <img 
+                src={VRSA_BOT_AVATAR_URL} 
+                alt="VRSA Bot"
+                className="w-6 h-6 rounded-full object-cover"
+              />
+            ) : profilePicUrl ? (
+              <img 
+                src={profilePicUrl} 
+                alt={comment.profiles?.username || 'User'}
+                className="w-6 h-6 rounded-full object-cover"
+              />
             ) : (
               <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
                 <User size={14} className="text-indigo-400" />
