@@ -209,7 +209,6 @@ const StructuredInputForm = ({
           {/* AI Model & Memory Settings */}
           <AccordionItem value="model">
             <AccordionTrigger>
-              Artist Style
               AI Model & Memory
             </AccordionTrigger>
             <AccordionContent>
@@ -269,7 +268,6 @@ const StructuredInputForm = ({
           {/* Lyrics Input Settings */}
           <AccordionItem value="lyrics">
                         <AccordionTrigger>
-              Theme & Mood
               Lyrics Settings
             </AccordionTrigger>
             <AccordionContent>
@@ -314,7 +312,6 @@ const StructuredInputForm = ({
           {/* Rhyme Controls */}
           <AccordionItem value="rhyme">
             <AccordionTrigger>
-              Rhyme Scheme
               Rhyme Controls
             </AccordionTrigger>
             <AccordionContent>
@@ -405,7 +402,6 @@ const StructuredInputForm = ({
           {/* Advanced Settings */}
           <AccordionItem value="advanced">
             <AccordionTrigger>
-              Rhyme Settings
               Advanced Settings
             </AccordionTrigger>
             <AccordionContent>
