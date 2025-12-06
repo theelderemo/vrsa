@@ -97,6 +97,8 @@ export const getRemainingUses = (feature, limit, isPro = false) => {
 export const RATE_LIMIT_FEATURES = {
   ANALYZER: 'analyzer',
   WORD_FINDER: 'word_finder',
+  HOOK_GENERATOR: 'hook_generator',
+  WORDPLAY_SUGGESTER: 'wordplay_suggester',
 };
 
 // Daily limits for free users

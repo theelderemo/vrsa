@@ -60,6 +60,99 @@ export const callAI = async (prompt, setLoading, setResult, options = {}) => {
 };
 
 /**
+ * Call the AI with a system prompt for stricter output control
+ * @param {string} systemPrompt - The system prompt to control AI behavior
+ * @param {string} userPrompt - The user's request
+ * @param {Function} setLoading - Function to set loading state
+ * @param {Function} setResult - Function to set the result
+ * @param {Object} options - Additional options (temperature, top_p, model)
+ */
+export const callAIWithSystem = async (systemPrompt, userPrompt, setLoading, setResult, options = {}) => {
+  setLoading(true);
+  setResult('');
+  try {
+    const messagesPayload = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({ messages: messagesPayload, ...options })
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    const data = await response.json();
+    const aiResult = data.content || 'Error: Could not process request.';
+    setResult(aiResult);
+  } catch (error) {
+    setResult(`An error occurred: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
+/**
+ * Call the model-router multiple times in parallel for hook generation
+ * @param {string} systemPrompt - The system prompt to control AI behavior
+ * @param {string} userPrompt - The user's request
+ * @param {number} count - Number of parallel requests (1 for free, 4 for pro)
+ * @param {Object} options - Additional options (temperature, top_p)
+ * @returns {Promise<string[]>} Array of generated hooks
+ */
+export const callAIMultiple = async (systemPrompt, userPrompt, count = 4, options = {}) => {
+  try {
+    const messagesPayload = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+    
+    // Create array of parallel fetch requests to model-router
+    const requests = Array(count).fill(null).map(() => 
+      fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        body: JSON.stringify({ 
+          messages: messagesPayload, 
+          model: 'model-router',
+          ...options 
+        })
+      })
+    );
+    
+    // Execute all requests in parallel
+    const responses = await Promise.all(requests);
+    
+    // Parse all responses
+    const results = await Promise.all(
+      responses.map(async (response) => {
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        const data = await response.json();
+        return data.content || 'Error: Could not process request.';
+      })
+    );
+    
+    return results;
+  } catch (error) {
+    console.error('Multiple AI call error:', error);
+    throw error;
+  }
+};
+
+/**
  * Generate an AI-based sarcastic comment
  * @param {string} userInput - The user's input to generate a comment about
  * @returns {Promise<string>} The sarcastic comment

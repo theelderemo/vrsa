@@ -4,11 +4,13 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoaderCircle, Lock } from 'lucide-react';
-import { callAI } from '../../lib/api';
+import { LoaderCircle, Lock, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { callAIWithSystem } from '../../lib/api';
 import { useUser } from '../../hooks/useUser';
+import { checkRateLimit, incrementUsage, RATE_LIMIT_FEATURES, getRemainingUses } from '../../lib/rateLimits';
 
 const WordplaySuggester = () => {
   const { user, profile, loading } = useUser();
@@ -20,26 +22,44 @@ const WordplaySuggester = () => {
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [rateLimit, setRateLimit] = useState({ canUse: true, remaining: 1 });
 
-  const WORDPLAY_PROMPT = `You are a creative wordplay expert specializing in songwriting. Given a word or phrase, generate creative wordplay suggestions including:
+  useEffect(() => {
+    const limit = checkRateLimit(RATE_LIMIT_FEATURES.WORDPLAY_SUGGESTER, 1, isPro);
+    setRateLimit(limit);
+  }, [isPro]);
 
-**Double Meanings**: Words or phrases that work on multiple levels
-**Puns**: Sound-alike words that create clever connections
-**Homophone Plays**: Words that sound the same but have different meanings
-**Metaphoric Twists**: Creative ways to use the word metaphorically
-**Slang Alternatives**: Hip-hop/R&B/pop culture slang substitutions
+  const SYSTEM_PROMPT = `You are a wordplay generator. You output ONLY formatted wordplay suggestions. You NEVER write conversational text.
 
-Format each suggestion clearly. Be creative, clever, and think like a songwriter looking for that perfect turn of phrase. Keep suggestions relevant to songwriting.`;
+CRITICAL RULES:
+- Start output IMMEDIATELY with "**Double Meanings**"
+- NEVER begin with "Absolutely", "Here are", "Let's", "Sure", or ANY greeting
+- NEVER end with "Let me know", "Hope this helps", or ANY closing remark
+- Output ONLY the 5 category sections with examples
+- NO commentary, NO explanations outside the examples`;
 
   const handleGenerate = () => {
-    if (!word.trim() || !isPro) return;
+    if (!word.trim()) return;
     
-    let prompt = `${WORDPLAY_PROMPT}\n\nWord/Phrase to work with: "${word}"`;
-    if (context.trim()) {
-      prompt += `\n\nContext/Theme: ${context}`;
+    // Check rate limit for free users
+    if (!isPro && !rateLimit.canUse) {
+      return;
     }
     
-    callAI(prompt, setIsLoading, setResult, { temperature: 0.9, top_p: 0.95 });
+    let userPrompt = `Word: "${word}"`;
+    if (context.trim()) {
+      userPrompt += `\nContext: ${context}`;
+    }
+    userPrompt += `\n\nGenerate wordplay for this word in these 5 categories:\n**Double Meanings**\n**Puns**\n**Homophones**\n**Metaphors**\n**Slang**\n\nFor each category, give 3-4 lyric examples. Start immediately with **Double Meanings** - no intro text.`;
+    
+    callAIWithSystem(SYSTEM_PROMPT, userPrompt, setIsLoading, setResult, { temperature: 0.9, top_p: 0.95 });
+    
+    // Increment usage for free users
+    if (!isPro) {
+      incrementUsage(RATE_LIMIT_FEATURES.WORDPLAY_SUGGESTER);
+      const newLimit = checkRateLimit(RATE_LIMIT_FEATURES.WORDPLAY_SUGGESTER, 1, isPro);
+      setRateLimit(newLimit);
+    }
   };
 
   const handleCopy = () => {
@@ -64,24 +84,49 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
     );
   }
 
-  // Pro-only gate
-  if (!isPro) {
-    return (
-      <div className="flex items-center justify-center h-full bg-slate-900 p-8">
-        <div className="max-w-md text-center">
-          <Lock size={48} className="mx-auto mb-4 text-purple-400 opacity-50" />
-          <h2 className="text-2xl font-bold text-white mb-4">Studio Pass Required</h2>
-          <p className="text-slate-400 mb-6">Wordplay Suggester is a premium feature. Upgrade to Studio Pass to unlock creative wordplay suggestions.</p>
-          <button
-            onClick={() => navigate('/studio-pass')}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
-          >
-            Get Studio Pass
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Parse result sections for freemium preview
+  const parseSections = (text) => {
+    if (!text) return [];
+    
+    // Split by section headers (e.g., "**Double Meanings**:")
+    const sectionRegex = /\*\*([^*]+)\*\*:?/g;
+    const matches = [];
+    let match;
+    
+    while ((match = sectionRegex.exec(text)) !== null) {
+      matches.push({
+        title: match[1].trim(),
+        startIndex: match.index,
+        endIndex: match.index + match[0].length
+      });
+    }
+    
+    if (matches.length === 0) return [];
+    
+    const sections = [];
+    for (let i = 0; i < matches.length; i++) {
+      const currentMatch = matches[i];
+      const nextMatch = matches[i + 1];
+      
+      // Extract content between this match and the next (or end of text)
+      const contentStart = currentMatch.endIndex;
+      const contentEnd = nextMatch ? nextMatch.startIndex : text.length;
+      const content = text.substring(contentStart, contentEnd).trim();
+      
+      // Only add sections that have actual content
+      if (content && content.length > 10) {
+        sections.push({
+          title: currentMatch.title,
+          content: content
+        });
+      }
+    }
+    
+    return sections;
+  };
+
+  const sections = parseSections(result);
+  const showFreemiumPreview = !isPro && result && sections.length > 1;
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">
@@ -118,7 +163,7 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
 
             <button
               onClick={handleGenerate}
-              disabled={isLoading || !word.trim()}
+              disabled={isLoading || !word.trim() || (!isPro && !rateLimit.canUse)}
               className="w-full px-4 py-2 lg:py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             >
               {isLoading ? (
@@ -134,6 +179,11 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
                 </>
               )}
             </button>
+            {!isPro && (
+              <p className="text-xs text-slate-500 mt-2 text-center">
+                {rateLimit.canUse ? '1 free generation per day' : 'Daily limit reached. Upgrade for unlimited generations.'}
+              </p>
+            )}
           </div>
 
           <div className="hidden lg:block mt-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
@@ -162,12 +212,61 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
           
           <div className="flex-1 overflow-y-auto bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 lg:p-4 min-h-0">
             {result ? (
-              <div className="text-slate-200 text-xs lg:text-sm whitespace-pre-wrap">{result}</div>
+              <div className="text-slate-200 text-xs lg:text-sm space-y-4">
+                {showFreemiumPreview ? (
+                  <>
+                    {/* First section - visible to free users */}
+                    <div>
+                      <div className="font-bold text-purple-400 mb-2">{sections[0].title}</div>
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown>{sections[0].content}</ReactMarkdown>
+                      </div>
+                    </div>
+                    
+                    {/* Blurred remaining sections with upgrade CTA */}
+                    <div className="relative">
+                      <div className="blur-sm select-none pointer-events-none opacity-60 space-y-4">
+                        {sections.slice(1).map((section, i) => (
+                          <div key={i}>
+                            <div className="font-bold text-purple-400 mb-2">{section.title}</div>
+                            <div className="prose prose-invert prose-sm max-w-none">
+                              <ReactMarkdown>{section.content}</ReactMarkdown>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+                        <div className="text-center p-6 max-w-sm">
+                          <Lock size={32} className="mx-auto mb-3 text-purple-400" />
+                          <h3 className="text-lg font-bold text-white mb-2">{sections.length - 1}+ More Categories Hidden</h3>
+                          <p className="text-slate-400 text-sm mb-4">
+                            Unlock all wordplay suggestions plus unlimited daily generations
+                          </p>
+                          <button
+                            onClick={() => navigate('/studio-pass')}
+                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2"
+                          >
+                            <Sparkles size={16} />
+                            Upgrade to Studio Pass
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown>{result}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-slate-500">
                 <div className="text-center px-4">
                   <p className="text-sm lg:text-base">Enter a word to get wordplay suggestions</p>
                   <p className="text-xs lg:text-sm mt-2 text-slate-600">Perfect for finding clever double meanings</p>
+                  {!isPro && (
+                    <p className="text-xs text-purple-400 mt-3">🎁 Try 1 free generation (resets daily)</p>
+                  )}
                 </div>
               </div>
             )}
