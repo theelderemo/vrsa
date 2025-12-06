@@ -4,10 +4,365 @@
  * Copyright (c) 2025 Christopher Dickinson
  *
  * Social features library for VRS/A
- * Handles published tracks, albums, likes, and public profiles
+ * Handles published tracks, albums, likes, follows, comments, and public profiles
  */
 
 import { supabase } from './supabase';
+
+// Bot identifier for AI roast comments
+export const VRSA_BOT_NAME = '@VRSA Official Bot';
+
+// ============================================
+// FOLLOWERS SYSTEM
+// ============================================
+
+/**
+ * Follow a user
+ * @param {string} followerId - Current user's ID
+ * @param {string} followingId - User to follow
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function followUser(followerId, followingId) {
+  try {
+    if (followerId === followingId) {
+      return { success: false, error: new Error('Cannot follow yourself') };
+    }
+    
+    const { error } = await supabase
+      .from('followers')
+      .insert({ follower_id: followerId, following_id: followingId });
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    // Ignore duplicate key errors (already following)
+    if (error.code === '23505') {
+      return { success: true, error: null };
+    }
+    console.error('Error following user:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Unfollow a user
+ * @param {string} followerId - Current user's ID
+ * @param {string} followingId - User to unfollow
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function unfollowUser(followerId, followingId) {
+  try {
+    const { error } = await supabase
+      .from('followers')
+      .delete()
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error unfollowing user:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Check if user is following another user
+ * @param {string} followerId - Current user's ID
+ * @param {string} followingId - User to check
+ * @returns {Promise<boolean>}
+ */
+export async function isFollowing(followerId, followingId) {
+  try {
+    const { data, error } = await supabase
+      .from('followers')
+      .select('id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return !!data;
+  } catch (error) {
+    console.error('Error checking follow status:', error);
+    return false;
+  }
+}
+
+/**
+ * Get follower and following counts for a user
+ * @param {string} userId - User ID
+ * @returns {Promise<{followers: number, following: number}>}
+ */
+export async function getFollowCounts(userId) {
+  try {
+    const [followersResult, followingResult] = await Promise.all([
+      supabase
+        .from('followers')
+        .select('id', { count: 'exact', head: true })
+        .eq('following_id', userId),
+      supabase
+        .from('followers')
+        .select('id', { count: 'exact', head: true })
+        .eq('follower_id', userId)
+    ]);
+
+    return {
+      followers: followersResult.count || 0,
+      following: followingResult.count || 0
+    };
+  } catch (error) {
+    console.error('Error getting follow counts:', error);
+    return { followers: 0, following: 0 };
+  }
+}
+
+/**
+ * Get list of users following a specific user
+ * @param {string} userId - User ID
+ * @param {number} limit - Max results
+ * @returns {Promise<{followers: array, error: Error | null}>}
+ */
+export async function getFollowers(userId, limit = 50) {
+  try {
+    const { data, error } = await supabase
+      .from('followers')
+      .select(`
+        id,
+        created_at,
+        follower:follower_id (
+          id,
+          username
+        )
+      `)
+      .eq('following_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return { followers: data?.map(f => f.follower) || [], error: null };
+  } catch (error) {
+    console.error('Error fetching followers:', error);
+    return { followers: [], error };
+  }
+}
+
+/**
+ * Get list of users that a specific user is following
+ * @param {string} userId - User ID
+ * @param {number} limit - Max results
+ * @returns {Promise<{following: array, error: Error | null}>}
+ */
+export async function getFollowing(userId, limit = 50) {
+  try {
+    const { data, error } = await supabase
+      .from('followers')
+      .select(`
+        id,
+        created_at,
+        following:following_id (
+          id,
+          username
+        )
+      `)
+      .eq('follower_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return { following: data?.map(f => f.following) || [], error: null };
+  } catch (error) {
+    console.error('Error fetching following:', error);
+    return { following: [], error };
+  }
+}
+
+// ============================================
+// COMMENTS SYSTEM
+// ============================================
+
+/**
+ * Add a comment to a track
+ * @param {object} commentData - Comment data
+ * @returns {Promise<{comment: object, error: Error | null}>}
+ */
+export async function addComment({ trackId, userId, content, parentCommentId = null }) {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        track_id: trackId,
+        user_id: userId,
+        content,
+        parent_comment_id: parentCommentId,
+        is_bot_roast: false
+      })
+      .select(`
+        *,
+        profiles:user_id (
+          id,
+          username
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+    return { comment: data, error: null };
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    return { comment: null, error };
+  }
+}
+
+/**
+ * Delete a comment (user can only delete their own)
+ * @param {string} commentId - Comment ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function deleteComment(commentId) {
+  try {
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Get comments for a track with threading support
+ * @param {string} trackId - Track ID
+ * @returns {Promise<{comments: array, error: Error | null}>}
+ */
+export async function getTrackComments(trackId) {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        profiles:user_id (
+          id,
+          username
+        )
+      `)
+      .eq('track_id', trackId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // Organize into threaded structure
+    const commentsMap = new Map();
+    const rootComments = [];
+
+    // First pass: create map of all comments
+    data?.forEach(comment => {
+      commentsMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    // Second pass: organize into tree
+    data?.forEach(comment => {
+      const commentWithReplies = commentsMap.get(comment.id);
+      if (comment.parent_comment_id) {
+        const parent = commentsMap.get(comment.parent_comment_id);
+        if (parent) {
+          parent.replies.push(commentWithReplies);
+        } else {
+          // Orphan comment, treat as root
+          rootComments.push(commentWithReplies);
+        }
+      } else {
+        rootComments.push(commentWithReplies);
+      }
+    });
+
+    return { comments: rootComments, error: null };
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    return { comments: [], error };
+  }
+}
+
+/**
+ * Get comment count for a track
+ * @param {string} trackId - Track ID
+ * @returns {Promise<number>}
+ */
+export async function getCommentCount(trackId) {
+  try {
+    const { count, error } = await supabase
+      .from('comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('track_id', trackId);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting comment count:', error);
+    return 0;
+  }
+}
+
+/**
+ * Check if a track already has a bot roast comment
+ * @param {string} trackId - Track ID
+ * @returns {Promise<{hasRoast: boolean, roast: object | null}>}
+ */
+export async function checkBotRoast(trackId) {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('track_id', trackId)
+      .eq('is_bot_roast', true)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return { hasRoast: !!data, roast: data };
+  } catch (error) {
+    console.error('Error checking bot roast:', error);
+    return { hasRoast: false, roast: null };
+  }
+}
+
+/**
+ * Add bot roast comment to a track (should only be called once per track)
+ * Note: This should be called from an Edge Function with service role
+ * @param {string} trackId - Track ID
+ * @param {string} roastContent - The roast content
+ * @returns {Promise<{comment: object, error: Error | null}>}
+ */
+export async function addBotRoast(trackId, roastContent) {
+  try {
+    // First check if roast already exists
+    const { hasRoast } = await checkBotRoast(trackId);
+    if (hasRoast) {
+      return { comment: null, error: new Error('Track already has a bot roast') };
+    }
+
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        track_id: trackId,
+        user_id: null,
+        content: roastContent,
+        is_bot_roast: true,
+        bot_name: VRSA_BOT_NAME
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { comment: data, error: null };
+  } catch (error) {
+    console.error('Error adding bot roast:', error);
+    return { comment: null, error };
+  }
+}
 
 // ============================================
 // PUBLISHED TRACKS
@@ -468,5 +823,449 @@ export async function getPublicAlbumsByUser(userId) {
   } catch (error) {
     console.error('Error fetching public albums:', error);
     return { albums: [], error };
+  }
+}
+
+// ============================================
+// POSTS (Social Media Posts)
+// ============================================
+
+/**
+ * Create a new post
+ * @param {object} postData - Post data
+ * @returns {Promise<{post: object, error: Error | null}>}
+ */
+export async function createPost({ userId, content, privacy = 'public' }) {
+  try {
+    // Insert the post
+    const { data: post, error } = await supabase
+      .from('posts')
+      .insert({
+        user_id: userId,
+        content,
+        privacy
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    // Fetch the profile separately
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('id', userId)
+      .single();
+
+    return { 
+      post: { ...post, profiles: profile || { id: userId, username: 'Unknown' } }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error creating post:', error);
+    return { post: null, error };
+  }
+}
+
+/**
+ * Get a single post by ID
+ * @param {string} postId - Post ID
+ * @returns {Promise<{post: object, error: Error | null}>}
+ */
+export async function getPostById(postId) {
+  try {
+    const { data: post, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', postId)
+      .single();
+
+    if (error) throw error;
+
+    // Fetch the profile separately
+    if (post?.user_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('id', post.user_id)
+        .single();
+      
+      post.profiles = profile || { id: post.user_id, username: 'Unknown' };
+    }
+
+    return { post, error: null };
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return { post: null, error };
+  }
+}
+
+/**
+ * Delete a post
+ * @param {string} postId - Post ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function deletePost(postId) {
+  try {
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Like a post
+ * @param {string} userId - User ID
+ * @param {string} postId - Post ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function likePost(userId, postId) {
+  try {
+    const { error } = await supabase
+      .from('post_likes')
+      .insert({ user_id: userId, post_id: postId });
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    // Ignore duplicate key errors (user already liked)
+    if (error.code === '23505') {
+      return { success: true, error: null };
+    }
+    console.error('Error liking post:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Unlike a post
+ * @param {string} userId - User ID
+ * @param {string} postId - Post ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function unlikePost(userId, postId) {
+  try {
+    const { error } = await supabase
+      .from('post_likes')
+      .delete()
+      .eq('user_id', userId)
+      .eq('post_id', postId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error unliking post:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Get user's liked post IDs
+ * @param {string} userId - User ID
+ * @returns {Promise<Set<string>>}
+ */
+export async function getUserLikedPostIds(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return new Set(data.map(row => row.post_id));
+  } catch (error) {
+    console.error('Error fetching user post likes:', error);
+    return new Set();
+  }
+}
+
+/**
+ * Get IDs of users that the current user is following
+ * @param {string} userId - User ID
+ * @returns {Promise<Set<string>>}
+ */
+export async function getUserFollowingIds(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('followers')
+      .select('following_id')
+      .eq('follower_id', userId);
+
+    if (error) throw error;
+    return new Set(data.map(row => row.following_id));
+  } catch (error) {
+    console.error('Error fetching following IDs:', error);
+    return new Set();
+  }
+}
+
+/**
+ * Get unified feed with both posts and tracks
+ * RLS handles privacy filtering for followers_only posts
+ * @param {object} options - Query options
+ * @returns {Promise<{items: array, error: Error | null}>}
+ */
+export async function getUnifiedFeed({ 
+  limit = 30, 
+  sortBy = 'created_at'
+}) {
+  try {
+    // Fetch posts - RLS will automatically filter based on privacy
+    const { data: posts, error: postsError } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (postsError) throw postsError;
+
+    // Fetch tracks (published_tracks don't have privacy, all are public)
+    const { data: tracks, error: tracksError } = await supabase
+      .from('published_tracks')
+      .select('*')
+      .order(sortBy, { ascending: false })
+      .limit(limit);
+
+    if (tracksError) throw tracksError;
+
+    // Get unique user IDs from both posts and tracks
+    const postUserIds = posts?.map(p => p.user_id) || [];
+    const trackUserIds = tracks?.map(t => t.user_id) || [];
+    const allUserIds = [...new Set([...postUserIds, ...trackUserIds])];
+
+    // Fetch profiles for all users
+    let profileMap = new Map();
+    if (allUserIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', allUserIds);
+
+      if (!profilesError && profiles) {
+        profileMap = new Map(profiles.map(p => [p.id, p]));
+      }
+    }
+
+    // Transform posts to unified format
+    const postItems = (posts || []).map(post => ({
+      ...post,
+      type: 'post',
+      profiles: profileMap.get(post.user_id) || { username: 'Unknown', id: post.user_id }
+    }));
+
+    // Transform tracks to unified format
+    const trackItems = (tracks || []).map(track => ({
+      ...track,
+      type: 'track',
+      profiles: profileMap.get(track.user_id) || { username: 'Anonymous', id: track.user_id }
+    }));
+
+    // Combine and sort by created_at
+    const allItems = [...postItems, ...trackItems].sort((a, b) => {
+      if (sortBy === 'fire_count') {
+        // For fire_count, only tracks have this field
+        const aFire = a.type === 'track' ? (a.fire_count || 0) : (a.like_count || 0);
+        const bFire = b.type === 'track' ? (b.fire_count || 0) : (b.like_count || 0);
+        return bFire - aFire;
+      }
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    // Limit to requested number
+    return { items: allItems.slice(0, limit), error: null };
+  } catch (error) {
+    console.error('Error fetching unified feed:', error);
+    return { items: [], error };
+  }
+}
+
+/**
+ * Get posts by a specific user
+ * @param {string} userId - User ID
+ * @param {number} limit - Max results
+ * @returns {Promise<{posts: array, error: Error | null}>}
+ */
+export async function getPostsByUser(userId, limit = 20) {
+  try {
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    // Fetch the profile for this user
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('id', userId)
+      .single();
+
+    // Add profile to each post
+    const postsWithProfile = (posts || []).map(post => ({
+      ...post,
+      profiles: profile || { id: userId, username: 'Unknown' }
+    }));
+
+    return { posts: postsWithProfile, error: null };
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    return { posts: [], error };
+  }
+}
+
+// ============================================
+// POST COMMENTS
+// ============================================
+
+/**
+ * Add a comment to a post
+ * @param {object} commentData - Comment data
+ * @returns {Promise<{comment: object, error: Error | null}>}
+ */
+export async function addPostComment({ postId, userId, content, parentCommentId = null }) {
+  try {
+    const { data: comment, error } = await supabase
+      .from('post_comments')
+      .insert({
+        post_id: postId,
+        user_id: userId,
+        content,
+        parent_comment_id: parentCommentId
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    // Fetch the profile separately
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('id', userId)
+      .single();
+
+    return { 
+      comment: { ...comment, profiles: profile || { id: userId, username: 'Unknown' } }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error adding post comment:', error);
+    return { comment: null, error };
+  }
+}
+
+/**
+ * Delete a post comment (user can only delete their own)
+ * @param {string} commentId - Comment ID
+ * @returns {Promise<{success: boolean, error: Error | null}>}
+ */
+export async function deletePostComment(commentId) {
+  try {
+    const { error } = await supabase
+      .from('post_comments')
+      .delete()
+      .eq('id', commentId);
+
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error deleting post comment:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Get comments for a post with threading support
+ * @param {string} postId - Post ID
+ * @returns {Promise<{comments: array, error: Error | null}>}
+ */
+export async function getPostComments(postId) {
+  try {
+    const { data, error } = await supabase
+      .from('post_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // Get unique user IDs
+    const userIds = [...new Set(data?.map(c => c.user_id).filter(Boolean) || [])];
+    
+    // Fetch profiles
+    let profileMap = new Map();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .in('id', userIds);
+      
+      if (profiles) {
+        profileMap = new Map(profiles.map(p => [p.id, p]));
+      }
+    }
+
+    // Add profiles and organize into threaded structure
+    const commentsMap = new Map();
+    const rootComments = [];
+
+    // First pass: create map of all comments with profiles
+    data?.forEach(comment => {
+      commentsMap.set(comment.id, { 
+        ...comment, 
+        profiles: profileMap.get(comment.user_id) || { id: comment.user_id, username: 'Unknown' },
+        replies: [] 
+      });
+    });
+
+    // Second pass: organize into tree
+    data?.forEach(comment => {
+      const commentWithReplies = commentsMap.get(comment.id);
+      if (comment.parent_comment_id) {
+        const parent = commentsMap.get(comment.parent_comment_id);
+        if (parent) {
+          parent.replies.push(commentWithReplies);
+        } else {
+          rootComments.push(commentWithReplies);
+        }
+      } else {
+        rootComments.push(commentWithReplies);
+      }
+    });
+
+    return { comments: rootComments, error: null };
+  } catch (error) {
+    console.error('Error fetching post comments:', error);
+    return { comments: [], error };
+  }
+}
+
+/**
+ * Get comment count for a post
+ * @param {string} postId - Post ID
+ * @returns {Promise<number>}
+ */
+export async function getPostCommentCount(postId) {
+  try {
+    const { count, error } = await supabase
+      .from('post_comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('post_id', postId);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Error getting post comment count:', error);
+    return 0;
   }
 }

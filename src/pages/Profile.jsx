@@ -46,7 +46,8 @@ import {
   updateAlbum,
   deleteAlbum,
   getUserStats,
-  getTracksByUser
+  getTracksByUser,
+  getFollowCounts
 } from '../lib/social';
 
 const Profile = () => {
@@ -73,6 +74,7 @@ const Profile = () => {
   const [albums, setAlbums] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [stats, setStats] = useState(null);
+  const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
   const [loadingDiscography, setLoadingDiscography] = useState(true);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
@@ -90,14 +92,17 @@ const Profile = () => {
   const loadDiscography = async () => {
     setLoadingDiscography(true);
     try {
-      const [albumsResult, tracksResult, statsResult] = await Promise.all([
+      const [albumsResult, tracksResult, statsResult, followCounts] = await Promise.all([
         getUserAlbums(user.id),
         getTracksByUser(user.id),
-        getUserStats(user.id)
+        getUserStats(user.id),
+        getFollowCounts(user.id)
       ]);
       
       setAlbums(albumsResult.albums || []);
       setTracks(tracksResult.tracks || []);
+      setStats(statsResult.stats);
+      setFollowStats(followCounts);
       setStats(statsResult.stats);
     } catch (err) {
       console.error('Error loading discography:', err);
@@ -496,6 +501,14 @@ const Profile = () => {
           {/* Stats Summary */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <span className="text-2xl font-bold text-white block">{followStats.followers}</span>
+                <span className="text-xs text-slate-400">Followers</span>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
+                <span className="text-2xl font-bold text-white block">{followStats.following}</span>
+                <span className="text-xs text-slate-400">Following</span>
+              </div>
               <div className="bg-slate-900/50 rounded-lg p-4 text-center border border-slate-700/50">
                 <Music className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
                 <span className="text-2xl font-bold text-white block">{stats.trackCount || 0}</span>

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * PublishModal - Modal for publishing tracks to the public feed
  * Allows users to select best lines for preview, add title, and publish

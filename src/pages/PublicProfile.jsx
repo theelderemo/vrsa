@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * PublicProfile - Public-facing artist profile page
  * Displays user's published tracks, stats, and public albums
@@ -27,8 +28,10 @@ import {
   getPublicProfileByUsername, 
   getTracksByUser, 
   getUserStats,
-  getPublicAlbumsByUser 
+  getPublicAlbumsByUser,
+  getFollowCounts
 } from '../lib/social';
+import FollowButton from '../components/social/FollowButton';
 
 /**
  * Achievement Badge - Display an earned badge
@@ -289,6 +292,7 @@ const PublicProfile = () => {
   const [tracks, setTracks] = useState([]);
   const [albums, setAlbums] = useState([]);
   const [stats, setStats] = useState({ trackCount: 0, totalFire: 0, avgRhymeDensity: null });
+  const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
@@ -307,16 +311,18 @@ const PublicProfile = () => {
         }
         setProfile(profileData);
 
-        // Fetch tracks, stats, and albums in parallel
-        const [tracksResult, statsResult, albumsResult] = await Promise.all([
+        // Fetch tracks, stats, albums, and follow counts in parallel
+        const [tracksResult, statsResult, albumsResult, followCounts] = await Promise.all([
           getTracksByUser(profileData.id),
           getUserStats(profileData.id),
-          getPublicAlbumsByUser(profileData.id)
+          getPublicAlbumsByUser(profileData.id),
+          getFollowCounts(profileData.id)
         ]);
 
         setTracks(tracksResult.tracks || []);
         setStats(statsResult);
         setAlbums(albumsResult.albums || []);
+        setFollowStats(followCounts);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Failed to load profile');
@@ -395,7 +401,35 @@ const PublicProfile = () => {
 
             {/* Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white">{profile.username}</h1>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <h1 className="text-3xl font-bold text-white">{profile.username}</h1>
+                {/* Follow Button - only show if not own profile */}
+                {!isOwnProfile && profile.id && (
+                  <FollowButton 
+                    targetUserId={profile.id}
+                    targetUsername={profile.username}
+                    onFollowChange={(delta) => setFollowStats(prev => ({
+                      ...prev,
+                      followers: Math.max(0, prev.followers + delta)
+                    }))}
+                    size="default"
+                    variant="default"
+                  />
+                )}
+              </div>
+              
+              {/* Follower/Following counts */}
+              <div className="flex items-center gap-6 mt-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-xl font-bold text-white">{followStats.followers}</span>
+                  <span className="text-sm text-slate-400">Followers</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xl font-bold text-white">{followStats.following}</span>
+                  <span className="text-sm text-slate-400">Following</span>
+                </div>
+              </div>
+              
               <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-400">
                 <span className="flex items-center gap-1">
                   <Calendar size={16} />
