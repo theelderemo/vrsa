@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lightbulb, LoaderCircle, Copy, Check, RefreshCw, Lock } from 'lucide-react';
+import { LoaderCircle, RefreshCw, Lock } from 'lucide-react';
 import { callAI } from '../../lib/api';
 import { useUser } from '../../hooks/useUser';
 
@@ -170,7 +170,6 @@ Format each hook clearly numbered 1-5. Include brief notes on how each hook coul
                 </>
               ) : (
                 <>
-                  <Lightbulb size={18} className="mr-2" />
                   <span className="hidden lg:inline">Generate Hooks</span>
                   <span className="lg:hidden">Generate</span>
                 </>
@@ -208,8 +207,8 @@ Format each hook clearly numbered 1-5. Include brief notes on how each hook coul
                     onClick={handleCopy}
                     className="flex items-center gap-1 px-2 lg:px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs lg:text-sm transition-colors"
                   >
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
                     <span className="hidden lg:inline">{copied ? 'Copied!' : 'Copy'}</span>
+                    <span className="lg:hidden">{copied ? '✓' : 'Copy'}</span>
                   </button>
                 </>
               )}
@@ -222,8 +221,6 @@ Format each hook clearly numbered 1-5. Include brief notes on how each hook coul
             ) : (
               <div className="flex items-center justify-center h-full text-slate-500">
                 <div className="text-center px-4">
-                  <Lightbulb size={36} className="mx-auto mb-3 opacity-50 lg:hidden" />
-                  <Lightbulb size={48} className="mx-auto mb-4 opacity-50 hidden lg:block" />
                   <p className="text-sm lg:text-base">Enter a theme to generate hook ideas</p>
                   <p className="text-xs lg:text-sm mt-2 text-slate-600">Get 5 unique hooks to kickstart your song</p>
                 </div>

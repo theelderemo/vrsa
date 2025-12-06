@@ -23,23 +23,15 @@
  */
 
 import React from 'react';
-import { Settings, Sliders } from 'lucide-react';
 
 const StructuredInputToggle = ({ enabled, onChange, className = "" }) => {
   return (
     <div className={`flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 ${className}`}>
-      <div className="flex items-center gap-2">
-        {enabled ? (
-          <Sliders className="w-5 h-5 text-indigo-400" />
-        ) : (
-          <Settings className="w-5 h-5 text-slate-500" />
-        )}
-        <div>
-          <p className="text-sm font-medium text-slate-300">Use Structured Input</p>
-          <p className="text-xs text-slate-500">
-            {enabled ? 'Form fields guide the AI' : 'Free-form chat only'}
-          </p>
-        </div>
+      <div>
+        <p className="text-sm font-medium text-slate-300">Use Structured Input</p>
+        <p className="text-xs text-slate-500">
+          {enabled ? 'Form fields guide the AI' : 'Free-form chat only'}
+        </p>
       </div>
       
       <label className="relative inline-flex items-center cursor-pointer">

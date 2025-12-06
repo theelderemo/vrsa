@@ -27,7 +27,7 @@ import { useState } from 'react';
 import * as Sentry from '@sentry/react';
 import { supabase } from './lib/supabase';
 import { useUser } from './hooks/useUser';
-import { Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, LogIn, UserPlus, Loader } from 'lucide-react';
+import { Loader } from 'lucide-react';
 
 export default function AuthComponent() {
   const { user, profile, signOut } = useUser();
@@ -287,7 +287,9 @@ export default function AuthComponent() {
           <div className="text-center">
             <div className="mb-6">
               <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserIcon size={40} className="text-white" />
+                <span className="text-3xl font-bold text-white">
+                  {profile?.username?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || '?'}
+                </span>
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Welcome back!</h2>
               <p className="text-slate-400">
@@ -347,7 +349,6 @@ export default function AuthComponent() {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <LogIn size={16} className="inline mr-2" />
             Login
           </button>
           <button
@@ -361,31 +362,26 @@ export default function AuthComponent() {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <UserPlus size={16} className="inline mr-2" />
             Sign Up
           </button>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-lg flex items-start">
-            <AlertCircle className="text-red-500 mr-3 flex-shrink-0 mt-0.5" size={20} />
-            <div className="flex-1">
-              <p className="text-red-200 text-sm">{error}</p>
-              <button
-                onClick={handleRetry}
-                className="mt-2 text-red-400 hover:text-red-300 text-xs underline"
-              >
-                Try again
-              </button>
-            </div>
+          <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-lg">
+            <p className="text-red-200 text-sm">{error}</p>
+            <button
+              onClick={handleRetry}
+              className="mt-2 text-red-400 hover:text-red-300 text-xs underline"
+            >
+              Try again
+            </button>
           </div>
         )}
 
         {/* Success Display */}
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-900/20 border border-green-500 rounded-lg flex items-start">
-            <CheckCircle className="text-green-500 mr-3 flex-shrink-0 mt-0.5" size={20} />
+          <div className="mb-4 p-4 bg-green-900/20 border border-green-500 rounded-lg">
             <p className="text-green-200 text-sm">{successMessage}</p>
           </div>
         )}
@@ -398,13 +394,12 @@ export default function AuthComponent() {
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 text-slate-500" size={20} />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={loading}
               />
             </div>
@@ -417,13 +412,12 @@ export default function AuthComponent() {
                 Username
               </label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-3 text-slate-500" size={20} />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
                   placeholder="username"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   disabled={loading}
                 />
               </div>
@@ -439,13 +433,12 @@ export default function AuthComponent() {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-500" size={20} />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={loading}
               />
             </div>
@@ -469,17 +462,7 @@ export default function AuthComponent() {
               </>
             ) : (
               <>
-                {mode === 'signup' ? (
-                  <>
-                    <UserPlus className="mr-2" size={20} />
-                    Create Account
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="mr-2" size={20} />
-                    Log In
-                  </>
-                )}
+                {mode === 'signup' ? 'Create Account' : 'Log In'}
               </>
             )}
           </button>

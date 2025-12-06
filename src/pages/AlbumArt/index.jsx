@@ -24,7 +24,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // <-- Import
-import { LoaderCircle, Image, User, Type } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
 import { IMAGE_GENERATOR_OPTIONS } from '../../lib/constants';
@@ -77,20 +77,17 @@ if (!user) {
     {
       id: 'album-cover',
       name: 'Album Cover',
-      icon: Image,
       description: 'Generate unique album cover art',
       systemMessage: 'Create a professional design based on the following description. Focus on visual impact, color harmony, and artistic composition.'
     },
     {
       id: 'artist-avatar',
-      icon: User,
       name: 'Artist Avatar',
       description: 'Create consistent artist personas',
       systemMessage: 'Generate a profile picture for an artist based on the following description. Create a consistent, recognizable persona that captures the artist\'s style and personality.'
     },
     {
       id: 'band-logo',
-      icon: Type,
       name: 'Band Logo',
       description: 'Design customizable band/artist logos',
       systemMessage: 'Design a professional band or artist logo based on the following description. Focus on typography, symbolism, and visual identity that represents the artist\'s brand and musical style.'
@@ -198,7 +195,6 @@ if (!user) {
       <div className="border-b border-slate-700 p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {generators.map((gen) => {
-            const Icon = gen.icon;
             return (
               <button
                 key={gen.id}
@@ -209,12 +205,9 @@ if (!user) {
                     : 'border-slate-700 bg-slate-800 hover:border-slate-600'
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <Icon className={`flex-shrink-0 ${activeGenerator === gen.id ? 'text-indigo-400' : 'text-slate-400'}`} size={24} />
-                  <div>
-                    <h3 className="font-semibold mb-1">{gen.name}</h3>
-                    <p className="text-sm text-slate-400">{gen.description}</p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold mb-1">{gen.name}</h3>
+                  <p className="text-sm text-slate-400">{gen.description}</p>
                 </div>
               </button>
             );

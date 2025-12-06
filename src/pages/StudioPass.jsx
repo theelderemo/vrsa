@@ -23,7 +23,7 @@
  */
 
 import React from 'react';
-import { Sparkles, Zap, Rocket, Lock, CheckCircle2 } from 'lucide-react';
+
 
 const StudioPass = () => {
   return (
@@ -32,7 +32,6 @@ const StudioPass = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center bg-slate-800/50 backdrop-blur-sm px-6 py-3 rounded-full border border-indigo-500/50 mb-6">
-            <Sparkles className="text-indigo-400 mr-2" size={24} />
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
               Studio Pass
             </span>
@@ -49,23 +48,22 @@ const StudioPass = () => {
           </h1>
           
           <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            VRS/A is free and always will be. Studio Pass keeps the lights on and unlocks the expensive AI models. 
-            Think of it as buying me a coffee, except the coffee costs more than $5 and gets you access to Claude Opus.
+            VRS/A is free and always will be. Studio Pass keeps the lights on, unlocks the expensive AI models, 
+            and gives you access to premium tools like the Wordplay Suggester and Hook Generator. 
+            Think of it as buying me a coffee, except the coffee gets you access to Claude Opus and GPT 5.1.
           </p>
         </div>
 
         {/* What You Get */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-indigo-500/30 mb-12">
-          <h2 className="text-3xl font-bold text-indigo-300 mb-6 flex items-center gap-2">
-    <CheckCircle2 size={32} />
+          <h2 className="text-3xl font-bold text-indigo-300 mb-6">
     What You Get Right Now
   </h2>
 
   <div className="grid md:grid-cols-2 gap-6">
     {/* Premium Card */}
     <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
-      <h3 className="text-xl font-semibold text-purple-300 mb-3 flex items-center gap-2">
-        <Zap size={20} />
+      <h3 className="text-xl font-semibold text-purple-300 mb-3">
         Premium Tier Models
       </h3>
       <ul className="space-y-2 text-slate-300">
@@ -75,7 +73,11 @@ const StudioPass = () => {
         </li>
         <li className="flex items-start gap-2">
           <span className="text-indigo-400 mt-1">•</span>
-          <span><strong>Claude Sonnet 4.5</strong> - State-of-the-art reasoning & coding</span>
+          <span><strong>Claude Sonnet 4.5</strong> - State-of-the-art reasoning & creative writing</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-indigo-400 mt-1">•</span>
+          <span><strong>Claude 3 Opus</strong> - The creative powerhouse, legendary for lyrics</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-indigo-400 mt-1">•</span>
@@ -83,41 +85,38 @@ const StudioPass = () => {
         </li>
         <li className="flex items-start gap-2">
           <span className="text-indigo-400 mt-1">•</span>
-          <span><strong>Claude 3 Opus</strong> - Legacy creative powerhouse</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-indigo-400 mt-1">•</span>
-          <span><strong>gpt-4o-mini</strong> - High speed, low latency</span>
+          <span><strong>GPT 4.1</strong> - Reliable workhorse model</span>
         </li>
       </ul>
     </div>
 
     {/* Standard/Free Card */}
     <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
-      <h3 className="text-xl font-semibold text-emerald-300 mb-3 flex items-center gap-2">
-        {/* Reusing CheckCircle2 here to ensure no crash */}
-        <CheckCircle2 size={20} />
-        Standard Access
+      <h3 className="text-xl font-semibold text-emerald-300 mb-3">
+        Standard Access (Free)
       </h3>
       <ul className="space-y-2 text-slate-300">
         <li className="flex items-start gap-2">
           <span className="text-emerald-400 mt-1">•</span>
-          <span><strong>GPT 4.1</strong> - Reliable standard conversational model</span>
+          <span><strong>gpt-4o</strong> - Fast, capable, and free</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-emerald-400 mt-1">•</span>
-          <span><strong>DeepSeek V3.1</strong> - Balanced open-weight performance</span>
+          <span><strong>gpt-4o-mini</strong> - Lightning fast responses</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-emerald-400 mt-1">•</span>
           <span><strong>DeepSeek R1</strong> - Optimized reasoning engine</span>
         </li>
+        <li className="flex items-start gap-2">
+          <span className="text-emerald-400 mt-1">•</span>
+          <span><strong>DeepSeek V3.1</strong> - Balanced open-weight performance</span>
+        </li>
       </ul>
     </div>
 
             <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
-              <h3 className="text-xl font-semibold text-purple-300 mb-3 flex items-center gap-2">
-                <Sparkles size={20} />
+              <h3 className="text-xl font-semibold text-purple-300 mb-3">
                 Premium Image Generation
               </h3>
               <ul className="space-y-2 text-slate-300">
@@ -125,13 +124,44 @@ const StudioPass = () => {
                   <span className="text-indigo-400 mt-1">•</span>
                   <span><strong>Flux 1.1 Pro</strong> - High-quality album covers, avatars, logos</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span>1024x1024 resolution output</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span>Unlimited generations (fair use)</span>
+                </li>
               </ul>
             </div>
 
             <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
-              <h3 className="text-xl font-semibold text-purple-300 mb-3 flex items-center gap-2">
-                <Lock size={20} />
-                Custom AI Prompts (NEW)
+              <h3 className="text-xl font-semibold text-purple-300 mb-3">
+                Premium Writing Tools
+              </h3>
+              <ul className="space-y-2 text-slate-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span><strong>Wordplay Suggester</strong> - Double meanings, puns, slang alternatives</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span><strong>Hook Generator</strong> - 5 unique hook/chorus ideas per query</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span><strong>Unlimited Analyzer</strong> - No daily limits on analysis tools</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-1">•</span>
+                  <span><strong>Unlimited Word Finder</strong> - No daily limits on rhyme searches</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
+              <h3 className="text-xl font-semibold text-purple-300 mb-3">
+                Custom AI Prompts
               </h3>
               <ul className="space-y-2 text-slate-300">
                 <li className="flex items-start gap-2">
@@ -150,8 +180,7 @@ const StudioPass = () => {
             </div>
 
             <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-700/50">
-              <h3 className="text-xl font-semibold text-purple-300 mb-3 flex items-center gap-2">
-                <Rocket size={20} />
+              <h3 className="text-xl font-semibold text-purple-300 mb-3">
                 Priority Support
               </h3>
               <ul className="space-y-2 text-slate-300">
@@ -174,8 +203,7 @@ const StudioPass = () => {
 
         {/* What's Coming */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/30 mb-12">
-          <h2 className="text-3xl font-bold text-purple-300 mb-6 flex items-center gap-2">
-            <Rocket size={32} />
+          <h2 className="text-3xl font-bold text-purple-300 mb-6">
             What's Coming (Studio Pass Only)
           </h2>
           

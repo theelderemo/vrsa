@@ -24,7 +24,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Key, Shield, Crown, Beaker, LogOut, Save, X } from 'lucide-react';
+import { LogOut, Save, X } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { supabase } from '../lib/supabase';
 
@@ -164,31 +164,20 @@ const Profile = () => {
 
         {/* Account Status */}
         <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Shield size={20} className="text-indigo-400" />
+          <h2 className="text-xl font-bold text-white mb-4">
             Account Status
           </h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Account Type:</span>
-              <div className="flex items-center gap-2">
-                {profile?.is_pro === 'true' ? (
-                  <>
-                    <Crown size={16} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-medium">Studio Pass</span>
-                  </>
-                ) : (
-                  <span className="text-slate-300">Free</span>
-                )}
-              </div>
+              <span className={profile?.is_pro === 'true' ? 'text-yellow-400 font-medium' : 'text-slate-300'}>
+                {profile?.is_pro === 'true' ? 'Studio Pass' : 'Free'}
+              </span>
             </div>
             {profile?.is_beta === 'true' && (
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Beta Access:</span>
-                <div className="flex items-center gap-2">
-                  <Beaker size={16} className="text-cyan-400" />
-                  <span className="text-cyan-400 font-medium">Enabled</span>
-                </div>
+                <span className="text-cyan-400 font-medium">Enabled</span>
               </div>
             )}
           </div>
@@ -196,8 +185,7 @@ const Profile = () => {
 
         {/* Username Section */}
         <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <User size={20} className="text-indigo-400" />
+          <h2 className="text-xl font-bold text-white mb-4">
             Username
           </h2>
           
@@ -251,8 +239,7 @@ const Profile = () => {
 
         {/* Email Section */}
         <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Mail size={20} className="text-indigo-400" />
+          <h2 className="text-xl font-bold text-white mb-4">
             Email Address
           </h2>
           
@@ -303,8 +290,7 @@ const Profile = () => {
 
         {/* Password Section */}
         <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Key size={20} className="text-indigo-400" />
+          <h2 className="text-xl font-bold text-white mb-4">
             Password
           </h2>
           

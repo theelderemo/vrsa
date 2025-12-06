@@ -34,61 +34,209 @@ const Guide = () => (
       <p className="text-slate-300 mb-4">Built by one guy, running on fumes, vibes, and a couple tips. VRS/A is your lyric engine for bending styles, moods, and rhyme forms into something that doesn't sound like it was grown in a lab.</p>
 
       <div className="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-lg mb-6">
-        <h3 className="text-indigo-300 font-bold mb-1">🚀 New: Studio Pass</h3>
+        <h3 className="text-indigo-300 font-bold mb-1">🚀 Studio Pass</h3>
         <p className="text-slate-400 text-sm">
-          Want access to the heavy hitters? The <strong>Studio Pass</strong> unlocks premium models like <strong>Claude 3 Opus</strong>, <strong>DeepSeek R1</strong>, and <strong>GPT-5.1</strong>, plus the high-res <strong>Flux 1.1</strong> image generator. Support the dev, get better tools. 
+          Want access to the heavy hitters? The <strong>Studio Pass</strong> unlocks premium models like <strong>GPT 5.1</strong>, <strong>Claude Sonnet 4.5</strong>, <strong>Claude 3 Opus</strong>, and <strong>DeepSeek R1 0528</strong>, plus the high-res <strong>Flux 1.1 Pro</strong> image generator and premium-only tools like the <strong>Wordplay Suggester</strong> and <strong>Hook Generator</strong>. Support the dev, get better tools. 
           <a href="https://buymeacoffee.com/theelderemo/membership" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline ml-1">Get it here.</a>
         </p>
       </div>
 
-      <h2 className="text-xl font-semibold text-slate-200 mb-2">Ghostwriter Mode Tour</h2>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-2">Step 1: Navigation</h3>
-      <p className="text-slate-300 mb-4">Use the nav up top to switch between tools. <strong>Ghostwriter</strong> is for generation, <strong>Analyzer</strong> is for deconstruction, and <strong>Album Art</strong> is for visuals.</p>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-2">Step 2: Structured Input Form</h3>
-      <p className="text-slate-300 mb-4">The left panel is your command center. Be specific for the best results:<br />- <strong>Artist Name</strong>: Go for an era or album for more accuracy (e.g., "Kendrick Lamar on To Pimp a Butterfly").<br />- <strong>Core Theme</strong>: Give it the song's topic in a sentence or two.<br />- <strong>Mood</strong>: Set the emotional tone ("dark," "nostalgic," "aggressive").<br />- <strong>Length</strong>: Choose the exact section you need, from a short verse to a full song.</p>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-2">Step 3: Advanced Controls</h3>
-      <p className="text-slate-300 mb-4">Fine-tune the output:<br />- <strong>Explicit toggle</strong>: Enable for adult content that fits the artist's style.<br />- <strong>Rhyme schemes</strong>: Select specific patterns or poetic forms (Sonnets, Villanelles, etc.) from the dropdowns.<br />- <strong>Temperature & Top-p</strong>: Your chaos knobs. For a good balance of creativity and coherence, I suggest a <strong>Temp of 1.2</strong> and a <strong>Top-p of 0.9</strong>.</p>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-6">Step 4: Iterate and Refine</h3>
-      <p className="text-slate-300 mb-6">The AI remembers the conversation. Use the copy button on lyrics you like, then ask for tweaks: "Make that first verse more aggressive" or "add a pre-chorus that builds tension."</p>
-
-      <h2 className="text-xl font-semibold text-slate-200 mb-2">Album Art Generator</h2>
-
-      <h3 className="text-lg font-medium text-slate-200 mb-2">Step 5: Visuals</h3>
-      <p className="text-slate-300 mb-4">Stop using stock photos. Go to the <strong>Album Art</strong> tab to generate custom visuals.<br />- <strong>Album Covers</strong>: Abstract, moody, or literal interpretations of your lyrics.<br />- <strong>Artist Avatars</strong>: Create a consistent persona for your streaming profiles.<br />- <strong>Band Logos</strong>: Get typography and icon ideas for your brand.</p>
-      <p className="text-slate-400 text-sm italic mb-6">Note: The high-quality Flux 1.1 Pro model is reserved for Studio Pass members because GPU time costs actual money.</p>
-
-      <h2 className="text-xl font-semibold text-slate-200 mt-6 mb-2">Pro-Tips for Better Output</h2>
-      <p className="text-slate-300 mb-4"><strong>Vague prompts get vague results. Specific prompts get specific results.</strong><br/>- "A sad song" is okay. "A song in the style of Frank Ocean's 'Blonde' about the melancholy of seeing your ex's car parked outside a house you don't recognize" is much better.<br/>- Don't just name an artist; name their era. "2001 Radiohead" is a world away from "1995 Radiohead."<br/>- Blend styles: "Write a verse with the storytelling of Kendrick Lamar but the melodic sensibility of a 2010's Lana Del Rey chorus."</p>
-      
-      <h2 className="text-xl font-semibold text-slate-200 mt-6 mb-2">Rhyme Scheme & Lyrical Device Guide</h2>
-      <p className="text-slate-400 mb-4 text-sm italic">A quick reference for the toggles in the sidebar. Use these to influence the structure and texture of your lyrics.</p>
-      
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-lg font-medium text-slate-200 mb-2">Structural Patterns</h3>
-          <p className="text-slate-300 mb-1"><strong>AABB, ABBA, Alternate rhyme (ABAB)</strong>: The basics. AABB is paired couplets, ABBA is an enclosed rhyme, and ABAB is interlocking.</p>
-          <p className="text-slate-300 mb-1"><strong>Monorhyme</strong>: Every line ends with the same rhyme. (AAAA)</p>
-          <p className="text-slate-300 mb-1"><strong>Chain Rhyme / Terza Rima</strong>: Interlocking rhyme scheme that connects stanzas (e.g., ABA BCB CDC).</p>
+      {/* Quick Navigation */}
+      <div className="bg-slate-900/50 border border-slate-700/50 p-4 rounded-lg mb-6">
+        <h3 className="text-slate-200 font-bold mb-2">📍 Quick Navigation</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+          <a href="#ghostwriter" className="text-indigo-400 hover:text-indigo-300">Ghostwriter</a>
+          <a href="#writing-tools" className="text-indigo-400 hover:text-indigo-300">Writing Tools</a>
+          <a href="#album-art" className="text-indigo-400 hover:text-indigo-300">Album Art</a>
+          <a href="#poetic-forms" className="text-indigo-400 hover:text-indigo-300">Poetic Forms</a>
         </div>
-        <div>
-          <h3 className="text-lg font-medium text-slate-200 mb-2">Types of Rhyme</h3>
-          <p className="text-slate-300 mb-1"><strong>Slant Rhyme</strong>: Similar but not identical sounds (shape/keep). The bread and butter of modern lyricism.</p>
-          <p className="text-slate-300 mb-1"><strong>Multisyllabic Rhyme</strong>: Rhyming multiple syllables at the end of lines (pessimistic/realistic). A staple of complex hip-hop.</p>
-          <p className="text-slate-300 mb-1"><strong>Internal Rhyme</strong>: Rhymes that occur within a single line, not just at the end.</p>
-        </div>
-        <div>
-          <h3 className="text-lg font-medium text-slate-200 mb-2">Formal Structures</h3>
-          <p className="text-slate-300 mb-1"><strong>Sonnet, Villanelle, Sestina, Ghazal</strong>: Highly structured classical forms. Use these if you want to challenge the AI to adhere to strict rules.</p>
-        </div>
-        <div className="border-t border-slate-700 pt-8">
-          <h2 className="text-3xl font-bold text-white mb-2">The Archive of Poetic Forms</h2>
-          <p className="text-slate-400 mb-8">
-            VRS/A supports 17 distinct poetic forms. Selecting these in the "Poetic Forms" dropdown forces the AI to adhere to specific structural rules. Here is your reference guide.
+      </div>
+
+      {/* GHOSTWRITER SECTION */}
+      <div id="ghostwriter" className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="w-2 h-8 bg-indigo-500 rounded-full"></span>
+          Ghostwriter Mode
+        </h2>
+        <p className="text-slate-400 mb-4">Your main lyric generation engine. This is where styles get bent.</p>
+
+        <h3 className="text-lg font-medium text-slate-200 mb-2">Project Management</h3>
+        <p className="text-slate-300 mb-4">The "My Projects" panel at the top of the sidebar lets you organize your work. Create multiple projects, switch between them, rename them, and keep your sessions separated. Each project maintains its own conversation history when memory is enabled.</p>
+
+        <h3 className="text-lg font-medium text-slate-200 mb-2">Structured Input Form</h3>
+        <p className="text-slate-300 mb-4">The left panel is your command center. Be specific for the best results:<br />- <strong>Artist Name</strong>: Go for an era or album for more accuracy (e.g., "Kendrick Lamar on To Pimp a Butterfly").<br />- <strong>Core Theme</strong>: Give it the song's topic in a sentence or two.<br />- <strong>Mood Tag</strong>: Set the emotional tone ("dark," "nostalgic," "aggressive").<br />- <strong>Banned Words</strong>: Comma-separated list of words the AI should avoid. Perfect for killing clichés.<br />- <strong>Length</strong>: Choose the exact section you need—short verse, single verse, double verse, full song, hook, chorus, bridge, breakdown, or outro.</p>
+
+        <h3 className="text-lg font-medium text-slate-200 mb-2">AI Model & Memory</h3>
+        <p className="text-slate-300 mb-4">
+          - <strong>Model Selection</strong>: Free users get gpt-4o, gpt-4o-mini, DeepSeek R1, and DeepSeek V3.1. Studio Pass unlocks GPT 5.1, Claude Sonnet 4.5, Claude 3 Opus, and DeepSeek R1 0528.<br />
+          - <strong>Memory Toggle</strong>: When enabled, the AI remembers your conversation. Use this for iterative refinement. When disabled, each message is independent.<br />
+          - <strong>Structured Input Toggle</strong>: When enabled, your sidebar settings are automatically injected into prompts. Disable for freeform chat.
+        </p>
+
+        <h3 className="text-lg font-medium text-slate-200 mb-2">Advanced Controls</h3>
+        <p className="text-slate-300 mb-4">Fine-tune the output:<br />- <strong>Explicit toggle</strong>: Enable for adult content that fits the artist's style.<br />- <strong>Rhyme schemes</strong>: Select specific patterns or poetic forms (Sonnets, Villanelles, etc.) from the dropdowns.<br />- <strong>Temperature & Top-p</strong>: Your chaos knobs. For a good balance of creativity and coherence, I suggest a <strong>Temp of 1.2</strong> and a <strong>Top-p of 0.9</strong>. Lower temp = more predictable. Higher temp = wilder.</p>
+
+        <h3 className="text-lg font-medium text-slate-200 mb-2">Iterate and Refine</h3>
+        <p className="text-slate-300 mb-4">The AI remembers the conversation (when memory is on). Use the copy button on lyrics you like, then ask for tweaks: "Make that first verse more aggressive" or "add a pre-chorus that builds tension."</p>
+
+        <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg mb-6">
+          <h4 className="text-purple-300 font-bold mb-1">🎯 Custom AI Prompts (Studio Pass)</h4>
+          <p className="text-slate-400 text-sm">
+            Click any line in the generated lyrics to prompt the AI directly about that specific line. Ask it to "make it more metaphorical," "add a sports reference," or "flip the perspective." The AI has full song context when suggesting edits.
           </p>
+        </div>
+      </div>
+
+      {/* WRITING TOOLS SECTION */}
+      <div id="writing-tools" className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="w-2 h-8 bg-emerald-500 rounded-full"></span>
+          Writing Tools
+        </h2>
+        <p className="text-slate-400 mb-4">A suite of utilities for deconstructing lyrics, finding words, and generating ideas. Access via the nav bar.</p>
+
+        <div className="space-y-4">
+          {/* Analyzer */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+            <h3 className="text-lg font-bold text-emerald-300 mb-2">Analyzer</h3>
+            <p className="text-slate-300 mb-2">Paste any lyrics and run AI-powered analysis tools:</p>
+            <ul className="text-slate-400 text-sm space-y-1 ml-4">
+              <li>• <strong>Style Palette</strong>: Extract genre, themes, word choice, flow habits, and unique artist signatures.</li>
+              <li>• <strong>Suno Tag Generator</strong>: Get AI-compatible tags (Genre, Instruments, Style Tags) for Suno or other music generators.</li>
+              <li>• <strong>Stat-Sheet</strong>: Lexical density, sentiment breakdown, reading level, and a "Banned Word Counter" that flags overused clichés (shadow, mirror, void, etc.).</li>
+              <li>• <strong>Rhyme Visualizer</strong>: Categorizes all rhymes into Perfect, Slant, and Internal with specific word citations.</li>
+            </ul>
+            <p className="text-slate-500 text-xs mt-2">Free users get limited daily analyses. Studio Pass = unlimited.</p>
+          </div>
+
+          {/* Word Finder */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+            <h3 className="text-lg font-bold text-emerald-300 mb-2">Word Finder (Rhyme Finder)</h3>
+            <p className="text-slate-300 mb-2">Powered by the Datamuse API. Enter a word and search across 13 different modes:</p>
+            <ul className="text-slate-400 text-sm space-y-1 ml-4">
+              <li>• <strong>Perfect Rhymes</strong>: Exact matches (cat → hat, bat)</li>
+              <li>• <strong>Slant Rhymes</strong>: Near rhymes (cat → bad, cap)</li>
+              <li>• <strong>Sounds Like</strong>: Phonetic similarity (jirraf → giraffe)</li>
+              <li>• <strong>Homophones</strong>: Sound-alike, different spelling (course → coarse)</li>
+              <li>• <strong>Consonant Match</strong>: Same consonant pattern (sample → simple)</li>
+              <li>• <strong>Means Like</strong>: Semantic similarity (happy → joyful)</li>
+              <li>• <strong>Synonyms / Antonyms</strong>: WordNet powered</li>
+              <li>• <strong>Triggers</strong>: Statistically associated words (cow → milking, farm)</li>
+              <li>• <strong>Adjectives For / Nouns For</strong>: Word collocations (beach → sandy, sunny)</li>
+              <li>• <strong>Follows Word / Precedes Word</strong>: Common phrase patterns (wreak → havoc)</li>
+            </ul>
+            <p className="text-slate-500 text-xs mt-2">Optional: Add a topic hint to weight results toward a specific subject.</p>
+          </div>
+
+          {/* Wordplay Suggester */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-purple-500/30">
+            <h3 className="text-lg font-bold text-purple-300 mb-2">Wordplay Suggester <span className="text-xs bg-purple-600 px-2 py-0.5 rounded ml-2">Studio Pass</span></h3>
+            <p className="text-slate-300 mb-2">Enter a word or phrase and get creative suggestions:</p>
+            <ul className="text-slate-400 text-sm space-y-1 ml-4">
+              <li>• <strong>Double Meanings</strong>: Words that work on multiple levels</li>
+              <li>• <strong>Puns</strong>: Sound-alike words with clever connections</li>
+              <li>• <strong>Homophone Plays</strong>: Same sound, different meanings</li>
+              <li>• <strong>Metaphoric Twists</strong>: Creative metaphorical uses</li>
+              <li>• <strong>Slang Alternatives</strong>: Hip-hop/R&B/pop culture substitutions</li>
+            </ul>
+            <p className="text-slate-500 text-xs mt-2">Add optional context (theme of the song) for more relevant suggestions.</p>
+          </div>
+
+          {/* Hook Generator */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-amber-500/30">
+            <h3 className="text-lg font-bold text-amber-300 mb-2">Hook Generator <span className="text-xs bg-amber-600 px-2 py-0.5 rounded ml-2">Studio Pass</span></h3>
+            <p className="text-slate-300 mb-2">Generate 5 unique hook/chorus ideas based on a theme. Configure:</p>
+            <ul className="text-slate-400 text-sm space-y-1 ml-4">
+              <li>• <strong>Theme/Topic</strong>: What's the song about?</li>
+              <li>• <strong>Genre</strong>: Hip-Hop, R&B, Pop, Rock, Country, EDM, Soul, Indie, Alternative</li>
+              <li>• <strong>Mood</strong>: Hype, Melancholic, Romantic, Aggressive, Chill, Inspirational, Dark, Party, Reflective</li>
+            </ul>
+            <p className="text-slate-500 text-xs mt-2">Each hook includes notes on melodic potential.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ALBUM ART SECTION */}
+      <div id="album-art" className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="w-2 h-8 bg-pink-500 rounded-full"></span>
+          Album Art Generator
+        </h2>
+        <p className="text-slate-400 mb-4">Stop using stock photos. Generate custom visuals for your music.</p>
+
+        <div className="space-y-3">
+          <p className="text-slate-300">Three generation modes:</p>
+          <ul className="text-slate-400 space-y-2 ml-4">
+            <li>• <strong>Album Covers</strong>: Abstract, moody, or literal interpretations of your lyrics. Focus on visual impact, color harmony, and artistic composition.</li>
+            <li>• <strong>Artist Avatars</strong>: Create a consistent persona for your streaming profiles. Generate profile pictures that capture the artist's style and personality.</li>
+            <li>• <strong>Band Logos</strong>: Get typography and icon ideas for your brand. Focus on symbolism and visual identity.</li>
+          </ul>
+        </div>
+        <p className="text-slate-400 text-sm italic mt-4">Note: The Flux 1.1 Pro model is reserved for Studio Pass members because GPU time costs actual money.</p>
+      </div>
+
+      {/* PRO TIPS SECTION */}
+      <div className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="w-2 h-8 bg-yellow-500 rounded-full"></span>
+          Pro-Tips for Better Output
+        </h2>
+        <p className="text-slate-300 mb-4"><strong>Vague prompts get vague results. Specific prompts get specific results.</strong></p>
+        <ul className="text-slate-400 space-y-2 ml-4 mb-4">
+          <li>• "A sad song" is okay. "A song in the style of Frank Ocean's 'Blonde' about the melancholy of seeing your ex's car parked outside a house you don't recognize" is much better.</li>
+          <li>• Don't just name an artist; name their era. "2001 Radiohead" is a world away from "1995 Radiohead."</li>
+          <li>• Blend styles: "Write a verse with the storytelling of Kendrick Lamar but the melodic sensibility of a 2010's Lana Del Rey chorus."</li>
+          <li>• Use the Banned Words field aggressively. Kill the clichés before they kill your song.</li>
+          <li>• If the output is too safe, crank the temperature. If it's too chaotic, lower it.</li>
+          <li>• Enable Memory mode and iterate. The AI gets better at understanding what you want over multiple exchanges.</li>
+        </ul>
+      </div>
+      
+      {/* RHYME SCHEME REFERENCE */}
+      <div className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="w-2 h-8 bg-cyan-500 rounded-full"></span>
+          Rhyme Scheme & Lyrical Device Guide
+        </h2>
+        <p className="text-slate-400 mb-4 text-sm italic">A quick reference for the toggles in the sidebar. Use these to influence the structure and texture of your lyrics.</p>
+      
+        <div className="space-y-4">
+          {/* Rhyme Placement */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+            <h3 className="text-lg font-medium text-cyan-300 mb-2">Rhyme Placement</h3>
+            <p className="text-slate-300 mb-1"><strong>End Rhyme</strong>: The classic. Rhymes fall at the end of lines.</p>
+            <p className="text-slate-300 mb-1"><strong>Internal Rhyme</strong>: Rhymes that occur within a single line, not just at the end. Creates density and flow.</p>
+            <p className="text-slate-300 mb-1"><strong>Cross-line Rhyme</strong>: Rhymes that connect across multiple lines in unexpected positions.</p>
+          </div>
+
+          {/* Rhyme Quality */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+            <h3 className="text-lg font-medium text-cyan-300 mb-2">Rhyme Quality</h3>
+            <p className="text-slate-300 mb-1"><strong>Perfect Rhyme</strong>: Exact sound matches (cat/hat, time/rhyme). Clean but can feel predictable.</p>
+            <p className="text-slate-300 mb-1"><strong>Slant Rhyme</strong>: Similar but not identical sounds (shape/keep, soul/cold). The bread and butter of modern lyricism.</p>
+            <p className="text-slate-300 mb-1"><strong>Assonance</strong>: Matching vowel sounds (lake/fate, might/find). Creates subtle musicality.</p>
+            <p className="text-slate-300 mb-1"><strong>Consonance</strong>: Matching consonant sounds (luck/lick, pitter/patter). Harder edges.</p>
+            <p className="text-slate-300 mb-1"><strong>Multisyllabic Rhyme</strong>: Rhyming multiple syllables at the end of lines (pessimistic/realistic). A staple of complex hip-hop.</p>
+          </div>
+
+          {/* Rhyme Patterns */}
+          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+            <h3 className="text-lg font-medium text-cyan-300 mb-2">Structural Patterns</h3>
+            <p className="text-slate-300 mb-1"><strong>AABB (Couplets)</strong>: Paired rhymes. Direct, punchy, good for rap.</p>
+            <p className="text-slate-300 mb-1"><strong>ABAB (Alternating)</strong>: Interlocking rhymes. Classic verse structure.</p>
+            <p className="text-slate-300 mb-1"><strong>ABBA (Enclosed)</strong>: Bookend rhyme. Creates a sense of closure.</p>
+            <p className="text-slate-300 mb-1"><strong>ABCCB / ABCCA</strong>: Extended patterns. Good for longer verses with complex structure.</p>
+            <p className="text-slate-300 mb-1"><strong>Free/Irregular</strong>: No set pattern. Let the content dictate the form.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* POETIC FORMS ARCHIVE */}
+      <div id="poetic-forms" className="border-t border-slate-700 pt-8 mt-6">
+        <h2 className="text-3xl font-bold text-white mb-2">The Archive of Poetic Forms</h2>
+        <p className="text-slate-400 mb-8">
+          VRS/A supports 17 distinct poetic forms. Selecting these in the "Poetic Forms" dropdown forces the AI to adhere to specific structural rules. Here is your reference guide.
+        </p>
 
           {/* SECTION 1: Short & Strict */}
           <h3 className="text-xl font-bold text-indigo-300 mb-4 flex items-center gap-2">
@@ -345,7 +493,9 @@ const Guide = () => (
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-slate-200 mt-10 mb-2">Still Reading?</h2>
+      {/* STILL READING */}
+      <div className="border-t border-slate-700 pt-6 mt-6">
+        <h2 className="text-2xl font-bold text-slate-200 mb-2">Still Reading?</h2>
         <p className="text-slate-300 mb-4">You're deep in the docs. I respect it.</p>
         <p className="text-slate-300">If this tool helps you write a banger, <a href="https://buymeacoffee.com/theelderemo" target="_blank" rel="noopener noreferrer" className="underline text-yellow-400 hover:text-yellow-300">buy me a coffee</a>. If it writes garbage, blame the temperature setting.</p>
       </div>

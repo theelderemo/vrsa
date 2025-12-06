@@ -24,7 +24,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoaderCircle, Palette, Mic, FileText, ListCollapse, BrainCircuit, Lock } from 'lucide-react';
+import { LoaderCircle, Lock, Palette, FileText, ListCollapse, Mic, BrainCircuit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useUser } from '../../hooks/useUser';
 import { callAI } from '../../lib/api';

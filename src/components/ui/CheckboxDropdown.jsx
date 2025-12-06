@@ -23,7 +23,6 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
 
 const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholder = "Select options..." }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,7 +51,7 @@ const CheckboxDropdown = ({ label, options, selectedValues, onChange, placeholde
         className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-left text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-between"
       >
         <span className={selectedCount > 0 ? "text-white" : "text-slate-500"}>{displayText}</span>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180 inline-block' : ''}`}>▼</span>
       </button>
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">

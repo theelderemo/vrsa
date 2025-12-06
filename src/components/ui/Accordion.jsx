@@ -8,7 +8,6 @@ import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
-import { ChevronDown } from "lucide-react";
 
 const accordionVariants = cva("w-full", {
   variants: {
@@ -117,7 +116,7 @@ AccordionItem.displayName = "AccordionItem";
 
 const AccordionTrigger = React.forwardRef(
   (
-    { className, children, variant, size, icon, hideChevron = false, ...props },
+    { className, children, variant, size, ...props },
     ref
   ) => (
     <AccordionPrimitive.Header className="flex">
@@ -126,15 +125,12 @@ const AccordionTrigger = React.forwardRef(
         className={cn(accordionTriggerVariants({ variant, size }), className)}
         {...props}
       >
-        <div className="flex items-center gap-2">
-          {icon && <span className="shrink-0 text-indigo-400">{icon}</span>}
-          <span className="text-left text-slate-200">
-            {children}
-          </span>
-        </div>
-        {!hideChevron && (
-          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200" />
-        )}
+        <span className="text-left text-slate-200">
+          {children}
+        </span>
+        <span className="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 [&[data-state=open]]:rotate-180">
+          ▼
+        </span>
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )

@@ -23,7 +23,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, RotateCcw, BrainCircuit, Mic, FileText, Smile, ListCollapse, Trash2, Download, Shield, History, FolderPlus, Pencil, Check, Sliders, Music, Settings } from 'lucide-react';
+import { X, Check, Pencil } from 'lucide-react';
 import CheckboxDropdown from '../../components/ui/CheckboxDropdown';
 import MemoryToggle from '../../components/ui/MemoryToggle';
 import StructuredInputToggle from '../../components/ui/StructuredInputToggle';
@@ -91,9 +91,8 @@ const StructuredInputForm = ({
         {/* Session Manager Section */}
         <div className="space-y-2 bg-gradient-to-br from-indigo-900/30 to-slate-800/50 rounded-lg p-2.5 sm:p-3 border border-indigo-600/30">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xs sm:text-sm font-bold text-indigo-300 flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <FolderPlus size={14} className="shrink-0" />
-              <span className="truncate">My Projects</span>
+            <h3 className="text-xs sm:text-sm font-bold text-indigo-300">
+              My Projects
             </h3>
             <span className="text-xs text-slate-500 shrink-0">{userSessions.length} saved</span>
           </div>
@@ -144,7 +143,6 @@ const StructuredInputForm = ({
                 onClick={() => onCreateNewSession && onCreateNewSession()}
                 className="w-full flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg p-2 text-white text-xs sm:text-sm font-medium transition-colors"
               >
-                <FolderPlus size={14} className="shrink-0" />
                 <span>New Project</span>
               </button>
               
@@ -210,7 +208,8 @@ const StructuredInputForm = ({
         <Accordion type="multiple" defaultValue={[]} className="w-full bg-slate-800/30">
           {/* AI Model & Memory Settings */}
           <AccordionItem value="model">
-            <AccordionTrigger icon={<BrainCircuit className="h-4 w-4" />}>
+            <AccordionTrigger>
+              Artist Style
               AI Model & Memory
             </AccordionTrigger>
             <AccordionContent>
@@ -258,9 +257,8 @@ const StructuredInputForm = ({
                 {memoryEnabled && (
                   <button
                     onClick={onClearConversation}
-                    className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-xs"
+                    className="w-full flex items-center justify-center p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-red-400 transition-colors text-xs"
                   >
-                    <Trash2 size={12} />
                     Clear Conversation
                   </button>
                 )}
@@ -270,7 +268,8 @@ const StructuredInputForm = ({
 
           {/* Lyrics Input Settings */}
           <AccordionItem value="lyrics">
-            <AccordionTrigger icon={<Mic className="h-4 w-4" />}>
+                        <AccordionTrigger>
+              Theme & Mood
               Lyrics Settings
             </AccordionTrigger>
             <AccordionContent>
@@ -314,7 +313,8 @@ const StructuredInputForm = ({
 
           {/* Rhyme Controls */}
           <AccordionItem value="rhyme">
-            <AccordionTrigger icon={<Music className="h-4 w-4" />}>
+            <AccordionTrigger>
+              Rhyme Scheme
               Rhyme Controls
             </AccordionTrigger>
             <AccordionContent>
@@ -404,7 +404,8 @@ const StructuredInputForm = ({
 
           {/* Advanced Settings */}
           <AccordionItem value="advanced">
-            <AccordionTrigger icon={<Sliders className="h-4 w-4" />}>
+            <AccordionTrigger>
+              Rhyme Settings
               Advanced Settings
             </AccordionTrigger>
             <AccordionContent>
@@ -441,32 +442,29 @@ const StructuredInputForm = ({
 
           {/* Data & Export */}
           <AccordionItem value="data">
-            <AccordionTrigger icon={<Settings className="h-4 w-4" />}>
+            <AccordionTrigger>
               Data & Export
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
                 <button
                   onClick={onShowPrivacy}
-                  className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                  className="w-full flex items-center justify-center p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
                 >
-                  <Shield size={12} />
                   Privacy & Data
                 </button>
                 
                 <button
                   onClick={onDeleteAllHistory}
-                  className="w-full flex items-center justify-center gap-2 p-2 bg-red-900/20 hover:bg-red-900/30 border border-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition-colors text-xs"
+                  className="w-full flex items-center justify-center p-2 bg-red-900/20 hover:bg-red-900/30 border border-red-600/30 rounded-lg text-red-400 hover:text-red-300 transition-colors text-xs"
                 >
-                  <History size={12} />
                   Delete All History
                 </button>
                 
                 <button
                   onClick={onReset}
-                  className="w-full flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                  className="w-full flex items-center justify-center p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
                 >
-                  <RotateCcw size={12} />
                   Reset Form
                 </button>
                 
@@ -484,9 +482,8 @@ const StructuredInputForm = ({
                   
                   <button
                     onClick={() => onExportConversation(exportFormat)}
-                    className="w-full mt-2 flex items-center justify-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
+                    className="w-full mt-2 flex items-center justify-center p-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors text-xs"
                   >
-                    <Download size={12} />
                     Export Conversation
                   </button>
                 </div>

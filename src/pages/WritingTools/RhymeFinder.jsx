@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, LoaderCircle, Volume2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import { checkRateLimit, incrementUsage, RATE_LIMIT_FEATURES, DAILY_LIMITS, getRemainingUses } from '../../lib/rateLimits';
 
@@ -155,9 +155,8 @@ const RhymeFinder = () => {
                 onChange={(e) => setWord(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter a word..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 lg:px-4 lg:py-3 pr-9 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 lg:px-4 lg:py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
               />
-              <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             </div>
             <button
               onClick={fetchWords}
@@ -165,7 +164,7 @@ const RhymeFinder = () => {
               title={!isPro && remainingQueries <= 0 ? 'Daily limit reached' : 'Search'}
               className="px-4 py-2 lg:w-full lg:py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             >
-              {loading ? <LoaderCircle size={18} className="animate-spin" /> : <Search size={18} className="lg:mr-2" />}
+              {loading ? <LoaderCircle size={18} className="animate-spin" /> : <span className="lg:hidden">Go</span>}
               <span className="hidden lg:inline">{loading ? 'Searching...' : 'Search'}</span>
             </button>
           </div>
@@ -191,7 +190,7 @@ const RhymeFinder = () => {
                 className={`w-full px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${COLOR_CLASSES[currentMode?.color || 'indigo'].active}`}
               >
                 <span>{currentMode?.label || 'Select Mode'}</span>
-                {showAllModes ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                <span>{showAllModes ? '▲' : '▼'}</span>
               </button>
             </div>
             
@@ -281,7 +280,6 @@ const RhymeFinder = () => {
                   >
                     {copiedWord === result.word && (
                       <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 rounded-lg z-10">
-                        <Check size={14} className="text-green-400 mr-1" />
                         <span className="text-green-400 text-xs">Copied!</span>
                       </div>
                     )}
@@ -298,9 +296,6 @@ const RhymeFinder = () => {
                         </span>
                       )}
                     </div>
-                    <div className="hidden lg:block absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Copy size={12} className="text-slate-500" />
-                    </div>
                   </div>
                 ))}
               </div>
@@ -309,8 +304,6 @@ const RhymeFinder = () => {
             {!loading && !error && results.length === 0 && (
               <div className="flex items-center justify-center h-full text-slate-500">
                 <div className="text-center px-4">
-                  <Volume2 size={36} className="mx-auto mb-3 opacity-50 lg:hidden" />
-                  <Volume2 size={48} className="mx-auto mb-4 opacity-50 hidden lg:block" />
                   <p className="text-sm lg:text-base">Enter a word to find matches</p>
                   <p className="text-xs lg:text-sm mt-2 text-slate-600">
                     Tap the mode button to change search type

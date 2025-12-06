@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, LoaderCircle, Copy, Check, Lock } from 'lucide-react';
+import { LoaderCircle, Lock } from 'lucide-react';
 import { callAI } from '../../lib/api';
 import { useUser } from '../../hooks/useUser';
 
@@ -129,7 +129,6 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
                 </>
               ) : (
                 <>
-                  <Sparkles size={18} className="mr-2" />
                   <span className="hidden lg:inline">Generate Wordplay</span>
                   <span className="lg:hidden">Generate</span>
                 </>
@@ -156,7 +155,6 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
                 onClick={handleCopy}
                 className="flex items-center gap-1 px-2 lg:px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs lg:text-sm transition-colors"
               >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             )}
@@ -168,8 +166,6 @@ Format each suggestion clearly. Be creative, clever, and think like a songwriter
             ) : (
               <div className="flex items-center justify-center h-full text-slate-500">
                 <div className="text-center px-4">
-                  <Sparkles size={36} className="mx-auto mb-3 opacity-50 lg:hidden" />
-                  <Sparkles size={48} className="mx-auto mb-4 opacity-50 hidden lg:block" />
                   <p className="text-sm lg:text-base">Enter a word to get wordplay suggestions</p>
                   <p className="text-xs lg:text-sm mt-2 text-slate-600">Perfect for finding clever double meanings</p>
                 </div>

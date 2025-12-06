@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoaderCircle, Wrench } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import WritingToolsDock from '../../components/ui/WritingToolsDock';
 import Analyzer from '../Analyzer';
