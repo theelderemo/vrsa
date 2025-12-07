@@ -169,19 +169,15 @@ const Landing = () => {
           {/* Main Headline */}
           <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
             <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
-              AI-Powered Lyrical
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Co-Writing Studio
+              VRS/A - AI-Powered Lyrical Co-Writing Studio
             </span>
           </motion.h1>
 
           {/* Subheadline */}
-          <motion.p variants={itemVariants} className="text-lg md:text-xl text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed">
+          <motion.h2 variants={itemVariants} className="text-lg md:text-xl text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed font-normal">
             Generate lyrics in any artist's style. Analyze and deconstruct songs. 
             Create album art. All powered by advanced AI models including Claude Opus, GPT 5.1, and DeepSeek.
-          </motion.p>
+          </motion.h2>
 
           {/* CTA Buttons */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -368,6 +364,101 @@ const Landing = () => {
           </AnimatedBorderCard>
         </motion.div>
       </div>
+
+      {/* Footer with Links */}
+      <footer className="relative z-10 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto mb-8">
+            {/* Tools */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Tools</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/ghostwriter" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Ghostwriter
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/writing-tools" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Writing Tools
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/albumart" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Album Art Generator
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/projects" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Projects
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Community */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Community</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/feed" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Feed
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/profile" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/studio-pass" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Studio Pass
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/guide" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Guide
+                  </Link>
+                </li>
+                <li>
+                  <a href="https://github.com/theelderemo/vrsa" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    GitHub
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/terms" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="text-center text-slate-500 text-sm border-t border-slate-800/50 pt-8">
+            <p>&copy; 2025 VRS/A. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
