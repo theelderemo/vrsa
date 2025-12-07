@@ -22,10 +22,14 @@
  * SOFTWARE.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 
 const StudioPass = () => {
+  useEffect(() => {
+    document.title = 'Studio Pass - Premium Features | VRS/A';
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-8">
       <div className="max-w-5xl mx-auto">

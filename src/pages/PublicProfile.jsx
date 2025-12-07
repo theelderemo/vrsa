@@ -311,6 +311,10 @@ const PublicProfile = () => {
   const [activeTab, setActiveTab] = useState('posts'); // 'posts' or 'tracks'
 
   useEffect(() => {
+    document.title = username ? `@${username} - Artist Profile | VRS/A` : 'Artist Profile | VRS/A';
+  }, [username]);
+
+  useEffect(() => {
     const fetchProfileData = async () => {
       setLoading(true);
       setError(null);

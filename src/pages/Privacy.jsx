@@ -22,9 +22,14 @@
  * SOFTWARE.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const Privacy = () => (
+const Privacy = () => {
+  useEffect(() => {
+    document.title = 'Privacy Policy | VRS/A';
+  }, []);
+
+  return (
   <div className="flex flex-col items-center justify-center min-h-full bg-slate-900 p-8">
     <div className="max-w-4xl w-full bg-slate-800 rounded-lg shadow-lg p-8 border border-slate-700/50">
       <h1 className="text-3xl font-bold text-indigo-400 mb-6">VRS/A Privacy Policy</h1>
@@ -95,6 +100,7 @@ const Privacy = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default Privacy;

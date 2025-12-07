@@ -104,6 +104,10 @@ const Landing = () => {
   const heroRef = useRef(null);
   const isHeroInView = useInView(heroRef, { once: true });
 
+  useEffect(() => {
+    document.title = 'VRS/A - AI Lyric Assistant & Co-Writer';
+  }, []);
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },

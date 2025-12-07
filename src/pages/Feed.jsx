@@ -729,6 +729,10 @@ const Feed = () => {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    document.title = 'Feed - Community Posts & Tracks | VRS/A';
+  }, []);
+
   const fetchFeed = useCallback(async () => {
     setLoading(true);
     try {

@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
@@ -18,6 +18,10 @@ const WritingTools = () => {
   const { user, loading } = useUser();
   const navigate = useNavigate();
   const [activeTool, setActiveTool] = useState('analyzer');
+
+  useEffect(() => {
+    document.title = 'Writing Tools - Analyzer & Rhyme Finder | VRS/A';
+  }, []);
 
   // Auth check
   if (loading) {

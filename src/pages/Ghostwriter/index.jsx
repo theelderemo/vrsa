@@ -60,6 +60,10 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
   const navigate = useNavigate(); // <-- Initialize hook
   
+  useEffect(() => {
+    document.title = 'Ghostwriter - AI Lyric Generation | VRS/A';
+  }, []);
+  
   // Dynamic welcome message state (null = loading, string = content)
   const [welcomeMessage, setWelcomeMessage] = useState(null);
   const [welcomeLoading, setWelcomeLoading] = useState(true);

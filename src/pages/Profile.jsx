@@ -54,6 +54,10 @@ const Profile = () => {
   const { user, profile, signOut, loading, refreshProfile } = useUser();
   const navigate = useNavigate();
   
+  useEffect(() => {
+    document.title = 'My Profile | VRS/A';
+  }, []);
+  
   const [editingEmail, setEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');

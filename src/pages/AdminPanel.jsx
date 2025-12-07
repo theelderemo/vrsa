@@ -243,6 +243,10 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useUser();
   
+  useEffect(() => {
+    document.title = 'Admin Panel | VRS/A';
+  }, []);
+  
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);

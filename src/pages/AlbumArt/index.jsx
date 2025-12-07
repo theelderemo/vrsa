@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // <-- Import
 import { LoaderCircle } from 'lucide-react';
 import * as Sentry from "@sentry/react";
@@ -38,6 +38,10 @@ const AlbumArt = () => {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState(null);
   const [selectedModel, setSelectedModel] = useState(IMAGE_GENERATOR_OPTIONS[0].id);
+
+  useEffect(() => {
+    document.title = 'Album Art Generator | VRS/A';
+  }, []);
 
   // Auth check
   if (loading) {
