@@ -416,7 +416,7 @@ const Landing = () => {
                   </Link>
                 </li>
                 <li>
-                  <a href="https://discord.gg/vrsa" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                  <a href="https://discord.com/invite/FQ6XGNf53P" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
                     Discord
                   </a>
                 </li>
