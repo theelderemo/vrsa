@@ -105,7 +105,8 @@ const MentionTextarea = ({
     const newValue = e.target.value;
     const cursorPosition = e.target.selectionStart;
     
-    onChange(newValue);
+    // Pass the event object to parent, not just the value
+    onChange(e);
     
     const { isMentioning, query, startIndex } = detectMention(newValue, cursorPosition);
     
@@ -127,7 +128,14 @@ const MentionTextarea = ({
     const afterMention = value.substring(mentionStartIndex + 1 + mentionQuery.length);
     const newValue = `${beforeMention}@${user.username} ${afterMention}`;
     
-    onChange(newValue);
+    // Create a synthetic event to pass to onChange
+    const syntheticEvent = {
+      target: {
+        value: newValue
+      }
+    };
+    
+    onChange(syntheticEvent);
     setShowSuggestions(false);
     setMentionStartIndex(-1);
     setMentionQuery('');
