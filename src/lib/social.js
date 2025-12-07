@@ -758,7 +758,7 @@ export async function getPublicProfileByUsername(username) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, created_at, membership_tier, profile_picture_url')
+      .select('id, username, created_at, membership_tier, profile_picture_url, bio, suno_url, spotify_url, soundcloud_url')
       .eq('username', username)
       .single();
 
