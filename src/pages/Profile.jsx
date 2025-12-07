@@ -70,6 +70,20 @@ const Profile = () => {
   const [usernameError, setUsernameError] = useState('');
   const [usernameSuccess, setUsernameSuccess] = useState('');
 
+  // Bio state
+  const [editingBio, setEditingBio] = useState(false);
+  const [newBio, setNewBio] = useState('');
+  const [bioError, setBioError] = useState('');
+  const [bioSuccess, setBioSuccess] = useState('');
+
+  // Social URLs state
+  const [editingSocialLinks, setEditingSocialLinks] = useState(false);
+  const [newSunoUrl, setNewSunoUrl] = useState('');
+  const [newSpotifyUrl, setNewSpotifyUrl] = useState('');
+  const [newSoundcloudUrl, setNewSoundcloudUrl] = useState('');
+  const [socialLinksError, setSocialLinksError] = useState('');
+  const [socialLinksSuccess, setSocialLinksSuccess] = useState('');
+
   // Profile picture state
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [pictureError, setPictureError] = useState('');
@@ -257,6 +271,60 @@ const Profile = () => {
       }
     } catch (error) {
       setUsernameError(error.message || 'Failed to update username');
+    }
+  };
+
+  const handleUpdateBio = async () => {
+    setBioError('');
+    setBioSuccess('');
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ bio: newBio.trim() || null })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      setBioSuccess('Bio updated successfully');
+      setEditingBio(false);
+      setNewBio('');
+      // Refresh profile
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+    } catch (error) {
+      setBioError(error.message || 'Failed to update bio');
+    }
+  };
+
+  const handleUpdateSocialLinks = async () => {
+    setSocialLinksError('');
+    setSocialLinksSuccess('');
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          suno_url: newSunoUrl.trim() || null,
+          spotify_url: newSpotifyUrl.trim() || null,
+          soundcloud_url: newSoundcloudUrl.trim() || null
+        })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      setSocialLinksSuccess('Social links updated successfully');
+      setEditingSocialLinks(false);
+      setNewSunoUrl('');
+      setNewSpotifyUrl('');
+      setNewSoundcloudUrl('');
+      // Refresh profile
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+    } catch (error) {
+      setSocialLinksError(error.message || 'Failed to update social links');
     }
   };
 
@@ -501,6 +569,174 @@ const Profile = () => {
                     setEditingUsername(false);
                     setUsernameError('');
                     setUsernameSuccess('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bio Section */}
+        <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
+          <h2 className="text-xl font-bold text-white mb-4">
+            Bio
+          </h2>
+          
+          {!editingBio ? (
+            <div className="space-y-3">
+              <p className="text-slate-300 whitespace-pre-wrap">
+                {profile?.bio || 'No bio set'}
+              </p>
+              <button
+                onClick={() => {
+                  setEditingBio(true);
+                  setNewBio(profile?.bio || '');
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              >
+                {profile?.bio ? 'Edit Bio' : 'Add Bio'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <textarea
+                value={newBio}
+                onChange={(e) => setNewBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                rows={4}
+                maxLength={500}
+                className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500">{newBio.length}/500 characters</span>
+              </div>
+              {bioError && <p className="text-red-400 text-sm">{bioError}</p>}
+              {bioSuccess && <p className="text-green-400 text-sm">{bioSuccess}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdateBio}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  <Save size={16} />
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingBio(false);
+                    setBioError('');
+                    setBioSuccess('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Social Links Section */}
+        <div className="bg-slate-800 rounded-lg p-6 mb-6 border border-slate-700">
+          <h2 className="text-xl font-bold text-white mb-4">
+            Social Links
+          </h2>
+          
+          {!editingSocialLinks ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {profile?.suno_url && (
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="text-slate-400 w-24">Suno:</span>
+                    <a href={profile.suno_url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 truncate">
+                      {profile.suno_url}
+                    </a>
+                  </div>
+                )}
+                {profile?.spotify_url && (
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="text-slate-400 w-24">Spotify:</span>
+                    <a href={profile.spotify_url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 truncate">
+                      {profile.spotify_url}
+                    </a>
+                  </div>
+                )}
+                {profile?.soundcloud_url && (
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="text-slate-400 w-24">SoundCloud:</span>
+                    <a href={profile.soundcloud_url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 truncate">
+                      {profile.soundcloud_url}
+                    </a>
+                  </div>
+                )}
+                {!profile?.suno_url && !profile?.spotify_url && !profile?.soundcloud_url && (
+                  <p className="text-slate-400">No social links set</p>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setEditingSocialLinks(true);
+                  setNewSunoUrl(profile?.suno_url || '');
+                  setNewSpotifyUrl(profile?.spotify_url || '');
+                  setNewSoundcloudUrl(profile?.soundcloud_url || '');
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+              >
+                Edit Social Links
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Suno Profile URL</label>
+                <input
+                  type="url"
+                  value={newSunoUrl}
+                  onChange={(e) => setNewSunoUrl(e.target.value)}
+                  placeholder="https://suno.com/@username"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Spotify Profile URL</label>
+                <input
+                  type="url"
+                  value={newSpotifyUrl}
+                  onChange={(e) => setNewSpotifyUrl(e.target.value)}
+                  placeholder="https://open.spotify.com/artist/..."
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">SoundCloud Profile URL</label>
+                <input
+                  type="url"
+                  value={newSoundcloudUrl}
+                  onChange={(e) => setNewSoundcloudUrl(e.target.value)}
+                  placeholder="https://soundcloud.com/username"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <p className="text-xs text-slate-500">Leave fields empty to remove links</p>
+              {socialLinksError && <p className="text-red-400 text-sm">{socialLinksError}</p>}
+              {socialLinksSuccess && <p className="text-green-400 text-sm">{socialLinksSuccess}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdateSocialLinks}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  <Save size={16} />
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingSocialLinks(false);
+                    setSocialLinksError('');
+                    setSocialLinksSuccess('');
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
                 >

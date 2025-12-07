@@ -28,6 +28,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
+import { supabase } from '../lib/supabase';
 import { 
   getPublicProfileByUsername, 
   getTracksByUser, 
@@ -502,6 +503,69 @@ const PublicProfile = () => {
               )}
             </div>
           </div>
+
+          {/* Bio */}
+          {profile.bio && (
+            <div className="mt-6 pt-6 border-t border-slate-700">
+              <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {profile.bio}
+              </p>
+            </div>
+          )}
+
+          {/* Social Links */}
+          {(profile.suno_url || profile.spotify_url || profile.soundcloud_url) && (
+            <div className="mt-4 flex items-center gap-3 flex-wrap">
+              {profile.suno_url && (
+                <a
+                  href={profile.suno_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg transition-colors group"
+                  title="Suno Profile"
+                >
+                  <img 
+                    src={`${supabase.storage.from('logos').getPublicUrl('suno.png').data.publicUrl}`}
+                    alt="Suno"
+                    className="w-5 h-5 object-contain"
+                  />
+                  <span className="text-sm text-slate-300 group-hover:text-white">Suno</span>
+                </a>
+              )}
+              {profile.spotify_url && (
+                <a
+                  href={profile.spotify_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg transition-colors group"
+                  title="Spotify Profile"
+                >
+                  <img 
+                    src={`${supabase.storage.from('logos').getPublicUrl('spotify.png').data.publicUrl}`}
+                    alt="Spotify"
+                    className="w-5 h-5 object-contain"
+                  />
+                  <span className="text-sm text-slate-300 group-hover:text-white">Spotify</span>
+                </a>
+              )}
+              {profile.soundcloud_url && (
+                <a
+                  href={profile.soundcloud_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg transition-colors group"
+                  title="SoundCloud Profile"
+                >
+                  <img 
+                    src={`${supabase.storage.from('logos').getPublicUrl('soundcloud.svg').data.publicUrl}`}
+                    alt="SoundCloud"
+                    className="w-5 h-5 object-contain"
+                  />
+                  <span className="text-sm text-slate-300 group-hover:text-white">SoundCloud</span>
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
