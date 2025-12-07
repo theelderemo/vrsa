@@ -1038,9 +1038,9 @@ export async function getUnifiedFeed({
 
     if (tracksError) throw tracksError;
 
-    // Get unique user IDs from both posts and tracks
-    const postUserIds = posts?.map(p => p.user_id) || [];
-    const trackUserIds = tracks?.map(t => t.user_id) || [];
+    // Get unique user IDs from both posts and tracks (filter out null for bot posts)
+    const postUserIds = posts?.map(p => p.user_id).filter(id => id != null) || [];
+    const trackUserIds = tracks?.map(t => t.user_id).filter(id => id != null) || [];
     const allUserIds = [...new Set([...postUserIds, ...trackUserIds])];
 
     // Fetch profiles for all users
@@ -1057,11 +1057,25 @@ export async function getUnifiedFeed({
     }
 
     // Transform posts to unified format
-    const postItems = (posts || []).map(post => ({
-      ...post,
-      type: 'post',
-      profiles: profileMap.get(post.user_id) || { username: 'Unknown', id: post.user_id }
-    }));
+    const postItems = (posts || []).map(post => {
+      // Handle bot posts specially
+      if (post.is_bot_post) {
+        return {
+          ...post,
+          type: 'post',
+          profiles: { 
+            id: 'vrsa-bot', 
+            username: 'VRSA', 
+            profile_picture_url: VRSA_BOT_AVATAR_URL 
+          }
+        };
+      }
+      return {
+        ...post,
+        type: 'post',
+        profiles: profileMap.get(post.user_id) || { username: 'Unknown', id: post.user_id }
+      };
+    });
 
     // Transform tracks to unified format
     const trackItems = (tracks || []).map(track => ({
