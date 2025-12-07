@@ -1335,36 +1335,35 @@ export async function addPostBotComment(postId, content) {
 
 /**
  * Create a bot post (admin function)
- * @param {string} adminUserId - Admin user ID who is creating the bot post
  * @param {string} content - The post content
  * @param {string} privacy - Privacy setting ('public' or 'followers_only')
  * @returns {Promise<{post: object, error: Error | null}>}
  */
-export async function createBotPost(adminUserId, content, privacy = 'public') {
+export async function createBotPost(content, privacy = 'public') {
   try {
     const { data: post, error } = await supabase
       .from('posts')
       .insert({
-        user_id: adminUserId,  // Use admin user ID
+        user_id: null,  // null for bot posts
         content,
-        privacy
+        privacy,
+        is_bot_post: true,
+        bot_display_name: VRSA_BOT_NAME
       })
       .select('*')
       .single();
 
     if (error) throw error;
 
-    // Fetch the admin profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, username, profile_picture_url')
-      .eq('id', adminUserId)
-      .single();
-
+    // Return post with bot profile info
     return { 
       post: { 
         ...post, 
-        profiles: profile || { id: adminUserId, username: 'Admin' } 
+        profiles: { 
+          id: 'vrsa-bot', 
+          username: 'VRSA', 
+          profile_picture_url: VRSA_BOT_AVATAR_URL 
+        } 
       }, 
       error: null 
     };

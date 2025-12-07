@@ -383,7 +383,7 @@ const AdminPanel = () => {
     setCreatingBotPost(true);
     try {
       const content = await generateBotPost(botPostPrompt);
-      const { post, error } = await createBotPost(user.id, content, 'public');
+      const { post, error } = await createBotPost(content, 'public');
       if (!error && post) {
         alert('Bot post created successfully!');
         setBotPostPrompt('');

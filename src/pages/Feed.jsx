@@ -96,7 +96,12 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
   };
 
   const isFollowersOnly = post.privacy === 'followers_only';
-  const profilePicUrl = post.profiles?.profile_picture_url;
+  const isBotPost = post.is_bot_post;
+  
+  // Use bot info if it's a bot post, otherwise use profile info
+  const displayName = isBotPost ? (post.bot_display_name || VRSA_BOT_NAME) : `@${post.profiles?.username || 'Unknown'}`;
+  const profilePicUrl = isBotPost ? VRSA_BOT_AVATAR_URL : post.profiles?.profile_picture_url;
+  const profileLink = isBotPost ? '#' : `/u/${post.profiles?.username}`;
 
   return (
     <motion.div
@@ -108,12 +113,12 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
         {/* Header: Avatar + Username + Timestamp */}
         <div className="flex items-start gap-3">
           {/* Avatar */}
-          <Link to={`/u/${post.profiles?.username}`} className="flex-shrink-0">
+          <Link to={profileLink} className="flex-shrink-0" onClick={(e) => isBotPost && e.preventDefault()}>
             {profilePicUrl ? (
               <img 
                 src={profilePicUrl} 
-                alt={post.profiles?.username || 'User'}
-                className="w-10 h-10 rounded-full object-cover border-2 border-slate-700"
+                alt={displayName}
+                className={`w-10 h-10 rounded-full object-cover border-2 ${isBotPost ? 'border-yellow-500/50' : 'border-slate-700'}`}
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -127,11 +132,17 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
             {/* Username & Timestamp Row */}
             <div className="flex items-center gap-2 flex-wrap">
               <Link 
-                to={`/u/${post.profiles?.username}`}
-                className="font-semibold text-white hover:text-indigo-400 transition-colors text-sm"
+                to={profileLink}
+                onClick={(e) => isBotPost && e.preventDefault()}
+                className={`font-semibold hover:text-indigo-400 transition-colors text-sm ${isBotPost ? 'text-yellow-400' : 'text-white'}`}
               >
-                @{post.profiles?.username || 'Unknown'}
+                {displayName}
               </Link>
+              {isBotPost && (
+                <span className="text-xs px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">
+                  Bot
+                </span>
+              )}
               <span className="text-slate-500 text-xs">·</span>
               <span className="text-slate-500 text-xs">
                 {new Date(post.created_at).toLocaleDateString('en-US', {
@@ -196,7 +207,8 @@ const PostCard = ({ post, isLiked, onLike, onUnlike, onDelete, user }) => {
               </button>
 
               {/* Follow Button */}
-              {post.profiles?.id && (
+              {/* Follow Button - only show for non-bot posts */}
+            {post.profiles?.id && !isBotPost && (
                 <FollowButton 
                   targetUserId={post.profiles.id}
                   targetUsername={post.profiles.username}
