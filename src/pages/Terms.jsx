@@ -32,69 +32,77 @@ const Terms = () => (
       <div className="text-slate-300 text-sm space-y-6">
         <p className="italic text-slate-400">Last updated: November 25, 2025</p>
         <p>
-          By accessing or using VRS/A ("we", "us", or "our"), you agree to be bound by these Terms. If you don't agree, please close the tab.
+          Terms of Service are legally required even though literally no one reads them. Anyway, don't be a dick and I won't be dicks. The legal version is below if you actually want to read it.
         </p>
 
         {/* Section 1 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">1. Accounts & Security</h3>
-          <p className="mb-2">To access Ghostwriter or Analyzer features, you must create an account.</p>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Accounts</h3>
+          <p className="mb-2">You need an account to use most features. Pretty standard.</p>
           <ul className="list-disc list-inside pl-4 space-y-1">
-            <li>You are responsible for maintaining the security of your account credentials.</li>
-            <li>We implemented usernames and Cloudflare Turnstile to keep bots out. Don't try to bypass them.</li>
-            <li>We reserve the right to ban accounts that exhibit suspicious behavior or API abuse.</li>
+            <li>Keep your password secure. If someone logs into your account, that's on you.</li>
+            <li>I use Cloudflare Turnstile to keep bots out. Don't try to bypass it.</li>
+            <li>If your account does suspicious stuff or abuses the API, I'll ban it.</li>
           </ul>
         </section>
 
         {/* Section 2 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">2. Fair Use & Abuse (The "Don't Be A Jerk" Clause)</h3>
-          <p className="mb-2">This app runs on a limited budget. You agree NOT to:</p>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Don't Be A Dick</h3>
+          <p className="mb-2">This app runs on a shoestring budget. Don't do these things:</p>
           <ul className="list-disc list-inside pl-4 space-y-1 mb-4">
-            <li>Automate requests or scrape the API.</li>
-            <li>Create multiple accounts to bypass limits.</li>
-            <li>Reverse-engineer the prompt logic.</li>
+            <li>Automate requests or scrape the API</li>
+            <li>Make multiple accounts to bypass limits</li>
+            <li>Try to reverse-engineer the prompts</li>
+            <li>Spam the feed with garbage</li>
+            <li>Harass people in comments or mentions</li>
+            <li>Pretend to be other users or the bot</li>
+            <li>Post illegal stuff, hate speech, or anything that violates someone else's rights</li>
           </ul>
           <div className="bg-slate-900/50 p-4 rounded border border-slate-700">
-            <span className="font-bold text-red-400">Consequences:</span> Abuse gets you banned. If you cost me money by spamming the API, I will delete your account without a second thought.
+            <span className="font-bold text-red-400">What happens if you do:</span> Your account gets deleted. If you cost me money by spamming API calls, I'll ban you without hesitation. Same if you're toxic to other users.
           </div>
         </section>
 
         {/* Section 3 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">3. Studio Pass & Membership</h3>
-          <p className="mb-2">The "Studio Pass" is a membership program via Buy Me a Coffee.</p>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Studio Pass</h3>
+          <p className="mb-2">Studio Pass is handled through Buy Me a Coffee. Here's how it works:</p>
           <ul className="list-disc list-inside pl-4 space-y-2">
-            <li><span className="font-bold text-slate-200">Nature of Service:</span> This is a support tier. It unlocks higher-cost models (Claude 3 Opus, Flux 1.1 Pro, etc.) as a thank-you.</li>
-            <li><span className="font-bold text-slate-200">Refunds:</span> Payments are donations/memberships to support development and are generally non-refundable.</li>
-            <li><span className="font-bold text-slate-200">Availability:</span> We try to keep premium models up 24/7, but API outages happen.</li>
+            <li><span className="font-bold text-slate-200">What it is:</span> A support tier that unlocks expensive models like Claude 3 Opus and Flux 1.1 Pro. You're basically funding the API bills in exchange for better tools.</li>
+            <li><span className="font-bold text-slate-200">Refunds:</span> This is a donation/membership to keep the lights on. Generally non-refundable unless something actually broke on our end.</li>
+            <li><span className="font-bold text-slate-200">Uptime:</span> I try to keep everything running 24/7 but sometimes OpenAI or Azure has an outage. Not much I can do about that.</li>
           </ul>
         </section>
 
         {/* Section 4 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">4. Content Ownership</h3>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Who Owns What</h3>
           <p className="mb-2">
-            <strong>Lyrics:</strong> You own the lyrics you generate. We claim no copyright over your output.
-            <br/>
-            <strong>Images:</strong> You own the images you generate, subject to the laws governing AI-generated art in your jurisdiction.
+            <strong>Lyrics:</strong> You own them. I'm not claiming copyright on your output.
+          </p>
+          <p className="mb-2">
+            <strong>Images:</strong> Also yours, subject to whatever laws exist about AI-generated art where you live.
+          </p>
+          <p className="mb-2">
+            <strong>Posts and comments:</strong> You own those too. By posting publicly you give us permission to show it on the platform, but you can delete it anytime.
           </p>
         </section>
 
         {/* Section 5 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">5. Limitation of Liability</h3>
-          <p>VRS/A is provided "as-is". We are not liable if the app crashes during your studio session, if the lyrics aren't a hit, or if the AI hallucinates a word that doesn't exist.</p>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Liability</h3>
+          <p>VRS/A is provided as-is. I'm not responsible if the app crashes, the lyrics suck, or the AI makes up a word that doesn't exist. You're using experimental AI tools at your own risk.</p>
         </section>
 
         {/* Section 6 */}
         <section>
-          <h3 className="text-lg font-bold text-slate-100 mb-2">6. Privacy</h3>
-          <p>Refer to our <a href="/privacy" className="text-indigo-400 hover:underline">Privacy Policy</a>. Short version: We don't sell your data. We use essential cookies for login. We store your chats only if you enable memory.</p>
+          <h3 className="text-lg font-bold text-slate-100 mb-2">Privacy Stuff</h3>
+          <p>Check the <a href="/privacy" className="text-indigo-400 hover:underline">Privacy Policy</a> for details. Quick version: I don't sell your data, I only use essential cookies, and I only store your chats if you turn on memory.</p>
         </section>
 
-        <div className="pt-6 border-t border-slate-700 text-center font-semibold text-slate-200">
-          By using VRS/A, you agree to these terms. Now go make some music.
+        <div className="pt-6 border-t border-slate-700 text-center text-slate-400 text-sm">
+          By using this, you agree to these terms. Now go make something.
         </div>
       </div>
     </div>
