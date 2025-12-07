@@ -312,6 +312,13 @@ const PublicProfile = () => {
 
   useEffect(() => {
     document.title = username ? `@${username} - Artist Profile | VRS/A` : 'Artist Profile | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      const description = username 
+        ? `View @${username}'s artist profile on VRS/A. Check out their published tracks, lyrics, and creative work.`
+        : 'Artist profile on VRS/A. View published tracks, lyrics, and creative work.';
+      metaDescription.setAttribute('content', description);
+    }
   }, [username]);
 
   useEffect(() => {

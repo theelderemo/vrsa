@@ -41,6 +41,10 @@ const AlbumArt = () => {
 
   useEffect(() => {
     document.title = 'Album Art Generator | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Generate album covers, artist avatars, and band logos with Flux 1.1 Pro AI. Create professional music artwork in seconds.');
+    }
   }, []);
 
   // Auth check

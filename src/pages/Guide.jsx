@@ -28,6 +28,10 @@ import { Link } from 'react-router-dom';
 const Guide = () => {
   useEffect(() => {
     document.title = 'Guide - How to Use VRS/A | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Learn how to use VRS/A. Complete guide to Ghostwriter, Writing Tools, Album Art Generator, and all features for creating better lyrics.');
+    }
   }, []);
 
   return (

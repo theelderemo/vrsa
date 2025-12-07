@@ -28,6 +28,10 @@ import React, { useEffect } from 'react';
 const StudioPass = () => {
   useEffect(() => {
     document.title = 'Studio Pass - Premium Features | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Unlock premium AI models (GPT-4, Claude Opus, DeepSeek R1), high-res image generation with Flux 1.1 Pro, and advanced writing tools.');
+    }
   }, []);
 
   return (

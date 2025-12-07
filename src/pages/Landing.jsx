@@ -106,6 +106,10 @@ const Landing = () => {
 
   useEffect(() => {
     document.title = 'VRS/A - AI Lyric Assistant & Co-Writer';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Generate authentic lyrics in the style of your favorite artists. A free AI co-writer for musicians, not a content mill. Anti-soulless lyrics.');
+    }
   }, []);
 
   // Animation variants

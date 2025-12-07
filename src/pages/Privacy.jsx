@@ -27,6 +27,10 @@ import React, { useEffect } from 'react';
 const Privacy = () => {
   useEffect(() => {
     document.title = 'Privacy Policy | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'VRS/A Privacy Policy. Learn how we handle your data, protect your privacy, and what information we collect when you use our AI lyric tools.');
+    }
   }, []);
 
   return (

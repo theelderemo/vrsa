@@ -21,6 +21,10 @@ const WritingTools = () => {
 
   useEffect(() => {
     document.title = 'Writing Tools - Analyzer & Rhyme Finder | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Analyze lyrics, find rhymes, generate hooks, and explore wordplay. Style Palette, Stat-Sheet analysis, 13-mode Word Finder, and more.');
+    }
   }, []);
 
   // Auth check

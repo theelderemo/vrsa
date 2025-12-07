@@ -27,6 +27,10 @@ import React, { useEffect } from 'react';
 const Terms = () => {
   useEffect(() => {
     document.title = 'Terms of Service | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'VRS/A Terms of Service. Read our terms for using the AI lyric assistant, account policies, content ownership, and user guidelines.');
+    }
   }, []);
 
   return (

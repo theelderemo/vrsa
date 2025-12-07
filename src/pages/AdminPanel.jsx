@@ -245,6 +245,10 @@ const AdminPanel = () => {
   
   useEffect(() => {
     document.title = 'Admin Panel | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'VRS/A Admin Panel - Manage users, content, and platform settings.');
+    }
   }, []);
   
   const [authorized, setAuthorized] = useState(false);

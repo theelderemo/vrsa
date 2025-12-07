@@ -56,6 +56,10 @@ const Profile = () => {
   
   useEffect(() => {
     document.title = 'My Profile | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Manage your VRS/A profile, update settings, view your published tracks, and customize your artist presence.');
+    }
   }, []);
   
   const [editingEmail, setEditingEmail] = useState(false);
@@ -108,32 +112,31 @@ const Profile = () => {
 
   // Load discography data
   useEffect(() => {
+    const loadDiscography = async () => {
+      setLoadingDiscography(true);
+      try {
+        const [albumsResult, tracksResult, statsResult, followCounts] = await Promise.all([
+          getUserAlbums(user.id),
+          getTracksByUser(user.id),
+          getUserStats(user.id),
+          getFollowCounts(user.id)
+        ]);
+        
+        setAlbums(albumsResult.albums || []);
+        setTracks(tracksResult.tracks || []);
+        setStats(statsResult.stats);
+        setFollowStats(followCounts);
+      } catch (err) {
+        console.error('Error loading discography:', err);
+      } finally {
+        setLoadingDiscography(false);
+      }
+    };
+
     if (user) {
       loadDiscography();
     }
   }, [user]);
-
-  const loadDiscography = async () => {
-    setLoadingDiscography(true);
-    try {
-      const [albumsResult, tracksResult, statsResult, followCounts] = await Promise.all([
-        getUserAlbums(user.id),
-        getTracksByUser(user.id),
-        getUserStats(user.id),
-        getFollowCounts(user.id)
-      ]);
-      
-      setAlbums(albumsResult.albums || []);
-      setTracks(tracksResult.tracks || []);
-      setStats(statsResult.stats);
-      setFollowStats(followCounts);
-      setStats(statsResult.stats);
-    } catch (err) {
-      console.error('Error loading discography:', err);
-    } finally {
-      setLoadingDiscography(false);
-    }
-  };
 
   const handleCreateAlbum = async () => {
     if (!newAlbumTitle.trim()) {

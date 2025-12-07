@@ -731,6 +731,10 @@ const Feed = () => {
 
   useEffect(() => {
     document.title = 'Feed - Community Posts & Tracks | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Discover community posts and tracks from VRS/A artists. Share your lyrics, get feedback, and connect with other musicians.');
+    }
   }, []);
 
   const fetchFeed = useCallback(async () => {

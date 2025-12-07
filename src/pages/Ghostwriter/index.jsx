@@ -62,6 +62,10 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   
   useEffect(() => {
     document.title = 'Ghostwriter - AI Lyric Generation | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Chat-based AI lyric generation. Input artist style, theme, mood, and rhyme scheme to create authentic verses, hooks, and full songs in seconds.');
+    }
   }, []);
   
   // Dynamic welcome message state (null = loading, string = content)

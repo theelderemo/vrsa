@@ -8,6 +8,10 @@ import ProjectDashboard from '../components/ui/ProjectDashboard';
 const Projects = () => {
   useEffect(() => {
     document.title = 'My Projects | VRS/A';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'View and manage all your lyric projects. Organize your songs, track progress, and keep your creative work in one place.');
+    }
   }, []);
 
   return (
