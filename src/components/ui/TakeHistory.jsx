@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   History, 
   Clock, 
@@ -303,7 +303,7 @@ const TakeHistory = ({
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className={`fixed right-0 top-0 h-full w-80 bg-slate-900 border-l border-slate-700 shadow-2xl z-40 flex flex-col ${className}`}
+        className={`fixed right-0 top-0 h-full w-80 bg-slate-900 border-l border-slate-700 shadow-2xl z-50 flex flex-col ${className}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700">
@@ -313,7 +313,8 @@ const TakeHistory = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
+            type="button"
           >
             <X size={20} />
           </button>
