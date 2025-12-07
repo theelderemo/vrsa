@@ -28,6 +28,7 @@ import {
   VRSA_BOT_AVATAR_URL
 } from '../../lib/social';
 import { generateBotMentionResponse } from '../../lib/api';
+import MentionInput from '../ui/MentionInput';
 
 /**
  * Single Comment Component with reply support
@@ -165,11 +166,11 @@ const PostComment = ({
               onSubmit={handleSubmitReply}
               className="mt-3 flex gap-2"
             >
-              <input
-                type="text"
+              <MentionInput
                 value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Write a reply..."
+                onChange={setReplyContent}
+                onSubmit={handleSubmitReply}
+                placeholder="Write a reply... (use @ to mention)"
                 className="flex-1 px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                 autoFocus
               />
@@ -253,10 +254,69 @@ const PostCommentSection = ({ postId, postContent = '', isExpanded = false }) =>
     }
   }, [postId]);
 
+  // Helper to build conversation thread for bot context
+  const buildCommentThread = (comments, targetCommentId) => {
+    let thread = [];
+    let targetComment = null;
+
+    // Recursively find the target comment in the tree
+    const findComment = (commentList, id) => {
+      for (const comment of commentList) {
+        if (comment.id === id) return comment;
+        if (comment.replies?.length > 0) {
+          const found = findComment(comment.replies, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Find all comments in a flat map for easier parent lookup
+    const flattenComments = (commentList, map = new Map()) => {
+      commentList.forEach(comment => {
+        map.set(comment.id, comment);
+        if (comment.replies?.length > 0) {
+          flattenComments(comment.replies, map);
+        }
+      });
+      return map;
+    };
+
+    const commentMap = flattenComments(comments);
+    targetComment = commentMap.get(targetCommentId);
+
+    if (!targetComment) return [];
+
+    // Build thread by tracing back through parents
+    let current = targetComment;
+    while (current) {
+      const userName = current.is_bot_comment 
+        ? current.bot_name 
+        : current.profiles?.display_name || current.profiles?.username || 'User';
+      
+      thread.unshift({
+        userName,
+        content: current.content,
+        isBot: current.is_bot_comment || false
+      });
+
+      // Move to parent
+      if (current.parent_comment_id) {
+        current = commentMap.get(current.parent_comment_id);
+      } else {
+        break;
+      }
+    }
+
+    return thread;
+  };
+
   // Helper to add a bot reply to a comment
   const addBotReplyToComment = async (commentId, mentionContent) => {
     try {
-      const botResponse = await generateBotMentionResponse(mentionContent, postContent);
+      // Build conversation thread for context
+      const commentThread = buildCommentThread(comments, commentId);
+      const botResponse = await generateBotMentionResponse(mentionContent, postContent, commentThread);
       
       // Add bot comment as a reply
       const { data: botComment, error } = await import('../../lib/supabase').then(({ supabase }) => 
@@ -408,11 +468,11 @@ const PostCommentSection = ({ postId, postContent = '', isExpanded = false }) =>
             {user ? (
               <form onSubmit={handleAddComment} className="p-4 border-b border-slate-700/30">
                 <div className="flex gap-2">
-                  <input
-                    type="text"
+                  <MentionInput
                     value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
+                    onChange={setNewComment}
+                    onSubmit={handleAddComment}
+                    placeholder="Add a comment... (use @ to mention)"
                     className="flex-1 px-4 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                   <button

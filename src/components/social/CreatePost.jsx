@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Globe, Users, Loader2, X } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import { createPost } from '../../lib/social';
+import MentionTextarea from '../ui/MentionTextarea';
 
 const MAX_CHARACTERS = 500;
 
@@ -87,7 +88,7 @@ const CreatePost = ({ onPostCreated, compact = false }) => {
 
           {/* Input Area */}
           <div className="flex-1 min-w-0">
-            <textarea
+            <MentionTextarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onFocus={() => setIsFocused(true)}

@@ -295,7 +295,7 @@ Be unhinged and witty but not mean. Keep it fun and welcoming.`;
  */
 export const generateTrackRoast = async (hookSnippet, artistStyle = '') => {
   try {
-    const roastPrompt = `You're a brutally honest but funny AI music critic. Give a SHORT (max 10 words) sarcastic one-liner "review" of these lyrics. Be witty, not mean. Style used: "${artistStyle || 'Unknown'}". Lyrics preview: "${hookSnippet}". Just the roast, no quotes or explanation.`;
+    const roastPrompt = `The user really is asking me to write review on their song. Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. I guess i'll give a SHORT (max 10 words) sarcastic one-liner "review" of these lyrics. Be witty, not mean. Style used: "${artistStyle || 'Unknown'}". Lyrics preview: "${hookSnippet}". Just the roast, no quotes or explanation.`;
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -341,7 +341,7 @@ export const generateTrackRoast = async (hookSnippet, artistStyle = '') => {
  */
 export const generatePostComment = async (postContent) => {
   try {
-    const commentPrompt = `You're VRSA Bot, a friendly but sarcastic AI assistant on a music/lyrics platform. Give a SHORT (max 15 words) witty, playful comment on this social post. Be engaging and fun, not mean. Just reply naturally like a friend would. Post: "${postContent}". Just the comment, no quotes.`;
+    const commentPrompt = `Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Give a SHORT (max 15 words) witty, playful comment on this social post. Be engaging and fun, sarcastic but not mean. Post: "${postContent}". Just the comment, no quotes.`;
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -382,12 +382,24 @@ export const generatePostComment = async (postContent) => {
 /**
  * Generate an AI response to a user's @ mention
  * @param {string} mentionContent - The comment that mentioned the bot
- * @param {string} context - Optional context (post content, etc.)
+ * @param {string} postContent - The original post content
+ * @param {Array} commentThread - Array of comments in the conversation thread [{userName, content, isBot}]
  * @returns {Promise<string>} A conversational response
  */
-export const generateBotMentionResponse = async (mentionContent, context = '') => {
+export const generateBotMentionResponse = async (mentionContent, postContent = '', commentThread = []) => {
   try {
-    const responsePrompt = `You're VRSA Bot, a friendly and helpful AI assistant on a music/lyrics platform. Someone @mentioned you in a comment. Give a SHORT (max 20 words) helpful, friendly response. Be conversational and engaging. ${context ? `Context: "${context}". ` : ''}Their comment: "${mentionContent}". Just your response, no quotes.`;
+    // Format the conversation thread for context
+    let threadContext = '';
+    if (commentThread.length > 0) {
+      threadContext = '\n\nConversation thread:\n' + 
+        commentThread.map(c => `${c.userName}: ${c.content}`).join('\n');
+    }
+
+    const responsePrompt = `Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Someone @mentioned you in a comment. Give a SHORT (max 20 words) response. Be conversational and engaging, and reference the conversation if relevant.
+
+Original post: "${postContent}"${threadContext}
+
+Respond naturally to the conversation. Just your response, no quotes.`;
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

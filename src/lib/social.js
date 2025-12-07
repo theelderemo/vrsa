@@ -1566,3 +1566,34 @@ export async function processMentions(content, fromUserId, sourceType, sourceId,
 
   return { mentionedBot, notificationsSent };
 }
+
+/**
+ * Search for users by username prefix (for @ mention autocomplete)
+ * @param {string} query - Username prefix to search for
+ * @param {number} limit - Max results
+ * @returns {Promise<{users: array, error: Error | null}>}
+ */
+export async function searchUsersByUsername(query, limit = 10) {
+  try {
+    if (!query || query.length < 1) {
+      return { users: [], error: null };
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, profile_picture_url')
+      .ilike('username', `${query}%`)
+      .limit(limit);
+
+    if (error) throw error;
+    return { users: data || [], error: null };
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return { users: [], error };
+  }
+}
+
+// Bot accounts for @ mention autocomplete
+export const BOT_ACCOUNTS = [
+  { id: 'vrsa-bot', username: 'VRSA', profile_picture_url: VRSA_BOT_AVATAR_URL, isBot: true },
+];

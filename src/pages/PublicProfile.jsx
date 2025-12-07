@@ -753,7 +753,7 @@ const ProfilePostCard = ({ post, isLiked, onLike, onUnlike, user }) => {
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-slate-700/50"
           >
-            <PostCommentSection postId={post.id} isExpanded={true} />
+            <PostCommentSection postId={post.id} postContent={post.content} isExpanded={true} />
           </motion.div>
         )}
       </AnimatePresence>
