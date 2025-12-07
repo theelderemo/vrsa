@@ -415,6 +415,11 @@ const Landing = () => {
                     Studio Pass
                   </Link>
                 </li>
+                <li>
+                  <a href="https://discord.gg/vrsa" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Discord
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -426,11 +431,6 @@ const Landing = () => {
                   <Link to="/guide" className="text-slate-400 hover:text-indigo-400 transition-colors">
                     Guide
                   </Link>
-                </li>
-                <li>
-                  <a href="https://github.com/theelderemo/vrsa" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
-                    GitHub
-                  </a>
                 </li>
               </ul>
             </div>
