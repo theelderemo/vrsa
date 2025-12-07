@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
@@ -13,6 +13,9 @@ import Analyzer from '../Analyzer';
 import RhymeFinder from './RhymeFinder';
 import WordplaySuggester from './WordplaySuggester';
 import HookGenerator from './HookGenerator';
+
+// Lazy load AudioAnalyzer to prevent import issues
+const AudioAnalyzer = lazy(() => import('./AudioAnalyzer'));
 
 const WritingTools = () => {
   const { user, loading } = useUser();
@@ -63,6 +66,16 @@ const WritingTools = () => {
     switch (activeTool) {
       case 'analyzer':
         return <Analyzer />;
+      case 'audio-analyzer':
+        return (
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full bg-slate-900">
+              <LoaderCircle className="animate-spin text-indigo-400" size={48} />
+            </div>
+          }>
+            <AudioAnalyzer />
+          </Suspense>
+        );
       case 'rhyme-finder':
         return <RhymeFinder />;
       case 'wordplay':

@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 
 const dockItems = [
   { id: 'analyzer', label: 'Analyzer' },
+  { id: 'audio-analyzer', label: 'Audio Analyzer' },
   { id: 'rhyme-finder', label: 'Rhyme Finder' },
   { id: 'wordplay', label: 'Wordplay' },
   { id: 'hook-generator', label: 'Hook Generator' },

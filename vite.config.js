@@ -13,5 +13,11 @@ export default defineConfig({
 
   build: {
     sourcemap: true
-  }
+  },
+
+  optimizeDeps: {
+    exclude: ['essentia.js']
+  },
+
+  assetsInclude: ['**/*.wasm']
 })
