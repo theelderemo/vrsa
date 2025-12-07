@@ -1333,6 +1333,45 @@ export async function addPostBotComment(postId, content) {
   }
 }
 
+/**
+ * Create a bot post (admin function)
+ * @param {string} content - The post content
+ * @param {string} privacy - Privacy setting ('public' or 'followers_only')
+ * @returns {Promise<{post: object, error: Error | null}>}
+ */
+export async function createBotPost(content, privacy = 'public') {
+  try {
+    const { data: post, error } = await supabase
+      .from('posts')
+      .insert({
+        user_id: null,  // null user_id indicates bot post
+        content,
+        privacy,
+        is_bot_post: true
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    // Return post with bot profile info
+    return { 
+      post: { 
+        ...post, 
+        profiles: { 
+          id: 'vrsa-bot', 
+          username: 'VRSA', 
+          profile_picture_url: VRSA_BOT_AVATAR_URL 
+        } 
+      }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Error creating bot post:', error);
+    return { post: null, error };
+  }
+}
+
 // ============================================
 // NOTIFICATIONS SYSTEM
 // ============================================

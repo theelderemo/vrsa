@@ -180,3 +180,127 @@ export async function updateUserProfile(userId, updates) {
   
   return { profile: data, error: null };
 }
+
+// ============================================
+// BOT MANAGEMENT FUNCTIONS
+// ============================================
+
+/**
+ * Get all bot comments (admin only)
+ */
+export async function getAllBotComments(limit = 50) {
+  const { data, error } = await supabase
+    .from('post_comments')
+    .select(`
+      *,
+      post:posts(id, content, user_id, created_at)
+    `)
+    .eq('is_bot_comment', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (error) {
+    console.error('Error fetching bot comments:', error);
+    return { comments: [], error };
+  }
+  
+  return { comments: data || [], error: null };
+}
+
+/**
+ * Update bot comment (admin only)
+ */
+export async function updateBotComment(commentId, content) {
+  const { data, error } = await supabase
+    .from('post_comments')
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq('id', commentId)
+    .eq('is_bot_comment', true)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating bot comment:', error);
+    return { comment: null, error };
+  }
+  
+  return { comment: data, error: null };
+}
+
+/**
+ * Delete bot comment (admin only)
+ */
+export async function deleteBotComment(commentId) {
+  const { error } = await supabase
+    .from('post_comments')
+    .delete()
+    .eq('id', commentId)
+    .eq('is_bot_comment', true);
+  
+  if (error) {
+    console.error('Error deleting bot comment:', error);
+    return { success: false, error };
+  }
+  
+  return { success: true, error: null };
+}
+
+/**
+ * Get all bot roasts (for tracks) (admin only)
+ */
+export async function getAllBotRoasts(limit = 50) {
+  const { data, error } = await supabase
+    .from('track_comments')
+    .select(`
+      *,
+      track:tracks(id, title, artist, user_id, created_at)
+    `)
+    .eq('is_bot_roast', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (error) {
+    console.error('Error fetching bot roasts:', error);
+    return { roasts: [], error };
+  }
+  
+  return { roasts: data || [], error: null };
+}
+
+/**
+ * Update bot roast (admin only)
+ */
+export async function updateBotRoast(roastId, content) {
+  const { data, error } = await supabase
+    .from('track_comments')
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq('id', roastId)
+    .eq('is_bot_roast', true)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating bot roast:', error);
+    return { roast: null, error };
+  }
+  
+  return { roast: data, error: null };
+}
+
+/**
+ * Delete bot roast (admin only)
+ */
+export async function deleteBotRoast(roastId) {
+  const { error } = await supabase
+    .from('track_comments')
+    .delete()
+    .eq('id', roastId)
+    .eq('is_bot_roast', true);
+  
+  if (error) {
+    console.error('Error deleting bot roast:', error);
+    return { success: false, error };
+  }
+  
+  return { success: true, error: null };
+}

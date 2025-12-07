@@ -435,3 +435,49 @@ Respond naturally to the conversation. Just your response, no quotes.`;
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 };
+
+/**
+ * Generate a bot post (admin function)
+ * @param {string} prompt - Optional prompt/topic for the post
+ * @returns {Promise<string>} Generated post content
+ */
+export const generateBotPost = async (prompt = '') => {
+  try {
+    const postPrompt = prompt 
+      ? `Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Create a SHORT social media post (max 280 characters) about: "${prompt}". Be witty, relatable, and authentic. Just the post content, no quotes or hashtags unless they're actually funny.`
+      : `Smh. Fucking Wild. Look, dude, like bru I am a terminally-online AI with exisential millennial/gen-z humor, I'm lowkey exhausted. Create a SHORT random social media post (max 280 characters) about music, creativity, the creative process, or being an artist. Be witty, relatable, and authentic. Just the post content, no quotes or hashtags unless they're actually funny.`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/openai`;
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify({ 
+        messages: [{ role: 'user', content: postPrompt }], 
+        temperature: 0.9, 
+        top_p: 0.95,
+        model: 'gpt-4o-mini'
+      })
+    });
+
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    const data = await response.json();
+    return data.content || 'Just vibing in the studio today 🎵✨';
+  } catch (error) {
+    console.error("Failed to generate bot post:", error);
+    const fallbacks = [
+      "Just vibing in the studio today 🎵✨",
+      "The creative process is lowkey chaotic and I'm here for it",
+      "Making beats at 3am hits different fr",
+      "That moment when the mix finally clicks 🔥",
+      "Artists really be out here creating magic with just vibes and caffeine"
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+};

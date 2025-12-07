@@ -31,7 +31,9 @@ import {
   Calendar,
   TrendingUp,
   MessageSquare,
-  Database
+  Database,
+  Bot,
+  Send
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { Button } from '../components/ui/Button';
@@ -44,8 +46,16 @@ import {
   updateDevNote,
   deleteDevNote,
   toggleDevNoteActive,
-  updateUserProfile
+  updateUserProfile,
+  getAllBotComments,
+  updateBotComment,
+  deleteBotComment,
+  getAllBotRoasts,
+  updateBotRoast,
+  deleteBotRoast
 } from '../lib/admin';
+import { createBotPost } from '../lib/social';
+import { generateBotPost } from '../lib/api';
 
 // Notification type options
 const NOTE_TYPES = [
@@ -242,6 +252,15 @@ const AdminPanel = () => {
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Bot management state
+  const [botComments, setBotComments] = useState([]);
+  const [botRoasts, setBotRoasts] = useState([]);
+  const [editingBotComment, setEditingBotComment] = useState(null);
+  const [editingBotRoast, setEditingBotRoast] = useState(null);
+  const [showCreateBotPost, setShowCreateBotPost] = useState(false);
+  const [botPostPrompt, setBotPostPrompt] = useState('');
+  const [creatingBotPost, setCreatingBotPost] = useState(false);
 
   // Check admin authorization
   useEffect(() => {
@@ -260,15 +279,19 @@ const AdminPanel = () => {
     
     setLoading(true);
     
-    const [statsRes, usersRes, notesRes] = await Promise.all([
+    const [statsRes, usersRes, notesRes, commentsRes, roastsRes] = await Promise.all([
       getAppStats(),
       getRecentUsers(15),
-      getAllDevNotes()
+      getAllDevNotes(),
+      getAllBotComments(50),
+      getAllBotRoasts(50)
     ]);
     
     if (statsRes.stats) setStats(statsRes.stats);
     if (usersRes.users) setRecentUsers(usersRes.users);
     if (notesRes.notes) setDevNotes(notesRes.notes);
+    if (commentsRes.comments) setBotComments(commentsRes.comments);
+    if (roastsRes.roasts) setBotRoasts(roastsRes.roasts);
     
     setLoading(false);
   }, [authorized]);
@@ -320,6 +343,57 @@ const AdminPanel = () => {
     const { profile, error } = await updateUserProfile(userId, { [field]: newValue });
     if (!error && profile) {
       setRecentUsers(prev => prev.map(u => u.id === userId ? { ...u, [field]: newValue } : u));
+    }
+  };
+
+  // Bot management handlers
+  const handleUpdateBotComment = async (commentId, newContent) => {
+    const { comment, error } = await updateBotComment(commentId, newContent);
+    if (!error && comment) {
+      setBotComments(prev => prev.map(c => c.id === commentId ? { ...c, content: newContent } : c));
+      setEditingBotComment(null);
+    }
+  };
+
+  const handleDeleteBotComment = async (commentId) => {
+    if (!confirm('Delete this bot comment?')) return;
+    const { success } = await deleteBotComment(commentId);
+    if (success) {
+      setBotComments(prev => prev.filter(c => c.id !== commentId));
+    }
+  };
+
+  const handleUpdateBotRoast = async (roastId, newContent) => {
+    const { roast, error } = await updateBotRoast(roastId, newContent);
+    if (!error && roast) {
+      setBotRoasts(prev => prev.map(r => r.id === roastId ? { ...r, content: newContent } : r));
+      setEditingBotRoast(null);
+    }
+  };
+
+  const handleDeleteBotRoast = async (roastId) => {
+    if (!confirm('Delete this bot roast?')) return;
+    const { success } = await deleteBotRoast(roastId);
+    if (success) {
+      setBotRoasts(prev => prev.filter(r => r.id !== roastId));
+    }
+  };
+
+  const handleCreateBotPost = async () => {
+    setCreatingBotPost(true);
+    try {
+      const content = await generateBotPost(botPostPrompt);
+      const { post, error } = await createBotPost(content, 'public');
+      if (!error && post) {
+        alert('Bot post created successfully!');
+        setBotPostPrompt('');
+        setShowCreateBotPost(false);
+      }
+    } catch (err) {
+      console.error('Error creating bot post:', err);
+      alert('Failed to create bot post');
+    } finally {
+      setCreatingBotPost(false);
     }
   };
 
@@ -385,6 +459,7 @@ const AdminPanel = () => {
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'notifications', label: 'Notifications', icon: Bell },
             { id: 'users', label: 'Users', icon: Users },
+            { id: 'bot', label: 'Bot Management', icon: Bot },
           ].map(tab => (
             <button
               key={tab.id}
@@ -607,6 +682,206 @@ const AdminPanel = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bot Management Tab */}
+        {activeTab === 'bot' && (
+          <div className="space-y-6">
+            {/* Create Bot Post */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Send size={20} className="text-yellow-400" />
+                Create Bot Post
+              </h3>
+              
+              {!showCreateBotPost ? (
+                <Button onClick={() => setShowCreateBotPost(true)}>
+                  <Plus size={16} className="mr-2" />
+                  New Bot Post
+                </Button>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Post Topic (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={botPostPrompt}
+                      onChange={(e) => setBotPostPrompt(e.target.value)}
+                      placeholder="e.g., 'creative process' or leave blank for random"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button onClick={handleCreateBotPost} disabled={creatingBotPost}>
+                      {creatingBotPost ? (
+                        <Loader2 size={16} className="animate-spin mr-2" />
+                      ) : (
+                        <Send size={16} className="mr-2" />
+                      )}
+                      Generate & Post
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowCreateBotPost(false);
+                        setBotPostPrompt('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bot Comments Section */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <MessageSquare size={20} className="text-blue-400" />
+                Bot Post Comments ({botComments.length})
+              </h3>
+              
+              <div className="space-y-3">
+                {botComments.map(comment => (
+                  <div key={comment.id} className="bg-slate-900/50 rounded-lg p-4">
+                    {editingBotComment?.id === comment.id ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={editingBotComment.content}
+                          onChange={(e) => setEditingBotComment({ ...editingBotComment, content: e.target.value })}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateBotComment(comment.id, editingBotComment.content)}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <Check size={14} />
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingBotComment(null)}
+                            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <X size={14} />
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <p className="text-sm text-slate-300 mb-2">"{comment.content}"</p>
+                            <p className="text-xs text-slate-500">
+                              On post: {comment.post?.content?.substring(0, 60)}...
+                            </p>
+                            <p className="text-xs text-slate-600 mt-1">
+                              {formatDate(comment.created_at)}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setEditingBotComment(comment)}
+                              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBotComment(comment.id)}
+                              className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                
+                {botComments.length === 0 && (
+                  <p className="text-center py-8 text-slate-400">No bot comments yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Bot Roasts Section */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Music size={20} className="text-purple-400" />
+                Bot Track Roasts ({botRoasts.length})
+              </h3>
+              
+              <div className="space-y-3">
+                {botRoasts.map(roast => (
+                  <div key={roast.id} className="bg-slate-900/50 rounded-lg p-4">
+                    {editingBotRoast?.id === roast.id ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={editingBotRoast.content}
+                          onChange={(e) => setEditingBotRoast({ ...editingBotRoast, content: e.target.value })}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleUpdateBotRoast(roast.id, editingBotRoast.content)}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <Check size={14} />
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingBotRoast(null)}
+                            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <X size={14} />
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <p className="text-sm text-slate-300 mb-2">"{roast.content}"</p>
+                            <p className="text-xs text-slate-500">
+                              On track: {roast.track?.title} - {roast.track?.artist}
+                            </p>
+                            <p className="text-xs text-slate-600 mt-1">
+                              {formatDate(roast.created_at)}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setEditingBotRoast(roast)}
+                              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBotRoast(roast.id)}
+                              className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                
+                {botRoasts.length === 0 && (
+                  <p className="text-center py-8 text-slate-400">No bot roasts yet</p>
+                )}
               </div>
             </div>
           </div>
