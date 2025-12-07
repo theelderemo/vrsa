@@ -853,7 +853,7 @@ const AdminPanel = () => {
                           <div className="flex-1">
                             <p className="text-sm text-slate-300 mb-2">"{roast.content}"</p>
                             <p className="text-xs text-slate-500">
-                              On track: {roast.track?.title} - {roast.track?.artist}
+                            On track: {roast.track?.title} - {roast.track?.primary_artist_style}
                             </p>
                             <p className="text-xs text-slate-600 mt-1">
                               {formatDate(roast.created_at)}

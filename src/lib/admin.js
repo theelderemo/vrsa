@@ -250,10 +250,10 @@ export async function deleteBotComment(commentId) {
  */
 export async function getAllBotRoasts(limit = 50) {
   const { data, error } = await supabase
-    .from('track_comments')
+    .from('comments')
     .select(`
       *,
-      track:tracks(id, title, artist, user_id, created_at)
+      track:published_tracks(id, title, primary_artist_style, user_id, created_at)
     `)
     .eq('is_bot_roast', true)
     .order('created_at', { ascending: false })
@@ -272,7 +272,7 @@ export async function getAllBotRoasts(limit = 50) {
  */
 export async function updateBotRoast(roastId, content) {
   const { data, error } = await supabase
-    .from('track_comments')
+    .from('comments')
     .update({ content, updated_at: new Date().toISOString() })
     .eq('id', roastId)
     .eq('is_bot_roast', true)
@@ -292,7 +292,7 @@ export async function updateBotRoast(roastId, content) {
  */
 export async function deleteBotRoast(roastId) {
   const { error } = await supabase
-    .from('track_comments')
+    .from('comments')
     .delete()
     .eq('id', roastId)
     .eq('is_bot_roast', true);
