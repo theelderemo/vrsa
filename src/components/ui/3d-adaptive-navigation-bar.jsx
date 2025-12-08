@@ -87,6 +87,23 @@ export const PillBase = () => {
   // Calculate expanded width based on number of items
   const expandedWidth = isAdmin ? 920 : 860;
 
+  // Close submenu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setSubmenuOpen(null);
+      }
+    };
+
+    if (submenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [submenuOpen]);
+
   // Handle hover expansion
   useEffect(() => {
     if (hovering) {
@@ -122,7 +139,8 @@ export const PillBase = () => {
 
   const handleSectionClick = (item) => {
     if (item.submenu) {
-      // Don't navigate for submenu items, just show submenu
+      // Toggle submenu for Tools
+      setSubmenuOpen(submenuOpen === item.id ? null : item.id);
       return;
     }
     setHovering(false);
@@ -134,13 +152,10 @@ export const PillBase = () => {
     if (submenuTimeoutRef.current) {
       clearTimeout(submenuTimeoutRef.current);
     }
-    setSubmenuOpen(itemId);
   };
 
   const handleSubmenuLeave = () => {
-    submenuTimeoutRef.current = setTimeout(() => {
-      setSubmenuOpen(null);
-    }, 200);
+    // Don't auto-close submenu on mouse leave for click-based interaction
   };
 
   const handleSubmenuItemClick = (path) => {
@@ -159,7 +174,7 @@ export const PillBase = () => {
       style={{
         width: pillWidth,
         height: '48px',
-        overflow: 'hidden',
+        overflow: 'visible',
         transition: 'border-color 0.2s ease',
       }}
     >
@@ -198,7 +213,10 @@ export const PillBase = () => {
               const isActive = item.id === activeSection;
               
               return (
-                <div key={item.id} className="relative">
+                <div 
+                  key={item.id} 
+                  className="relative"
+                >
                   <motion.button
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -209,12 +227,10 @@ export const PillBase = () => {
                       ease: 'easeOut'
                     }}
                     onClick={() => handleSectionClick(item)}
-                    onMouseEnter={() => item.submenu ? handleSubmenuEnter(item.id) : null}
-                    onMouseLeave={() => item.submenu ? handleSubmenuLeave() : null}
                     className={`
                       relative cursor-pointer transition-colors duration-150
                       text-sm px-3 py-2 rounded-md whitespace-nowrap
-                      ${isActive 
+                      ${isActive || (item.submenu && submenuOpen === item.id)
                         ? 'text-indigo-400 font-semibold' 
                         : 'text-slate-400 hover:text-slate-200 font-medium'
                       }
@@ -231,9 +247,7 @@ export const PillBase = () => {
                   {/* Submenu dropdown */}
                   {item.submenu && submenuOpen === item.id && (
                     <div 
-                      className="absolute top-full left-0 mt-2 w-56 bg-slate-800 border border-slate-700/50 rounded-lg shadow-xl z-50"
-                      onMouseEnter={() => handleSubmenuEnter(item.id)}
-                      onMouseLeave={handleSubmenuLeave}
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-slate-800 border border-slate-700/50 rounded-lg shadow-xl z-50"
                     >
                       {item.submenu.map(category => (
                         <div key={category.name} className="p-2">
