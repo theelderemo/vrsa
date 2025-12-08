@@ -273,10 +273,14 @@ const AdminPanel = () => {
   const [creatingBotPost, setCreatingBotPost] = useState(false);
   
   // Blog management state
+  const [blogPosts, setBlogPosts] = useState([]);
   const [blogTitle, setBlogTitle] = useState('');
   const [blogSlug, setBlogSlug] = useState('');
   const [blogContent, setBlogContent] = useState('');
+  const [blogExcerpt, setBlogExcerpt] = useState('');
   const [savingBlog, setSavingBlog] = useState(false);
+  const [editingBlog, setEditingBlog] = useState(null);
+  const [loadingBlogs, setLoadingBlogs] = useState(false);
 
   // Check admin authorization
   useEffect(() => {
@@ -308,6 +312,13 @@ const AdminPanel = () => {
     if (notesRes.notes) setDevNotes(notesRes.notes);
     if (commentsRes.comments) setBotComments(commentsRes.comments);
     if (roastsRes.roasts) setBotRoasts(roastsRes.roasts);
+    
+    // Fetch blog posts
+    const { data: blogs } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (blogs) setBlogPosts(blogs);
     
     setLoading(false);
   }, [authorized]);
@@ -367,40 +378,115 @@ const AdminPanel = () => {
     setBlogSlug(slug);
   };
 
-  // Save blog post
+  // Save blog post (create or update)
   const handleSaveBlog = async (e) => {
     e.preventDefault();
     if (!blogTitle || !blogSlug || !blogContent) {
-      alert('Please fill in all fields');
+      alert('Please fill in all required fields');
       return;
     }
 
     setSavingBlog(true);
     try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .insert({
-          title: blogTitle,
-          slug: blogSlug,
-          content: blogContent,
-          is_published: true,
-          author_name: 'Nico "The Shade" Reyes'
-        })
-        .select()
-        .single();
+      if (editingBlog) {
+        // Update existing blog post
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .update({
+            title: blogTitle,
+            slug: blogSlug,
+            content: blogContent,
+            excerpt: blogExcerpt || null,
+          })
+          .eq('id', editingBlog.id)
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      alert('Blog post saved successfully!');
+        setBlogPosts(prev => prev.map(p => p.id === editingBlog.id ? data : p));
+        alert('Blog post updated successfully!');
+      } else {
+        // Create new blog post
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .insert({
+            title: blogTitle,
+            slug: blogSlug,
+            content: blogContent,
+            excerpt: blogExcerpt || null,
+            is_published: true,
+            author_name: 'Nico "The Shade" Reyes'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setBlogPosts(prev => [data, ...prev]);
+        alert('Blog post saved successfully!');
+      }
+      
       // Reset form
-      setBlogTitle('');
-      setBlogSlug('');
-      setBlogContent('');
+      resetBlogForm();
     } catch (error) {
       console.error('Error saving blog post:', error);
       alert('Failed to save blog post: ' + error.message);
     } finally {
       setSavingBlog(false);
+    }
+  };
+
+  const resetBlogForm = () => {
+    setBlogTitle('');
+    setBlogSlug('');
+    setBlogContent('');
+    setBlogExcerpt('');
+    setEditingBlog(null);
+  };
+
+  const handleEditBlog = (post) => {
+    setEditingBlog(post);
+    setBlogTitle(post.title);
+    setBlogSlug(post.slug);
+    setBlogContent(post.content);
+    setBlogExcerpt(post.excerpt || '');
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (!confirm('Are you sure you want to delete this blog post? This cannot be undone.')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setBlogPosts(prev => prev.filter(p => p.id !== id));
+      alert('Blog post deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting blog post:', error);
+      alert('Failed to delete blog post: ' + error.message);
+    }
+  };
+
+  const handleToggleBlogPublished = async (id, currentStatus) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .update({ is_published: !currentStatus })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setBlogPosts(prev => prev.map(p => p.id === id ? data : p));
+    } catch (error) {
+      console.error('Error toggling blog status:', error);
+      alert('Failed to update blog post: ' + error.message);
     }
   };
 
@@ -957,40 +1043,65 @@ const AdminPanel = () => {
         {/* Blog Manager Tab */}
         {activeTab === 'blog' && (
           <div className="space-y-6">
+            {/* Blog Post Form */}
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <FileText className="text-indigo-400" size={24} />
-                <h2 className="text-xl font-semibold text-white">Create Blog Post</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <FileText className="text-indigo-400" size={24} />
+                  <h2 className="text-xl font-semibold text-white">
+                    {editingBlog ? 'Edit Blog Post' : 'Create Blog Post'}
+                  </h2>
+                </div>
+                {editingBlog && (
+                  <Button variant="outline" onClick={resetBlogForm}>
+                    <X size={16} className="mr-2" />
+                    Cancel Edit
+                  </Button>
+                )}
               </div>
               
               <form onSubmit={handleSaveBlog} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={blogTitle}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    placeholder="Enter blog post title..."
-                    required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={blogTitle}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      placeholder="Enter blog post title..."
+                      required
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Slug *
+                    </label>
+                    <input
+                      type="text"
+                      value={blogSlug}
+                      onChange={(e) => setBlogSlug(e.target.value)}
+                      placeholder="blog-post-slug"
+                      required
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Slug *
+                    Excerpt (optional)
                   </label>
-                  <input
-                    type="text"
-                    value={blogSlug}
-                    onChange={(e) => setBlogSlug(e.target.value)}
-                    placeholder="blog-post-slug"
-                    required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                  <textarea
+                    value={blogExcerpt}
+                    onChange={(e) => setBlogExcerpt(e.target.value)}
+                    placeholder="Brief summary for previews..."
+                    rows={2}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Auto-generated from title, but you can edit it</p>
                 </div>
 
                 <div>
@@ -1002,10 +1113,9 @@ const AdminPanel = () => {
                     onChange={(e) => setBlogContent(e.target.value)}
                     placeholder="Paste your markdown content here..."
                     required
-                    rows={20}
+                    rows={15}
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm resize-none"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Paste the Markdown content generated by Nico</p>
                 </div>
 
                 <Button 
@@ -1021,11 +1131,80 @@ const AdminPanel = () => {
                   ) : (
                     <>
                       <Save size={16} className="mr-2" />
-                      Save Blog Post
+                      {editingBlog ? 'Update Blog Post' : 'Save Blog Post'}
                     </>
                   )}
                 </Button>
               </form>
+            </div>
+
+            {/* Blog Posts List */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Database className="text-indigo-400" size={24} />
+                <h2 className="text-xl font-semibold text-white">All Blog Posts ({blogPosts.length})</h2>
+              </div>
+              
+              {blogPosts.length === 0 ? (
+                <p className="text-center py-8 text-slate-400">No blog posts yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {blogPosts.map(post => (
+                    <div 
+                      key={post.id} 
+                      className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-white truncate">{post.title}</h3>
+                            {post.is_published ? (
+                              <span className="px-2 py-0.5 bg-green-600/20 text-green-400 text-xs rounded-full">Published</span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 text-xs rounded-full">Draft</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-500 font-mono mb-2">/blog/{post.slug}</p>
+                          {post.excerpt && (
+                            <p className="text-sm text-slate-400 line-clamp-2">{post.excerpt}</p>
+                          )}
+                          <p className="text-xs text-slate-500 mt-2">
+                            <Calendar size={12} className="inline mr-1" />
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => handleToggleBlogPublished(post.id, post.is_published)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              post.is_published 
+                                ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' 
+                                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                            }`}
+                            title={post.is_published ? 'Unpublish' : 'Publish'}
+                          >
+                            {post.is_published ? <Eye size={16} /> : <EyeOff size={16} />}
+                          </button>
+                          <button
+                            onClick={() => handleEditBlog(post)}
+                            className="p-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBlog(post.id)}
+                            className="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
