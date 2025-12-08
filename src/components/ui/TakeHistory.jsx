@@ -3,17 +3,22 @@
  * Displays "Takes" (user prompt + AI response pairs) with ability to restore
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { 
-  History, 
-  Clock, 
-  ChevronRight, 
-  RotateCcw, 
+import {
+  History,
+  Clock,
+  ChevronRight,
+  RotateCcw,
   Info,
   X,
   Music,
-  Sparkles
+  Sparkles,
+  Copy,
+  Edit3,
+  Check,
+  Download,
+  Flame
 } from 'lucide-react';
 
 /**
@@ -89,8 +94,8 @@ const TakeCard = ({ take, takeNumber, isSelected, onSelect, onRestore, onViewSet
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       className={`rounded-lg border transition-all cursor-pointer ${
-        isSelected 
-          ? 'bg-indigo-600/20 border-indigo-500/50' 
+        isSelected
+          ? 'bg-indigo-600/20 border-indigo-500/50'
           : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'
       }`}
       onClick={() => onSelect(take)}
@@ -121,8 +126,8 @@ const TakeCard = ({ take, takeNumber, isSelected, onSelect, onRestore, onViewSet
           }}
           className="p-1 hover:bg-slate-700 rounded transition-colors"
         >
-          <ChevronRight 
-            size={16} 
+          <ChevronRight
+            size={16}
             className={`text-slate-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
           />
         </button>
@@ -181,6 +186,247 @@ const TakeCard = ({ take, takeNumber, isSelected, onSelect, onRestore, onViewSet
         )}
       </AnimatePresence>
     </motion.div>
+  );
+};
+
+/**
+ * TakeDetailModal - Show full prompt and response for a take
+ */
+const TakeDetailModal = ({ take, isOpen, onClose, onPublishTake }) => {
+  const [promptValue, setPromptValue] = useState('');
+  const [responseValue, setResponseValue] = useState('');
+  const [promptEditable, setPromptEditable] = useState(false);
+  const [responseEditable, setResponseEditable] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
+  const [exportFormat, setExportFormat] = useState('pdf');
+
+  useEffect(() => {
+    if (take) {
+      setPromptValue(take.prompt || '');
+      setResponseValue(take.response || '');
+    }
+    setPromptEditable(false);
+    setResponseEditable(false);
+    setCopiedField(null);
+    setExportFormat('pdf');
+  }, [take]);
+
+  if (!isOpen || !take) return null;
+
+  const handleCopy = async (text, field) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch (error) {
+      console.error('Failed to copy text', error);
+    }
+  };
+
+  const handleClose = () => {
+    setPromptValue(take.prompt || '');
+    setResponseValue(take.response || '');
+    setPromptEditable(false);
+    setResponseEditable(false);
+    setCopiedField(null);
+    onClose();
+  };
+
+  const downloadFile = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = () => {
+    if (!take) return;
+
+    const takeLabel = `take-${take.takeNumber ?? take.id + 1}`;
+    const exportPayload = {
+      id: take.id,
+      takeNumber: take.takeNumber ?? take.id + 1,
+      prompt: promptValue,
+      response: responseValue,
+      promptTimestamp: take.promptTimestamp,
+      responseTimestamp: take.responseTimestamp,
+      settings: take.settings || null
+    };
+
+    if (exportFormat === 'json') {
+      downloadFile(
+        JSON.stringify(exportPayload, null, 2),
+        `${takeLabel}.json`,
+        'application/json'
+      );
+      return;
+    }
+
+    const textContent = `Take ${exportPayload.takeNumber}\n\nPrompt:\n${exportPayload.prompt || ''}\n\nResponse:\n${exportPayload.response || ''}`;
+
+    if (exportFormat === 'txt') {
+      downloadFile(textContent, `${takeLabel}.txt`, 'text/plain');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${takeLabel}</title></head><body><pre style="white-space: pre-wrap; font-family: Inter, sans-serif;">${textContent}</pre></body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <div
+          className="absolute inset-0 bg-black/60"
+          onClick={handleClose}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl"
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
+            <div className="flex items-center gap-2">
+              <History size={18} className="text-indigo-400" />
+              <div>
+                <p className="text-white font-semibold">Take {take.takeNumber ?? take.id + 1}</p>
+                <p className="text-xs text-slate-500">Full prompt and response</p>
+              </div>
+            </div>
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-200">Prompt</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(promptValue, 'prompt')}
+                    className="flex items-center gap-1 px-2 py-1 bg-slate-800/80 border border-slate-700 rounded text-slate-300 text-xs hover:bg-slate-800"
+                    type="button"
+                  >
+                    {copiedField === 'prompt' ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                    {copiedField === 'prompt' ? 'Copied' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={() => setPromptEditable(!promptEditable)}
+                    className="flex items-center gap-1 px-2 py-1 bg-indigo-600/20 border border-indigo-500/50 rounded text-indigo-300 text-xs hover:bg-indigo-600/30"
+                    type="button"
+                  >
+                    <Edit3 size={14} />
+                    {promptEditable ? 'Done' : 'Edit'}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                value={promptValue}
+                onChange={(e) => setPromptValue(e.target.value)}
+                readOnly={!promptEditable}
+                className={`w-full rounded-lg border bg-slate-800/60 text-slate-200 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                  promptEditable ? 'border-slate-600' : 'border-slate-700 cursor-not-allowed'
+                }`}
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-200">Response</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(responseValue, 'response')}
+                    className="flex items-center gap-1 px-2 py-1 bg-slate-800/80 border border-slate-700 rounded text-slate-300 text-xs hover:bg-slate-800"
+                    type="button"
+                  >
+                    {copiedField === 'response' ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                    {copiedField === 'response' ? 'Copied' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={() => setResponseEditable(!responseEditable)}
+                    className="flex items-center gap-1 px-2 py-1 bg-indigo-600/20 border border-indigo-500/50 rounded text-indigo-300 text-xs hover:bg-indigo-600/30"
+                    type="button"
+                  >
+                    <Edit3 size={14} />
+                    {responseEditable ? 'Done' : 'Edit'}
+                  </button>
+                </div>
+              </div>
+              <textarea
+                value={responseValue}
+                onChange={(e) => setResponseValue(e.target.value)}
+                readOnly={!responseEditable}
+                className={`w-full rounded-lg border bg-slate-800/60 text-slate-200 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition ${
+                  responseEditable ? 'border-slate-600' : 'border-slate-700 cursor-not-allowed'
+                }`}
+                rows={8}
+              />
+            </div>
+
+            <div className="pt-2 border-t border-slate-700/50 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-400">Export as</label>
+                  <select
+                    value={exportFormat}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="pdf">PDF</option>
+                    <option value="txt">Text</option>
+                    <option value="json">JSON</option>
+                  </select>
+                </div>
+                <button
+                  onClick={handleExport}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-800 transition-colors"
+                  type="button"
+                >
+                  <Download size={14} />
+                  Export Take
+                </button>
+              </div>
+
+              <button
+                onClick={() => onPublishTake?.({ ...take, prompt: promptValue, response: responseValue })}
+                disabled={!responseValue}
+                className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${
+                  responseValue
+                    ? 'bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white hover:from-orange-500 hover:to-red-600'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}
+                type="button"
+              >
+                <Flame size={16} />
+                Publish This Take
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -275,15 +521,31 @@ const SettingsModal = ({ take, isOpen, onClose }) => {
 /**
  * Main TakeHistory Component
  */
-const TakeHistory = ({ 
-  messages, 
-  isOpen, 
-  onClose, 
+const TakeHistory = ({
+  messages,
+  isOpen,
+  onClose,
   onRestoreTake,
-  className = '' 
+  onPublishTake,
+  className = ''
 }) => {
   const [selectedTake, setSelectedTake] = useState(null);
   const [settingsTake, setSettingsTake] = useState(null);
+
+  const openTakeModal = (take) => {
+    setSelectedTake(take);
+  };
+
+  const closeTakeModal = () => {
+    setSelectedTake(null);
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedTake(null);
+      setSettingsTake(null);
+    }
+  }, [isOpen]);
 
   // Parse messages into takes
   const takes = useMemo(() => parseTakes(messages), [messages]);
@@ -331,17 +593,23 @@ const TakeHistory = ({
               </p>
             </div>
           ) : (
-            takes.map((take, index) => (
-              <TakeCard
-                key={take.id}
-                take={take}
-                takeNumber={index + 1}
-                isSelected={selectedTake?.id === take.id}
-                onSelect={setSelectedTake}
-                onRestore={handleRestore}
-                onViewSettings={setSettingsTake}
-              />
-            )).reverse()
+            takes
+              .map((take, index) => {
+                const numberedTake = { ...take, takeNumber: index + 1 };
+
+                return (
+                  <TakeCard
+                    key={numberedTake.id}
+                    take={numberedTake}
+                    takeNumber={numberedTake.takeNumber}
+                    isSelected={selectedTake?.id === numberedTake.id}
+                    onSelect={() => openTakeModal(numberedTake)}
+                    onRestore={handleRestore}
+                    onViewSettings={setSettingsTake}
+                  />
+                );
+              })
+              .reverse()
           )}
         </div>
 
@@ -357,6 +625,14 @@ const TakeHistory = ({
           take={settingsTake}
           isOpen={!!settingsTake}
           onClose={() => setSettingsTake(null)}
+        />
+
+        {/* Take Detail Modal */}
+        <TakeDetailModal
+          take={selectedTake}
+          isOpen={!!selectedTake}
+          onClose={closeTakeModal}
+          onPublishTake={onPublishTake}
         />
       </motion.div>
     </AnimatePresence>
