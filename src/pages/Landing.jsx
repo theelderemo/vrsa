@@ -458,6 +458,11 @@ const Landing = () => {
                     Guide
                   </Link>
                 </li>
+                <li>
+                  <a href="https://suno.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Suno
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -482,6 +487,7 @@ const Landing = () => {
           {/* Copyright */}
           <div className="text-center text-slate-500 text-sm border-t border-slate-800/50 pt-8">
             <p>&copy; 2025 VRS/A. All rights reserved.</p>
+            <p className="mt-2">VRS/A is an independent platform not affiliated with Suno or other mentioned brands.</p>
           </div>
         </div>
       </footer>
