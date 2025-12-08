@@ -267,6 +267,7 @@ const AdminPanel = () => {
   // Bot management state
   const [botComments, setBotComments] = useState([]);
   const [botRoasts, setBotRoasts] = useState([]);
+  const [botPosts, setBotPosts] = useState([]);
   const [editingBotComment, setEditingBotComment] = useState(null);
   const [editingBotRoast, setEditingBotRoast] = useState(null);
   const [showCreateBotPost, setShowCreateBotPost] = useState(false);
@@ -325,6 +326,15 @@ const AdminPanel = () => {
       .select('*')
       .order('created_at', { ascending: false });
     if (blogs) setBlogPosts(blogs);
+
+    // Fetch bot posts
+    const { data: botPostsData } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('is_bot_post', true)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (botPostsData) setBotPosts(botPostsData);
     
     setLoading(false);
   }, [authorized]);
@@ -579,6 +589,7 @@ const AdminPanel = () => {
       const content = await generateBotPost(botPostPrompt);
       const { post, error } = await createBotPost(content, 'public');
       if (!error && post) {
+        setBotPosts(prev => [post, ...prev]);
         alert('Bot post created successfully!');
         setBotPostPrompt('');
         setShowCreateBotPost(false);
@@ -588,6 +599,22 @@ const AdminPanel = () => {
       alert('Failed to create bot post');
     } finally {
       setCreatingBotPost(false);
+    }
+  };
+
+  const handleDeleteBotPost = async (postId) => {
+    if (!confirm('Delete this bot post?')) return;
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId);
+      
+      if (error) throw error;
+      setBotPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error('Error deleting bot post:', error);
+      alert('Failed to delete bot post: ' + error.message);
     }
   };
 
@@ -1018,6 +1045,41 @@ const AdminPanel = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Bot Posts Section */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Bot size={20} className="text-yellow-400" />
+                Bot Posts ({botPosts.length})
+              </h3>
+              
+              <div className="space-y-3">
+                {botPosts.map(post => (
+                  <div key={post.id} className="bg-slate-900/50 rounded-lg p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="text-sm text-slate-300 mb-2">{post.content}</p>
+                        <div className="flex items-center gap-4 text-xs text-slate-500">
+                          <span>{formatDate(post.created_at)}</span>
+                          <span>❤️ {post.like_count || 0}</span>
+                          <span>💬 {post.comment_count || 0}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteBotPost(post.id)}
+                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-600/20 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                {botPosts.length === 0 && (
+                  <p className="text-center py-8 text-slate-400">No bot posts yet</p>
+                )}
+              </div>
             </div>
 
             {/* Bot Comments Section */}
