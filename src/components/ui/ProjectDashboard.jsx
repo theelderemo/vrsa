@@ -536,7 +536,7 @@ const ProjectDashboard = ({ onSelectProject, initialViewMode = 'grid' }) => {
     if (onSelectProject) {
       onSelectProject(projectId);
     } else {
-      navigate('/ghostwriter');
+      navigate(`/projects/${projectId}`);
     }
   };
 
