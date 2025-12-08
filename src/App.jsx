@@ -40,6 +40,8 @@ import Feed from './pages/Feed';
 import Projects from './pages/Projects';
 import AdminPanel from './pages/AdminPanel';
 import AuthComponent from './Auth';
+import BlogIndex from './pages/blog';
+import BlogPost from './pages/blog/BlogPost';
 
 const App = () => {
   // NOTE: currentPage state is gone!
@@ -75,6 +77,8 @@ const App = () => {
           <Route path="/u/:username" element={<PublicProfile />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<AuthComponent />} />
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
         </Route>
       </Routes>
     </AppProviders>

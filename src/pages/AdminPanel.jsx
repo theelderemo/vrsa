@@ -33,10 +33,12 @@ import {
   MessageSquare,
   Database,
   Bot,
-  Send
+  Send,
+  FileText
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { Button } from '../components/ui/Button';
+import { supabase } from '../lib/supabase';
 import {
   ADMIN_EMAIL,
   getAppStats,
@@ -269,6 +271,12 @@ const AdminPanel = () => {
   const [showCreateBotPost, setShowCreateBotPost] = useState(false);
   const [botPostPrompt, setBotPostPrompt] = useState('');
   const [creatingBotPost, setCreatingBotPost] = useState(false);
+  
+  // Blog management state
+  const [blogTitle, setBlogTitle] = useState('');
+  const [blogSlug, setBlogSlug] = useState('');
+  const [blogContent, setBlogContent] = useState('');
+  const [savingBlog, setSavingBlog] = useState(false);
 
   // Check admin authorization
   useEffect(() => {
@@ -343,6 +351,56 @@ const AdminPanel = () => {
     const { note, error } = await toggleDevNoteActive(id, !currentActive);
     if (!error && note) {
       setDevNotes(prev => prev.map(n => n.id === note.id ? note : n));
+    }
+  };
+
+  // Auto-generate slug from title
+  const handleTitleChange = (title) => {
+    setBlogTitle(title);
+    // Auto-generate slug: lowercase, replace spaces with hyphens, remove special chars
+    const slug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    setBlogSlug(slug);
+  };
+
+  // Save blog post
+  const handleSaveBlog = async (e) => {
+    e.preventDefault();
+    if (!blogTitle || !blogSlug || !blogContent) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    setSavingBlog(true);
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .insert({
+          title: blogTitle,
+          slug: blogSlug,
+          content: blogContent,
+          is_published: true,
+          author_name: 'Nico "The Shade" Reyes'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      alert('Blog post saved successfully!');
+      // Reset form
+      setBlogTitle('');
+      setBlogSlug('');
+      setBlogContent('');
+    } catch (error) {
+      console.error('Error saving blog post:', error);
+      alert('Failed to save blog post: ' + error.message);
+    } finally {
+      setSavingBlog(false);
     }
   };
 
@@ -468,6 +526,7 @@ const AdminPanel = () => {
             { id: 'notifications', label: 'Notifications', icon: Bell },
             { id: 'users', label: 'Users', icon: Users },
             { id: 'bot', label: 'Bot Management', icon: Bot },
+            { id: 'blog', label: 'Blog Manager', icon: FileText },
           ].map(tab => (
             <button
               key={tab.id}
@@ -891,6 +950,82 @@ const AdminPanel = () => {
                   <p className="text-center py-8 text-slate-400">No bot roasts yet</p>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Blog Manager Tab */}
+        {activeTab === 'blog' && (
+          <div className="space-y-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <FileText className="text-indigo-400" size={24} />
+                <h2 className="text-xl font-semibold text-white">Create Blog Post</h2>
+              </div>
+              
+              <form onSubmit={handleSaveBlog} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={blogTitle}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Enter blog post title..."
+                    required
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Slug *
+                  </label>
+                  <input
+                    type="text"
+                    value={blogSlug}
+                    onChange={(e) => setBlogSlug(e.target.value)}
+                    placeholder="blog-post-slug"
+                    required
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Auto-generated from title, but you can edit it</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Content (Markdown) *
+                  </label>
+                  <textarea
+                    value={blogContent}
+                    onChange={(e) => setBlogContent(e.target.value)}
+                    placeholder="Paste your markdown content here..."
+                    required
+                    rows={20}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm resize-none"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Paste the Markdown content generated by Nico</p>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={savingBlog}
+                  className="w-full"
+                >
+                  {savingBlog ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      Save Blog Post
+                    </>
+                  )}
+                </Button>
+              </form>
             </div>
           </div>
         )}

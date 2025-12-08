@@ -24,12 +24,15 @@
 
 import React from 'react';
 import { UserProvider } from '../UserProvider';
+import { HelmetProvider } from 'react-helmet-async';
 
 const AppProviders = ({ children }) => {
   return (
-    <UserProvider>
-      {children}
-    </UserProvider>
+    <HelmetProvider>
+      <UserProvider>
+        {children}
+      </UserProvider>
+    </HelmetProvider>
   );
 };
 
