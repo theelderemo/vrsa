@@ -27,7 +27,20 @@ export const PillBase = () => {
   // Navigation items matching the app structure
   const baseNavItems = [
     { label: 'Home', id: 'home', path: '/' },
-    { label: 'Ghostwriter', id: 'ghostwriter', path: '/ghostwriter' },
+    {
+      label: 'Ghostwriter',
+      id: 'ghostwriter',
+      path: '/ghostwriter',
+      submenu: [
+        {
+          name: 'Workflows',
+          items: [
+            { name: 'Chat', path: '/ghostwriter' },
+            { name: 'Notion-Style Canvas', path: '/ghostwriter/notion-canvas' }
+          ]
+        }
+      ]
+    },
     { label: 'Feed', id: 'feed', path: '/feed' },
     { 
       label: 'Tools', 
@@ -77,7 +90,11 @@ export const PillBase = () => {
   // Get active section from current path
   const getActiveSection = () => {
     const path = location.pathname;
-    
+
+    if (path === '/ghostwriter' || path.startsWith('/ghostwriter/')) {
+      return 'ghostwriter';
+    }
+
     // Handle tool-related paths
     if (path === '/analyzer' || path === '/writing-tools' || path.startsWith('/writing-tools') || path === '/audio-tools' || path.startsWith('/audio-tools') || path === '/albumart' || path.startsWith('/albumart')) {
       return 'tools';

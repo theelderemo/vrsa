@@ -39,7 +39,19 @@ const Header = () => {
   const isAdmin = user?.email === ADMIN_EMAIL;
   
   const navItems = [
-    { name: 'Ghostwriter', path: '/ghostwriter' },
+    {
+      name: 'Ghostwriter',
+      path: '/ghostwriter',
+      submenu: [
+        {
+          name: 'Workflows',
+          items: [
+            { name: 'Chat', path: '/ghostwriter' },
+            { name: 'Notion-Style Canvas', path: '/ghostwriter/notion-canvas' }
+          ]
+        }
+      ]
+    },
     { name: 'Feed', path: '/feed' },
     { 
       name: 'Tools', 

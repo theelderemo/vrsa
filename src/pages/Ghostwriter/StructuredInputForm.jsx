@@ -103,7 +103,7 @@ const StructuredInputForm = ({
       
       {/* Header with close button on mobile */}
       <div className="flex items-center justify-between gap-2 p-3 md:p-4 shrink-0 border-b border-slate-700/30">
-        <h2 className="text-base sm:text-lg md:text-xl font-bold text-indigo-400 truncate min-w-0">Structured Input</h2>
+        <h2 className="text-base sm:text-lg md:text-xl font-bold text-indigo-400 truncate min-w-0">Chat</h2>
         {/* Mobile close button - ALWAYS VISIBLE ON MOBILE */}
         {onCloseMobile && (
           <button
