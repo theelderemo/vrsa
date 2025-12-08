@@ -3,17 +3,51 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoaderCircle, Music, Upload, AlertCircle, Check, ExternalLink, Server } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 
-const API_URL = import.meta.env.VITE_AUDIO_ENGINE_URL || "https://reporting-wrist-finished-shaft.trycloudflare.com"; 
+const API_URL = import.meta.env.VITE_AUDIO_ENGINE_URL || "https://audio.vrsa.app"; 
 
 const AudioAnalyzer = () => {
   const { user, loading: userLoading } = useUser();
   const [analysis, setAnalysis] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [engineStatus, setEngineStatus] = useState({ online: false, checking: true });
+
+  // Check engine status on component mount
+  useEffect(() => {
+    const checkEngineStatus = async () => {
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        
+        const response = await fetch(`${supabaseUrl}/functions/v1/audio-engine-status`, {
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'apikey': supabaseAnonKey
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setEngineStatus({ online: data.online, checking: false });
+        } else {
+          setEngineStatus({ online: false, checking: false });
+        }
+      } catch (err) {
+        console.error('Failed to check engine status:', err);
+        setEngineStatus({ online: false, checking: false });
+      }
+    };
+
+    checkEngineStatus();
+    
+    // Check status every 30 seconds
+    const interval = setInterval(checkEngineStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -117,8 +151,22 @@ const AudioAnalyzer = () => {
                 <span className="text-sm text-slate-300">Audio Engine Status:</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-slate-400">{API_URL}</span>
+                {engineStatus.checking ? (
+                  <>
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-slate-400">Checking...</span>
+                  </>
+                ) : engineStatus.online ? (
+                  <>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-400">Online</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-xs text-red-400">Offline</span>
+                  </>
+                )}
               </div>
             </div>
 
