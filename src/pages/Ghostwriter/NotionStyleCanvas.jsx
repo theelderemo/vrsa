@@ -9,23 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import { Command, LoaderCircle, Lock, Send, Sparkles, Wand2, Waypoints } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 
-const defaultCanvasText = `Rich text editor (title area)
-
-Lyrics, brainstorming, or whatever they want would go here
-
-Users can use commands ('/') such as:
-
-Translate to
-Continue writing
-Ask a question
-Ask about this page
-Make shorter
-See more`;
-
 const NotionStyleCanvas = () => {
   const { user, profile, loading } = useUser();
   const navigate = useNavigate();
-  const [editorContent, setEditorContent] = useState(defaultCanvasText);
+  const [editorContent, setEditorContent] = useState('');
   const [selectedText, setSelectedText] = useState('');
   const [chatMessages, setChatMessages] = useState([
     {
@@ -37,6 +24,8 @@ const NotionStyleCanvas = () => {
   const [chatInput, setChatInput] = useState('');
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+  const [agentInstructions, setAgentInstructions] = useState('');
   const editorRef = useRef(null);
 
   const isPro = profile?.is_pro === 'true';
@@ -82,6 +71,16 @@ const NotionStyleCanvas = () => {
     if (!selection) return;
     const text = selection.toString();
     setSelectedText(text.trim());
+  };
+
+  const contentBeforeCaret = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || !editorRef.current) return '';
+
+    const range = selection.getRangeAt(0).cloneRange();
+    range.selectNodeContents(editorRef.current);
+    range.setEnd(selection.focusNode, selection.focusOffset);
+    return range.toString();
   };
 
   const handleChatSubmit = (event) => {
@@ -132,10 +131,11 @@ const NotionStyleCanvas = () => {
     const text = e.currentTarget.innerText;
     setEditorContent(text);
 
-    const lastSlashIndex = text.lastIndexOf('/');
-    if (lastSlashIndex !== -1) {
-      const query = text.slice(lastSlashIndex + 1, text.length).trim();
-      setSlashQuery(query);
+    const beforeCaret = contentBeforeCaret();
+    const lastWord = beforeCaret.split(/\s/).pop() || '';
+
+    if (lastWord.startsWith('/')) {
+      setSlashQuery(lastWord.slice(1));
       setShowSlashMenu(true);
     } else {
       setShowSlashMenu(false);
@@ -205,23 +205,16 @@ const NotionStyleCanvas = () => {
           </form>
 
           <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-3">
-            <h3 className="text-sm font-semibold text-indigo-200">Personalize your Agent’s instructions and memory</h3>
+            <h3 className="text-sm font-semibold text-indigo-200">Agent instructions</h3>
             <p className="text-slate-400 text-sm mt-1">
-              Save style notes, references, and rules so the agent writes like a teammate who remembers your preferences over time.
+              Keep personal notes, voice rules, and references in one place.
             </p>
             <button
               type="button"
               className="mt-3 w-full px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm font-semibold text-white transition-colors"
-              onClick={() => setChatMessages((prev) => [
-                ...prev,
-                {
-                  role: 'assistant',
-                  content:
-                    'Memory updated. Your agent will prioritize the latest instructions and keep them sticky for this canvas.',
-                },
-              ])}
+              onClick={() => setShowInstructionsModal(true)}
             >
-              Save instructions to memory
+              Open instructions
             </button>
           </div>
         </aside>
@@ -265,81 +258,58 @@ const NotionStyleCanvas = () => {
           </div>
 
           <div className="relative bg-slate-950/80 border border-slate-800 rounded-xl shadow-inner">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-slate-300">
-                <div className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-                <span className="text-sm font-semibold">Rich text editor (title area)</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span>Edited just now</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">Private</span>
-              </div>
-            </div>
-
             <div className="p-5 space-y-6">
-              <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                onInput={handleContentChange}
-                onKeyUp={syncSelection}
-                onMouseUp={syncSelection}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setShowSlashMenu(false);
-                  }
-                }}
-                className="min-h-[520px] rounded-xl bg-slate-900/60 p-5 text-base text-slate-100 leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {editorContent}
-              </div>
+              <div className="relative">
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={handleContentChange}
+                  onKeyUp={syncSelection}
+                  onMouseUp={syncSelection}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setShowSlashMenu(false);
+                    }
+                  }}
+                  className="min-h-[520px] rounded-xl bg-slate-900/60 p-5 text-base text-slate-100 leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
 
-              {showSlashMenu && (
-                <div className="absolute left-5 bottom-6 z-10 w-72 rounded-xl bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
-                  <div className="px-4 py-3 border-b border-slate-700">
-                    <p className="text-xs uppercase tracking-wide text-slate-400">Commands</p>
-                    <p className="text-sm text-white font-semibold mt-1">AI</p>
-                    <p className="text-xs text-slate-400">Type "/" for quick actions</p>
+                {!editorContent && (
+                  <div className="pointer-events-none absolute left-5 top-5 text-slate-500 text-base">
+                    Start writing. Use "/" to open AI commands.
                   </div>
-                  <ul className="max-h-64 overflow-y-auto">
-                    {slashCommands
-                      .filter((command) => command.toLowerCase().includes(slashQuery.toLowerCase()))
-                      .map((command) => (
-                        <li key={command}>
-                          <button
-                            type="button"
-                            onClick={() => handleAiAction(command)}
-                            className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm ${
-                              isPro
-                                ? 'text-slate-100 hover:bg-slate-700/70'
-                                : 'text-slate-500 cursor-not-allowed'
-                            }`}
-                          >
-                            <span>{command}</span>
-                            <span className="text-xs text-slate-400">AI action</span>
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+                )}
 
-            <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-800">
-              <div className="flex gap-2 overflow-x-auto">
-                {['Heading', 'Paragraph', 'Checklist', 'Quote'].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-200 border border-slate-700"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-              <div className="ml-auto flex items-center gap-3">
-                <span className="text-xs text-slate-400">Type or use "/" to open commands</span>
+                {showSlashMenu && (
+                  <div className="absolute left-5 top-[20%] z-10 w-72 rounded-xl bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-slate-700">
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Commands</p>
+                      <p className="text-sm text-white font-semibold mt-1">AI</p>
+                      <p className="text-xs text-slate-400">Type "/" for quick actions</p>
+                    </div>
+                    <ul className="max-h-64 overflow-y-auto">
+                      {slashCommands
+                        .filter((command) => command.toLowerCase().includes(slashQuery.toLowerCase()))
+                        .map((command) => (
+                          <li key={command}>
+                            <button
+                              type="button"
+                              onClick={() => handleAiAction(command)}
+                              className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm ${
+                                isPro
+                                  ? 'text-slate-100 hover:bg-slate-700/70'
+                                  : 'text-slate-500 cursor-not-allowed'
+                              }`}
+                            >
+                              <span>{command}</span>
+                              <span className="text-xs text-slate-400">AI action</span>
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -413,6 +383,63 @@ const NotionStyleCanvas = () => {
           </div>
         </section>
       </div>
+
+      {showInstructionsModal && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-950/80 px-4">
+          <div className="w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-indigo-300 font-semibold">Agent memory</p>
+                <h2 className="text-lg font-semibold text-white">Personalize instructions</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInstructionsModal(false)}
+                className="text-slate-400 hover:text-white"
+                aria-label="Close instructions"
+              >
+                ✕
+              </button>
+            </div>
+
+            <textarea
+              value={agentInstructions}
+              onChange={(e) => setAgentInstructions(e.target.value)}
+              rows={6}
+              className="w-full rounded-xl bg-slate-800 border border-slate-700 text-sm text-white p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Describe your tone, references, or rules."
+            />
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg border border-slate-700 text-sm text-slate-200 hover:bg-slate-800"
+                onClick={() => setShowInstructionsModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold text-white"
+                onClick={() => {
+                  setShowInstructionsModal(false);
+                  if (agentInstructions.trim()) {
+                    setChatMessages((prev) => [
+                      ...prev,
+                      {
+                        role: 'assistant',
+                        content: 'Instructions saved. I will keep them in mind while editing your canvas.',
+                      },
+                    ]);
+                  }
+                }}
+              >
+                Save instructions
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
