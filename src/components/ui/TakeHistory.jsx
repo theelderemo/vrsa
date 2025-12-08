@@ -16,7 +16,9 @@ import {
   Sparkles,
   Copy,
   Edit3,
-  Check
+  Check,
+  Download,
+  Flame
 } from 'lucide-react';
 
 /**
@@ -190,12 +192,13 @@ const TakeCard = ({ take, takeNumber, isSelected, onSelect, onRestore, onViewSet
 /**
  * TakeDetailModal - Show full prompt and response for a take
  */
-const TakeDetailModal = ({ take, isOpen, onClose }) => {
+const TakeDetailModal = ({ take, isOpen, onClose, onPublishTake }) => {
   const [promptValue, setPromptValue] = useState('');
   const [responseValue, setResponseValue] = useState('');
   const [promptEditable, setPromptEditable] = useState(false);
   const [responseEditable, setResponseEditable] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const [exportFormat, setExportFormat] = useState('pdf');
 
   useEffect(() => {
     if (take) {
@@ -205,6 +208,7 @@ const TakeDetailModal = ({ take, isOpen, onClose }) => {
     setPromptEditable(false);
     setResponseEditable(false);
     setCopiedField(null);
+    setExportFormat('pdf');
   }, [take]);
 
   if (!isOpen || !take) return null;
@@ -227,6 +231,55 @@ const TakeDetailModal = ({ take, isOpen, onClose }) => {
     setResponseEditable(false);
     setCopiedField(null);
     onClose();
+  };
+
+  const downloadFile = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = () => {
+    if (!take) return;
+
+    const takeLabel = `take-${take.takeNumber ?? take.id + 1}`;
+    const exportPayload = {
+      id: take.id,
+      takeNumber: take.takeNumber ?? take.id + 1,
+      prompt: promptValue,
+      response: responseValue,
+      promptTimestamp: take.promptTimestamp,
+      responseTimestamp: take.responseTimestamp,
+      settings: take.settings || null
+    };
+
+    if (exportFormat === 'json') {
+      downloadFile(
+        JSON.stringify(exportPayload, null, 2),
+        `${takeLabel}.json`,
+        'application/json'
+      );
+      return;
+    }
+
+    const textContent = `Take ${exportPayload.takeNumber}\n\nPrompt:\n${exportPayload.prompt || ''}\n\nResponse:\n${exportPayload.response || ''}`;
+
+    if (exportFormat === 'txt') {
+      downloadFile(textContent, `${takeLabel}.txt`, 'text/plain');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${takeLabel}</title></head><body><pre style="white-space: pre-wrap; font-family: Inter, sans-serif;">${textContent}</pre></body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   return (
@@ -331,6 +384,45 @@ const TakeDetailModal = ({ take, isOpen, onClose }) => {
                 rows={8}
               />
             </div>
+
+            <div className="pt-2 border-t border-slate-700/50 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-400">Export as</label>
+                  <select
+                    value={exportFormat}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="pdf">PDF</option>
+                    <option value="txt">Text</option>
+                    <option value="json">JSON</option>
+                  </select>
+                </div>
+                <button
+                  onClick={handleExport}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-800 transition-colors"
+                  type="button"
+                >
+                  <Download size={14} />
+                  Export Take
+                </button>
+              </div>
+
+              <button
+                onClick={() => onPublishTake?.({ ...take, prompt: promptValue, response: responseValue })}
+                disabled={!responseValue}
+                className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${
+                  responseValue
+                    ? 'bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white hover:from-orange-500 hover:to-red-600'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                }`}
+                type="button"
+              >
+                <Flame size={16} />
+                Publish This Take
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -429,11 +521,12 @@ const SettingsModal = ({ take, isOpen, onClose }) => {
 /**
  * Main TakeHistory Component
  */
-const TakeHistory = ({ 
-  messages, 
-  isOpen, 
-  onClose, 
+const TakeHistory = ({
+  messages,
+  isOpen,
+  onClose,
   onRestoreTake,
+  onPublishTake,
   className = ''
 }) => {
   const [selectedTake, setSelectedTake] = useState(null);
@@ -539,6 +632,7 @@ const TakeHistory = ({
           take={selectedTake}
           isOpen={!!selectedTake}
           onClose={closeTakeModal}
+          onPublishTake={onPublishTake}
         />
       </motion.div>
     </AnimatePresence>

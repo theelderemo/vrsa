@@ -118,13 +118,14 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   
   // Inline editing state
   const [editingLine, setEditingLine] = useState(null); // { messageIndex, lineNumber, originalText }
-  
+
   // Privacy modal state
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   // Publish modal state
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishMessages, setPublishMessages] = useState(messages);
   
   // Take history sidebar state
   const [showTakeHistory, setShowTakeHistory] = useState(false);
@@ -133,6 +134,12 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const [userSessions, setUserSessions] = useState([]);
   const [currentSessionName, setCurrentSessionName] = useState('');
   const settingsDebounceRef = useRef(null);
+
+  useEffect(() => {
+    if (!showPublishModal) {
+      setPublishMessages(messages);
+    }
+  }, [messages, showPublishModal]);
 
   // Helper to get current settings as an object
   const getCurrentSettings = useCallback(() => ({
@@ -726,6 +733,23 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
     }
   };
 
+  const handlePublishTake = (take) => {
+    if (!take) return;
+
+    const takeMessages = [];
+    if (take.prompt) {
+      takeMessages.push({ role: 'user', content: take.prompt });
+    }
+    if (take.response) {
+      takeMessages.push({ role: 'assistant', content: take.response });
+    }
+
+    if (takeMessages.length === 0) return;
+
+    setPublishMessages(takeMessages);
+    setShowPublishModal(true);
+  };
+
   const sendMessage = async () => {
     if (ctaMessage) {
       setCtaMessage('');
@@ -933,7 +957,6 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           onDeleteAllHistory={() => setShowDeleteConfirm(true)}
           onShowPrivacy={() => setShowPrivacyModal(true)}
           onExportConversation={handleExportConversation}
-          onPublishTrack={() => setShowPublishModal(true)}
           onShowTakeHistory={() => setShowTakeHistory(true)}
           onReset={resetForm}
           onCloseMobile={() => setSidebarOpen(false)}
@@ -1058,7 +1081,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
       <PublishModal
         isOpen={showPublishModal}
         onClose={() => setShowPublishModal(false)}
-        messages={messages}
+        messages={publishMessages}
         sessionId={sessionId}
         userId={user?.id}
         settings={getCurrentSettings()}
@@ -1077,6 +1100,7 @@ Output ONLY the 3 alternative lines, one per line, with no numbering, explanatio
           // Could implement restore functionality here
           console.log('Restore take:', take);
         }}
+        onPublishTake={handlePublishTake}
       />
     </div>
   );
