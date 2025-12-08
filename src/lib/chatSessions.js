@@ -42,7 +42,6 @@ export async function createChatSession(userId, memoryEnabled = false, contextWi
       name: initialSettings?.name || `Project ${new Date().toLocaleDateString()}`
     };
     
-    // Add settings if provided
     if (initialSettings) {
       insertData.settings = initialSettings;
     }
@@ -118,14 +117,11 @@ export async function updateMemorySetting(sessionId, memoryEnabled) {
  */
 export async function appendMessage(sessionId, message, contextWindow = 10) {
   try {
-    // Get current session
     const { session, error: getError } = await getChatSession(sessionId);
     if (getError) throw getError;
 
-    // Append new message
     let messages = [...session.messages, message];
     
-    // Trim to context window
     if (messages.length > contextWindow) {
       const systemMessages = messages.filter(m => m.role === 'system');
       const nonSystemMessages = messages.filter(m => m.role !== 'system');
@@ -133,7 +129,6 @@ export async function appendMessage(sessionId, message, contextWindow = 10) {
       messages = [...systemMessages, ...recentMessages];
     }
 
-    // Update session with new messages
     const { error: updateError } = await supabase
       .from('chat_sessions')
       .update({ 
@@ -162,7 +157,6 @@ export async function getMessages(sessionId) {
     const { session, error } = await getChatSession(sessionId);
     if (error) throw error;
 
-    // Only return messages if memory is enabled
     if (!session.memory_enabled) {
       return { messages: [], error: null };
     }
@@ -249,7 +243,6 @@ export async function deleteAllUserSessions(userId) {
  */
 export async function startFreshSession(userId, memoryEnabled = false) {
   try {
-    // Create a brand new session
     const { id, error } = await createChatSession(userId, memoryEnabled);
     if (error) throw error;
     
@@ -278,12 +271,10 @@ export async function getOrCreateSession(userId) {
 
     if (error) throw error;
 
-    // If a valid session exists, return it
     if (data && data.length > 0) {
       return { sessionId: data[0].id, error: null };
     }
 
-    // Otherwise, create a new session
     const { id: newSessionId, error: createError } = await createChatSession(userId);
     if (createError) throw createError;
 

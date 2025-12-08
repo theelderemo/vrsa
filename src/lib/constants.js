@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 
-// Model options
 export const MODEL_OPTIONS = [
   { id: 'gpt-4o', name: 'gpt-4o', premium: false },
   { id: 'gpt-4o-mini', name: 'gpt-4o-mini', premium: false},
@@ -40,12 +39,10 @@ export const MODEL_OPTIONS = [
   { id: 'model-router', name: 'Model Router', premium: true }
 ];
 
-// Image generator options
 export const IMAGE_GENERATOR_OPTIONS = [
   { id: 'FLUX-1.1-pro', name: 'Flux 1.1', premium: true }
 ];
 
-// Rhyme scheme options organized by category
 export const rhymePlacementOptions = [
   "End rhyme",
   "Internal rhyme",

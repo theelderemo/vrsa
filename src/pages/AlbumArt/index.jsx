@@ -40,7 +40,6 @@ const AlbumArt = () => {
   const [error, setError] = useState(null);
   const [selectedModel, setSelectedModel] = useState(IMAGE_GENERATOR_OPTIONS[0].id);
 
-  // Set active generator from URL query parameter
   useEffect(() => {
     const typeParam = searchParams.get('type');
     if (typeParam && ['album-cover', 'artist-avatar', 'band-logo'].includes(typeParam)) {
@@ -56,7 +55,6 @@ const AlbumArt = () => {
     }
   }, []);
 
-  // Auth check
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full bg-slate-900">
@@ -72,7 +70,7 @@ if (!user) {
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
           <p className="text-slate-400 mb-6">Please log in to access Album Art generation.</p>
           <button
-            onClick={() => navigate('/login')} // <-- FIXED
+            onClick={() => navigate('/login')} 
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
             Log In / Sign Up
@@ -119,14 +117,12 @@ if (!user) {
       return;
     }
 
-    // Check premium access for premium models
     const selectedModelData = IMAGE_GENERATOR_OPTIONS.find(m => m.id === selectedModel);
     if (selectedModelData?.premium && profile.is_pro !== 'true') {
       setError('This model requires a premium subscription');
       return;
     }
 
-    // Check beta access for beta models
     if (selectedModelData?.beta && profile.is_beta !== 'true') {
       setError('This model requires beta access');
       return;
@@ -143,7 +139,6 @@ if (!user) {
         throw new Error('Azure OpenAI credentials not configured');
       }
 
-      // Combine system message with user prompt
       const fullPrompt = `${activeGeneratorData.systemMessage}\n\n${prompt}`;
 
       const response = await fetch(`https://chris-mfvtydwh-swedencentral.cognitiveservices.azure.com/openai/deployments/${selectedModel}/images/generations?api-version=2024-02-01`, {

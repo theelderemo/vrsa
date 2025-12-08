@@ -9,10 +9,8 @@
 
 import { supabase } from './supabase';
 
-// Bot identifier for AI roast comments
 export const VRSA_BOT_NAME = '@VRSA Official Bot';
 
-// Official VRSA bot profile picture URL
 export const VRSA_BOT_AVATAR_URL = 'https://hsujkvvbwcomdcdcmlfx.supabase.co/storage/v1/object/public/profile-pictures/officialvrsa.jpeg';
 
 /**
@@ -22,7 +20,6 @@ export const VRSA_BOT_AVATAR_URL = 'https://hsujkvvbwcomdcdcmlfx.supabase.co/sto
  */
 export async function extractMentionedUserIds(content) {
   try {
-    // Match @username patterns (username can be alphanumeric with underscores)
     const mentionPattern = /@([a-zA-Z0-9_]+)/g;
     const matches = [...content.matchAll(mentionPattern)];
     
@@ -30,10 +27,8 @@ export async function extractMentionedUserIds(content) {
       return { userIds: [], error: null };
     }
 
-    // Get unique usernames
     const usernames = [...new Set(matches.map(m => m[1].toLowerCase()))];
     
-    // Look up user IDs for these usernames
     const { data: users, error } = await supabase
       .from('profiles')
       .select('id, username')
@@ -58,7 +53,6 @@ export async function extractMentionedUserIds(content) {
  * @param {string} fromUsername - Username of the person who mentioned them
  */
 async function sendMentionNotifications(mentionedUserIds, fromUserId, sourceType, sourceId, fromUsername) {
-  // Don't notify yourself
   const usersToNotify = mentionedUserIds.filter(id => id !== fromUserId);
   
   if (usersToNotify.length === 0) return;
@@ -79,10 +73,6 @@ async function sendMentionNotifications(mentionedUserIds, fromUserId, sourceType
   }
 }
 
-// ============================================
-// FOLLOWERS SYSTEM
-// ============================================
-
 /**
  * Follow a user
  * @param {string} followerId - Current user's ID
@@ -102,7 +92,6 @@ export async function followUser(followerId, followingId) {
     if (error) throw error;
     return { success: true, error: null };
   } catch (error) {
-    // Ignore duplicate key errors (already following)
     if (error.code === '23505') {
       return { success: true, error: null };
     }
@@ -244,10 +233,6 @@ export async function getFollowing(userId, limit = 50) {
   }
 }
 
-// ============================================
-// COMMENTS SYSTEM
-// ============================================
-
 /**
  * Add a comment to a track
  * @param {object} commentData - Comment data
@@ -322,16 +307,13 @@ export async function getTrackComments(trackId) {
 
     if (error) throw error;
 
-    // Organize into threaded structure
     const commentsMap = new Map();
     const rootComments = [];
 
-    // First pass: create map of all comments
     data?.forEach(comment => {
       commentsMap.set(comment.id, { ...comment, replies: [] });
     });
 
-    // Second pass: organize into tree
     data?.forEach(comment => {
       const commentWithReplies = commentsMap.get(comment.id);
       if (comment.parent_comment_id) {
@@ -339,7 +321,6 @@ export async function getTrackComments(trackId) {
         if (parent) {
           parent.replies.push(commentWithReplies);
         } else {
-          // Orphan comment, treat as root
           rootComments.push(commentWithReplies);
         }
       } else {
@@ -405,7 +386,6 @@ export async function checkBotRoast(trackId) {
  */
 export async function addBotRoast(trackId, roastContent) {
   try {
-    // First check if roast already exists
     const { hasRoast } = await checkBotRoast(trackId);
     if (hasRoast) {
       return { comment: null, error: new Error('Track already has a bot roast') };
@@ -430,10 +410,6 @@ export async function addBotRoast(trackId, roastContent) {
     return { comment: null, error };
   }
 }
-
-// ============================================
-// PUBLISHED TRACKS
-// ============================================
 
 /**
  * Publish a track to the public feed
@@ -489,7 +465,6 @@ export async function getFeedTracks({
   sortBy = 'created_at' 
 }) {
   try {
-    // First get the tracks
     const { data: tracks, error: tracksError } = await supabase
       .from('published_tracks')
       .select('*')
@@ -502,10 +477,8 @@ export async function getFeedTracks({
       return { tracks: [], error: null };
     }
 
-    // Get unique user IDs
     const userIds = [...new Set(tracks.map(t => t.user_id))];
     
-    // Fetch profiles for those users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, username, profile_picture_url')
@@ -515,7 +488,6 @@ export async function getFeedTracks({
       console.warn('Could not fetch profiles:', profilesError);
     }
     
-    // Map profiles to tracks
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
     const tracksWithProfiles = tracks.map(track => ({
       ...track,
@@ -565,7 +537,6 @@ export async function getTrackById(trackId) {
 
     if (error) throw error;
     
-    // Fetch profile separately
     if (track?.user_id) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -615,10 +586,6 @@ export async function incrementViewCount(trackId) {
   }
 }
 
-// ============================================
-// LIKES ("FIRE" RATINGS)
-// ============================================
-
 /**
  * Like a track
  * @param {string} userId - User ID
@@ -634,7 +601,6 @@ export async function likeTrack(userId, trackId) {
     if (error) throw error;
     return { success: true, error: null };
   } catch (error) {
-    // Ignore duplicate key errors (user already liked)
     if (error.code === '23505') {
       return { success: true, error: null };
     }
@@ -707,10 +673,6 @@ export async function getUserLikedTrackIds(userId) {
     return new Set();
   }
 }
-
-// ============================================
-// ALBUMS
-// ============================================
 
 /**
  * Create a new album
@@ -809,10 +771,6 @@ export async function deleteAlbum(albumId) {
   }
 }
 
-// ============================================
-// PUBLIC PROFILES
-// ============================================
-
 /**
  * Get public profile by username
  * @param {string} username - Username
@@ -852,7 +810,6 @@ export async function getUserStats(userId) {
     const trackCount = tracks?.length || 0;
     const totalFire = tracks?.reduce((sum, t) => sum + (t.fire_count || 0), 0) || 0;
     
-    // Calculate average rhyme density from generation settings
     const rhymeDensities = tracks
       ?.map(t => t.generation_settings?.rhymeDensity)
       .filter(d => typeof d === 'number') || [];
@@ -893,10 +850,6 @@ export async function getPublicAlbumsByUser(userId) {
   }
 }
 
-// ============================================
-// POSTS (Social Media Posts)
-// ============================================
-
 /**
  * Create a new post
  * @param {object} postData - Post data
@@ -904,7 +857,6 @@ export async function getPublicAlbumsByUser(userId) {
  */
 export async function createPost({ userId, content, privacy = 'public' }) {
   try {
-    // Insert the post
     const { data: post, error } = await supabase
       .from('posts')
       .insert({
@@ -917,14 +869,12 @@ export async function createPost({ userId, content, privacy = 'public' }) {
 
     if (error) throw error;
 
-    // Fetch the profile separately
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
-    // Handle mentions - send notifications to mentioned users
     const { userIds: mentionedUserIds } = await extractMentionedUserIds(content);
     if (mentionedUserIds.length > 0 && profile?.username) {
       await sendMentionNotifications(mentionedUserIds, userId, 'post', post.id, profile.username);
@@ -955,7 +905,6 @@ export async function getPostById(postId) {
 
     if (error) throw error;
 
-    // Fetch the profile separately
     if (post?.user_id) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -1008,7 +957,6 @@ export async function likePost(userId, postId) {
     if (error) throw error;
     return { success: true, error: null };
   } catch (error) {
-    // Ignore duplicate key errors (user already liked)
     if (error.code === '23505') {
       return { success: true, error: null };
     }
@@ -1090,7 +1038,6 @@ export async function getUnifiedFeed({
   sortBy = 'created_at'
 }) {
   try {
-    // Fetch posts - RLS will automatically filter based on privacy
     const { data: posts, error: postsError } = await supabase
       .from('posts')
       .select('*')
@@ -1099,7 +1046,6 @@ export async function getUnifiedFeed({
 
     if (postsError) throw postsError;
 
-    // Fetch tracks (published_tracks don't have privacy, all are public)
     const { data: tracks, error: tracksError } = await supabase
       .from('published_tracks')
       .select('*')
@@ -1108,12 +1054,10 @@ export async function getUnifiedFeed({
 
     if (tracksError) throw tracksError;
 
-    // Get unique user IDs from both posts and tracks (filter out null for bot posts)
     const postUserIds = posts?.map(p => p.user_id).filter(id => id != null) || [];
     const trackUserIds = tracks?.map(t => t.user_id).filter(id => id != null) || [];
     const allUserIds = [...new Set([...postUserIds, ...trackUserIds])];
 
-    // Fetch profiles for all users
     let profileMap = new Map();
     if (allUserIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
@@ -1126,9 +1070,7 @@ export async function getUnifiedFeed({
       }
     }
 
-    // Transform posts to unified format
     const postItems = (posts || []).map(post => {
-      // Handle bot posts specially
       if (post.is_bot_post) {
         return {
           ...post,
@@ -1147,17 +1089,14 @@ export async function getUnifiedFeed({
       };
     });
 
-    // Transform tracks to unified format
     const trackItems = (tracks || []).map(track => ({
       ...track,
       type: 'track',
       profiles: profileMap.get(track.user_id) || { username: 'Anonymous', id: track.user_id }
     }));
 
-    // Combine and sort by created_at
     const allItems = [...postItems, ...trackItems].sort((a, b) => {
       if (sortBy === 'fire_count') {
-        // For fire_count, only tracks have this field
         const aFire = a.type === 'track' ? (a.fire_count || 0) : (a.like_count || 0);
         const bFire = b.type === 'track' ? (b.fire_count || 0) : (b.like_count || 0);
         return bFire - aFire;
@@ -1165,7 +1104,6 @@ export async function getUnifiedFeed({
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    // Limit to requested number
     return { items: allItems.slice(0, limit), error: null };
   } catch (error) {
     console.error('Error fetching unified feed:', error);
@@ -1190,14 +1128,12 @@ export async function getPostsByUser(userId, limit = 20) {
 
     if (error) throw error;
 
-    // Fetch the profile for this user
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
-    // Add profile to each post
     const postsWithProfile = (posts || []).map(post => ({
       ...post,
       profiles: profile || { id: userId, username: 'Unknown' }
@@ -1209,10 +1145,6 @@ export async function getPostsByUser(userId, limit = 20) {
     return { posts: [], error };
   }
 }
-
-// ============================================
-// POST COMMENTS
-// ============================================
 
 /**
  * Add a comment to a post
@@ -1234,14 +1166,12 @@ export async function addPostComment({ postId, userId, content, parentCommentId 
 
     if (error) throw error;
 
-    // Fetch the profile separately
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
 
-    // Handle mentions - send notifications to mentioned users
     const { userIds: mentionedUserIds } = await extractMentionedUserIds(content);
     if (mentionedUserIds.length > 0 && profile?.username) {
       await sendMentionNotifications(mentionedUserIds, userId, 'post_comment', comment.id, profile.username);
@@ -1292,10 +1222,8 @@ export async function getPostComments(postId) {
 
     if (error) throw error;
 
-    // Get unique user IDs
     const userIds = [...new Set(data?.map(c => c.user_id).filter(Boolean) || [])];
     
-    // Fetch profiles
     let profileMap = new Map();
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
@@ -1308,11 +1236,9 @@ export async function getPostComments(postId) {
       }
     }
 
-    // Add profiles and organize into threaded structure
     const commentsMap = new Map();
     const rootComments = [];
 
-    // First pass: create map of all comments with profiles
     data?.forEach(comment => {
       commentsMap.set(comment.id, { 
         ...comment, 
@@ -1321,7 +1247,6 @@ export async function getPostComments(postId) {
       });
     });
 
-    // Second pass: organize into tree
     data?.forEach(comment => {
       const commentWithReplies = commentsMap.get(comment.id);
       if (comment.parent_comment_id) {
@@ -1363,10 +1288,6 @@ export async function getPostCommentCount(postId) {
   }
 }
 
-// ============================================
-// POST BOT COMMENTS
-// ============================================
-
 /**
  * Check if a post already has a bot comment
  * @param {string} postId - Post ID
@@ -1397,7 +1318,6 @@ export async function checkPostBotComment(postId) {
  */
 export async function addPostBotComment(postId, content) {
   try {
-    // First check if bot comment already exists
     const { hasComment } = await checkPostBotComment(postId);
     if (hasComment) {
       return { comment: null, error: new Error('Post already has a bot comment') };
@@ -1434,7 +1354,7 @@ export async function createBotPost(content, privacy = 'public') {
     const { data: post, error } = await supabase
       .from('posts')
       .insert({
-        user_id: null,  // null for bot posts
+        user_id: null,  
         content,
         privacy,
         is_bot_post: true,
@@ -1445,7 +1365,6 @@ export async function createBotPost(content, privacy = 'public') {
 
     if (error) throw error;
 
-    // Return post with bot profile info
     return { 
       post: { 
         ...post, 
@@ -1462,10 +1381,6 @@ export async function createBotPost(content, privacy = 'public') {
     return { post: null, error };
   }
 }
-
-// ============================================
-// NOTIFICATIONS SYSTEM
-// ============================================
 
 /**
  * Create a notification for a user
@@ -1526,7 +1441,6 @@ export async function getUserNotifications(userId, limit = 50, unreadOnly = fals
 
     if (error) throw error;
     
-    // Fetch profiles for from_user_id separately
     const fromUserIds = [...new Set(data?.filter(n => n.from_user_id).map(n => n.from_user_id) || [])];
     let profileMap = new Map();
     
@@ -1541,7 +1455,6 @@ export async function getUserNotifications(userId, limit = 50, unreadOnly = fals
       }
     }
     
-    // Add profile data to notifications
     const notificationsWithProfiles = data?.map(notif => ({
       ...notif,
       from_user: notif.from_user_id ? profileMap.get(notif.from_user_id) : null
@@ -1675,7 +1588,6 @@ export async function processMentions(content, fromUserId, sourceType, sourceId,
   let notificationsSent = 0;
 
   for (const username of mentions) {
-    // Skip bot mentions (handled separately)
     if (['vrsa', 'vrsabot', 'vrsa_bot', 'vrsaofficial'].includes(username.toLowerCase())) {
       continue;
     }
@@ -1723,7 +1635,6 @@ export async function searchUsersByUsername(query, limit = 10) {
   }
 }
 
-// Bot accounts for @ mention autocomplete
 export const BOT_ACCOUNTS = [
   { id: 'vrsa-bot', username: 'VRSA', profile_picture_url: VRSA_BOT_AVATAR_URL, isBot: true },
 ];

@@ -76,7 +76,6 @@ export function exportConversationAsTxt(messages, metadata = {}) {
  * @param {Object} metadata - Optional metadata (sessionId, editHistory, etc.)
  */
 export function exportConversationAsPdf(messages, metadata = {}) {
-  // Create a new window with formatted content
   const printWindow = window.open('', '_blank');
   
   if (!printWindow) {
@@ -196,7 +195,6 @@ export function exportConversationAsPdf(messages, metadata = {}) {
   printWindow.document.write(htmlContent);
   printWindow.document.close();
   
-  // Wait for content to load, then trigger print dialog
   printWindow.onload = () => {
     setTimeout(() => {
       printWindow.print();

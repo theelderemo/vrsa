@@ -39,7 +39,6 @@ export function parseEditCommand(input, messageContent) {
   
   const targetLine = lines[lineNumber - 1];
   
-  // Determine the type of edit
   let editType = 'general';
   let instructions = input;
   
@@ -60,7 +59,6 @@ export function parseEditCommand(input, messageContent) {
     editType = 'improve';
     instructions = `Improve this line: ${targetLine}`;
   } else {
-    // General instruction
     instructions = `${input.replace(lineNumberRegex, '').trim()}: ${targetLine}`;
   }
   
@@ -72,9 +70,6 @@ export function parseEditCommand(input, messageContent) {
   };
 }
 
-/**
- * Build a prompt for AI to perform inline edits
- */
 export function buildEditPrompt(parsedCommand, fullContext) {
   const { lineNumber, targetLine, instructions } = parsedCommand;
   

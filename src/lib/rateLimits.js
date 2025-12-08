@@ -4,8 +4,6 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-// Rate limiting utilities using localStorage
-
 const RATE_LIMIT_PREFIX = 'vrsa_rate_limit_';
 
 /**
@@ -29,7 +27,6 @@ export const getUsageCount = (feature) => {
   
   try {
     const { date, count } = JSON.parse(stored);
-    // Reset if it's a new day
     if (date !== getTodayKey()) {
       return 0;
     }
@@ -66,7 +63,6 @@ export const incrementUsage = (feature) => {
  * @returns {{ canUse: boolean, remaining: number, limit: number }}
  */
 export const checkRateLimit = (feature, limit, isPro = false) => {
-  // Pro users bypass all rate limits
   if (isPro) {
     return { canUse: true, remaining: Infinity, limit: Infinity };
   }
@@ -93,7 +89,6 @@ export const getRemainingUses = (feature, limit, isPro = false) => {
   return Math.max(0, limit - getUsageCount(feature));
 };
 
-// Feature identifiers
 export const RATE_LIMIT_FEATURES = {
   ANALYZER: 'analyzer',
   WORD_FINDER: 'word_finder',
@@ -101,7 +96,6 @@ export const RATE_LIMIT_FEATURES = {
   WORDPLAY_SUGGESTER: 'wordplay_suggester',
 };
 
-// Daily limits for free users
 export const DAILY_LIMITS = {
   ANALYZER: 2,
   WORD_FINDER: 5,
