@@ -333,6 +333,24 @@ const Landing = () => {
           </div>
         </motion.div>
 
+        {/* Testimonial Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto mb-20"
+        >
+          <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-slate-700/50 text-center">
+            <blockquote className="text-lg md:text-xl text-slate-300 mb-6 italic leading-relaxed">
+              "Honestly criminally underrated...for AI lyric generators currently this is the Suno of lyric generators"
+            </blockquote>
+            <cite className="text-sm text-indigo-400 font-medium">
+              — @theyluvcello
+            </cite>
+          </div>
+        </motion.div>
+
         {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
