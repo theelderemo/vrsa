@@ -41,6 +41,7 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Feed from './pages/Feed';
 import Projects from './pages/Projects';
+import ProjectView from './pages/ProjectView';
 import AdminPanel from './pages/AdminPanel';
 import AuthComponent from './Auth';
 import BlogIndex from './pages/blog';
@@ -74,6 +75,7 @@ const App = () => {
           <Route path="/tools" element={<Tools />} />
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectId" element={<ProjectView />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/studio-pass" element={<StudioPass />} />

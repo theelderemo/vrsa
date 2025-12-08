@@ -23,7 +23,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- Import this
+import { useLocation, useNavigate } from 'react-router-dom'; // <-- Import this
 import { CornerDownLeft, LoaderCircle, Menu, X } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
@@ -59,6 +59,7 @@ import {
 const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   const { user, profile, loading } = useUser();
   const navigate = useNavigate(); // <-- Initialize hook
+  const location = useLocation();
   
   useEffect(() => {
     document.title = 'Ghostwriter - AI Lyric Generation | VRS/A';
@@ -245,7 +246,7 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
   };
 
   // Switch to a different session
-  const handleSwitchSession = async (targetSessionId) => {
+  const handleSwitchSession = useCallback(async (targetSessionId) => {
     // Don't do anything if we're already in the same state (unless both are null on first click)
     if (targetSessionId === sessionId && (targetSessionId !== null || messages.length === 0)) return;
     
@@ -284,7 +285,20 @@ const Ghostwriter = ({ selectedRhymeSchemes, setSelectedRhymeSchemes }) => {
         generateInitialWelcome();
       }
     }
-  };
+  }, [sessionId, messages.length, userSessions, setSessionId, setCurrentSessionName, setMemoryEnabled, loadSettingsFromSession, setMessages, generateInitialWelcome]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const targetProjectId = params.get('projectId');
+
+    if (!targetProjectId || userSessions.length === 0) return;
+
+    const selectedSession = userSessions.find(session => session.id === targetProjectId);
+    if (!selectedSession) return;
+
+    handleSwitchSession(targetProjectId);
+    navigate('/ghostwriter', { replace: true });
+  }, [location.search, userSessions, handleSwitchSession, navigate]);
 
   // Rename the current session
   const handleRenameSession = async (newName) => {

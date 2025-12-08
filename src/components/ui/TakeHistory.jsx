@@ -20,45 +20,7 @@ import {
   Download,
   Flame
 } from 'lucide-react';
-
-/**
- * Parse messages into "Takes" (prompt + response pairs)
- * @param {array} messages - Chat messages
- * @returns {array} - Array of takes
- */
-const parseTakes = (messages) => {
-  const takes = [];
-  let currentTake = null;
-
-  messages.forEach((msg, index) => {
-    if (msg.role === 'user') {
-      // Start a new take
-      if (currentTake) {
-        takes.push(currentTake);
-      }
-      currentTake = {
-        id: index,
-        prompt: msg.content,
-        promptTimestamp: msg.timestamp || null,
-        response: null,
-        responseTimestamp: null,
-        settings: msg.settings || null
-      };
-    } else if (msg.role === 'assistant' && currentTake) {
-      // Complete the current take
-      currentTake.response = msg.content;
-      currentTake.responseTimestamp = msg.timestamp || null;
-      currentTake.settings = msg.settings || currentTake.settings;
-    }
-  });
-
-  // Push the last take if it exists
-  if (currentTake) {
-    takes.push(currentTake);
-  }
-
-  return takes;
-};
+import { parseTakes } from '../../lib/parseTakes';
 
 /**
  * Format timestamp for display
