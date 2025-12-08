@@ -4,13 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LoaderCircle, Music, Upload, AlertCircle, Check, ExternalLink, Server } from 'lucide-react';
+import { LoaderCircle, Upload, AlertCircle, Server } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 
 const API_URL = import.meta.env.VITE_AUDIO_ENGINE_URL || "https://audio.vrsa.app"; 
 
 const AudioAnalyzer = () => {
-  const { user, loading: userLoading } = useUser();
+  const { loading: userLoading } = useUser();
   const [analysis, setAnalysis] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
