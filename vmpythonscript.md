@@ -55,7 +55,7 @@ async def analyze_audio(file: UploadFile = File(...)):
             "bpm": round(bpm),
             "key": key,
             "scale": scale,
-            "danceability": min(round(dance_score, 2), 1.0)
+            "danceability": round(dance_score, 2)
         }
 
     except Exception as e:

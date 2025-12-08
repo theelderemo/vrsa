@@ -135,7 +135,7 @@ const AudioAnalyzer = () => {
                     {isProcessing ? "Analyzing Audio..." : "Upload a Song"}
                   </h3>
                   <p className="text-slate-400 text-sm">
-                    {isProcessing ? "Sending to your VM for processing" : "MP3, WAV, or M4A (Max 10MB)"}
+                    {isProcessing ? "Please wait, this may take a moment" : "MP3, WAV, or M4A (Max 10MB)"}
                   </p>
                 </div>
               </div>
@@ -189,7 +189,7 @@ const AudioAnalyzer = () => {
 
           {/* Results Display */}
           {analysis && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
               {/* BPM Card */}
               <div className="bg-slate-800/50 border border-indigo-500/30 p-6 rounded-xl text-center">
@@ -206,20 +206,6 @@ const AudioAnalyzer = () => {
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-4xl font-black text-white">{analysis.key}</span>
                   <span className="text-xl text-purple-400 font-medium">{analysis.scale}</span>
-                </div>
-              </div>
-
-              {/* Danceability Card */}
-              <div className="bg-slate-800/50 border border-pink-500/30 p-6 rounded-xl text-center">
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Danceability</p>
-                <div className="relative pt-2">
-                  <div className="overflow-hidden h-2 mb-2 text-xs flex rounded bg-slate-700">
-                    <div 
-                      style={{ width: `${Math.min(analysis.danceability * 100, 100)}%` }} 
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-pink-500 transition-all duration-1000"
-                    ></div>
-                  </div>
-                  <span className="text-2xl font-bold text-white">{Math.min(analysis.danceability * 100, 100).toFixed(0)}%</span>
                 </div>
               </div>
 
