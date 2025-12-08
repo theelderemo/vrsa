@@ -46,6 +46,7 @@ import AdminPanel from './pages/AdminPanel';
 import AuthComponent from './Auth';
 import BlogIndex from './pages/blog';
 import BlogPost from './pages/blog/BlogPost';
+import NotionStyleCanvas from './pages/Ghostwriter/NotionStyleCanvas';
 
 const App = () => {
   // NOTE: currentPage state is gone!
@@ -64,11 +65,12 @@ const App = () => {
         {/* Main App Pages (With Layout) */}
         <Route element={<MainLayout />}>
           <Route path="/ghostwriter" element={
-            <Ghostwriter 
-              selectedRhymeSchemes={selectedRhymeSchemes} 
-              setSelectedRhymeSchemes={setSelectedRhymeSchemes} 
+            <Ghostwriter
+              selectedRhymeSchemes={selectedRhymeSchemes}
+              setSelectedRhymeSchemes={setSelectedRhymeSchemes}
             />
           } />
+          <Route path="/ghostwriter/notion-canvas" element={<NotionStyleCanvas />} />
           <Route path="/writing-tools" element={<WritingTools />} />
           <Route path="/analyzer" element={<Analyzer />} />
           <Route path="/audio-tools" element={<AudioTools />} />
