@@ -105,10 +105,10 @@ const Landing = () => {
   const isHeroInView = useInView(heroRef, { once: true });
 
   useEffect(() => {
-    document.title = 'VRS/A - AI Lyric Assistant & Co-Writer';
+    document.title = 'VRS/A - Free AI Lyric Generator & Songwriting Assistant';
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Generate authentic lyrics in the style of your favorite artists. A free AI co-writer for musicians, not a content mill. Anti-soulless lyrics.');
+      metaDescription.setAttribute('content', 'Free AI lyric generator and songwriting co-writer. Generate lyrics in any artist style, analyze songs, create album art. Powered by Claude, GPT, DeepSeek and more! No ads, no tracking.');
     }
   }, []);
 
@@ -177,7 +177,7 @@ const Landing = () => {
           {/* Main Headline */}
           <motion.h1 variants={itemVariants} className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
             <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
-              VRS/A - AI-Powered Lyrical Co-Writing Studio
+              Free AI Lyric Generator & Songwriting Co-Writer
             </span>
           </motion.h1>
 
@@ -415,6 +415,11 @@ const Landing = () => {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/audio-tools" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Audio Tools
+                  </Link>
+                </li>
+                <li>
                   <Link to="/projects" className="text-slate-400 hover:text-indigo-400 transition-colors">
                     Projects
                   </Link>
@@ -456,6 +461,11 @@ const Landing = () => {
                 <li>
                   <Link to="/guide" className="text-slate-400 hover:text-indigo-400 transition-colors">
                     Guide
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog" className="text-slate-400 hover:text-indigo-400 transition-colors">
+                    Blog
                   </Link>
                 </li>
                 <li>
