@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from 'react-helmet';
 import { LoaderCircle, Calendar, ArrowRight } from 'lucide-react';
 
 const BlogIndex = () => {

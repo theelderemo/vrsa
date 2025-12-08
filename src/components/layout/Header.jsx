@@ -24,7 +24,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import { PillBase } from '../ui/3d-adaptive-navigation-bar';
 import { NotificationAlertDialog } from '../ui/NotificationAlertDialog';
@@ -34,13 +34,34 @@ const Header = () => {
   const { user } = useUser();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [expandedSubmenus, setExpandedSubmenus] = useState({});
   
   const isAdmin = user?.email === ADMIN_EMAIL;
   
   const navItems = [
     { name: 'Ghostwriter', path: '/ghostwriter' },
     { name: 'Feed', path: '/feed' },
-    { name: 'Writing Tools', path: '/writing-tools' },
+    { 
+      name: 'Tools', 
+      path: '/tools',
+      submenu: [
+        {
+          name: 'Writing Tools',
+          items: [
+            { name: 'Analyzer', path: '/analyzer' },
+            { name: 'Rhyme Finder', path: '/writing-tools?tool=rhyme-finder' },
+            { name: 'Wordplay Suggester', path: '/writing-tools?tool=wordplay-suggester' },
+            { name: 'Hook Generator', path: '/writing-tools?tool=hook-generator' }
+          ]
+        },
+        {
+          name: 'Audio Tools',
+          items: [
+            { name: 'Audio Analyzer', path: '/audio-tools' }
+          ]
+        }
+      ]
+    },
     { name: 'AlbumArt', path: '/albumart' },
     { name: 'Projects', path: '/projects' },
     { name: 'Guide', path: '/guide' },
@@ -59,8 +80,16 @@ const Header = () => {
   
   const isActive = (path) => location.pathname === path;
 
+  const toggleSubmenu = (itemName) => {
+    setExpandedSubmenus(prev => ({
+      ...prev,
+      [itemName]: !prev[itemName]
+    }));
+  };
+
   const handleNavClick = () => {
     setMenuOpen(false);
+    setExpandedSubmenus({});
   };
 
   return (
@@ -113,20 +142,68 @@ const Header = () => {
         <div className="flex flex-col h-full pt-20 px-6 pb-6 overflow-y-auto">
           {/* Navigation Items */}
           <div className="space-y-2">
-            {allNavItems.map(item => (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={handleNavClick}
-                className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {allNavItems.map(item => {
+              // Handle items with submenus
+              if (item.submenu) {
+                return (
+                  <div key={item.name} className="space-y-1">
+                    <button
+                      onClick={() => toggleSubmenu(item.name)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-base font-medium rounded-lg text-slate-300 hover:bg-slate-800 transition-colors"
+                    >
+                      <span>{item.name}</span>
+                      {expandedSubmenus[item.name] ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </button>
+                    
+                    {expandedSubmenus[item.name] && (
+                      <div className="ml-4 space-y-1">
+                        {item.submenu.map(category => (
+                          <div key={category.name} className="space-y-1">
+                            <div className="px-4 py-2 text-sm font-semibold text-slate-400 uppercase tracking-wide">
+                              {category.name}
+                            </div>
+                            {category.items.map(subItem => (
+                              <Link
+                                key={subItem.name}
+                                to={subItem.path}
+                                onClick={handleNavClick}
+                                className={`block px-4 py-2 text-sm rounded-lg transition-colors ml-4 ${
+                                  isActive(subItem.path)
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-slate-300 hover:bg-slate-800'
+                                }`}
+                              >
+                                {subItem.name}
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              // Handle regular menu items
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={handleNavClick}
+                  className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </nav>

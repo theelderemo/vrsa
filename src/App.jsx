@@ -29,6 +29,9 @@ import MainLayout from './components/layout/MainLayout';
 import Landing from './pages/Landing';
 import Ghostwriter from './pages/Ghostwriter';
 import WritingTools from './pages/WritingTools';
+import Analyzer from './pages/Analyzer';
+import AudioTools from './pages/AudioTools';
+import Tools from './pages/Tools';
 import AlbumArt from './pages/AlbumArt';
 import Guide from './pages/Guide';
 import Terms from './pages/Terms';
@@ -66,6 +69,9 @@ const App = () => {
             />
           } />
           <Route path="/writing-tools" element={<WritingTools />} />
+          <Route path="/analyzer" element={<Analyzer />} />
+          <Route path="/audio-tools" element={<AudioTools />} />
+          <Route path="/tools" element={<Tools />} />
           <Route path="/albumart" element={<AlbumArt />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/feed" element={<Feed />} />

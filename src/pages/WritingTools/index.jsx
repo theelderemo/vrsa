@@ -4,8 +4,8 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 import WritingToolsDock from '../../components/ui/WritingToolsDock';
@@ -14,13 +14,11 @@ import RhymeFinder from './RhymeFinder';
 import WordplaySuggester from './WordplaySuggester';
 import HookGenerator from './HookGenerator';
 
-// Lazy load AudioAnalyzer to prevent import issues
-const AudioAnalyzer = lazy(() => import('./AudioAnalyzer'));
-
 const WritingTools = () => {
   const { user, loading } = useUser();
   const navigate = useNavigate();
-  const [activeTool, setActiveTool] = useState('analyzer');
+  const [searchParams] = useSearchParams();
+  const [activeTool, setActiveTool] = useState(searchParams.get('tool') || 'analyzer');
 
   useEffect(() => {
     document.title = 'Writing Tools - Analyzer & Rhyme Finder | VRS/A';
@@ -66,19 +64,10 @@ const WritingTools = () => {
     switch (activeTool) {
       case 'analyzer':
         return <Analyzer />;
-      case 'audio-analyzer':
-        return (
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-full bg-slate-900">
-              <LoaderCircle className="animate-spin text-indigo-400" size={48} />
-            </div>
-          }>
-            <AudioAnalyzer />
-          </Suspense>
-        );
       case 'rhyme-finder':
         return <RhymeFinder />;
       case 'wordplay':
+      case 'wordplay-suggester':
         return <WordplaySuggester />;
       case 'hook-generator':
         return <HookGenerator />;
