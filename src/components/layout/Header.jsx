@@ -59,10 +59,18 @@ const Header = () => {
           items: [
             { name: 'Audio Analyzer', path: '/audio-tools' }
           ]
+        },
+        {
+          name: 'Image Tools',
+          items: [
+            { name: 'Album Cover', path: '/albumart?type=album-cover' },
+            { name: 'Artist Avatar', path: '/albumart?type=artist-avatar' },
+            { name: 'Band Logo', path: '/albumart?type=band-logo' }
+          ]
         }
       ]
     },
-    { name: 'AlbumArt', path: '/albumart' },
+    { name: 'Blog', path: '/blog' },
     { name: 'Projects', path: '/projects' },
     { name: 'Guide', path: '/guide' },
     { name: 'Studio Pass', path: '/studio-pass' },

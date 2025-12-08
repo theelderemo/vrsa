@@ -4,12 +4,10 @@
  * Copyright (c) 2025 Christopher Dickinson
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoaderCircle } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
-import WritingToolsDock from '../../components/ui/WritingToolsDock';
-import Analyzer from '../Analyzer';
 import RhymeFinder from './RhymeFinder';
 import WordplaySuggester from './WordplaySuggester';
 import HookGenerator from './HookGenerator';
@@ -18,7 +16,7 @@ const WritingTools = () => {
   const { user, loading } = useUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [activeTool, setActiveTool] = useState(searchParams.get('tool') || 'analyzer');
+  const activeTool = searchParams.get('tool') || 'rhyme-finder';
 
   useEffect(() => {
     document.title = 'Writing Tools - Analyzer & Rhyme Finder | VRS/A';
@@ -54,16 +52,8 @@ const WritingTools = () => {
     );
   }
 
-  const handleToolSelect = (toolId) => {
-    if (toolId !== 'more') {
-      setActiveTool(toolId);
-    }
-  };
-
   const renderActiveTool = () => {
     switch (activeTool) {
-      case 'analyzer':
-        return <Analyzer />;
       case 'rhyme-finder':
         return <RhymeFinder />;
       case 'wordplay':
@@ -72,19 +62,12 @@ const WritingTools = () => {
       case 'hook-generator':
         return <HookGenerator />;
       default:
-        return <Analyzer />;
+        return <RhymeFinder />;
     }
   };
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden bg-slate-900">
-      {/* Dock at the top */}
-      <div className="p-4 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto">
-          <WritingToolsDock activeTool={activeTool} onToolSelect={handleToolSelect} />
-        </div>
-      </div>
-
       {/* Active Tool Content */}
       <div className="flex-1 overflow-hidden">
         {renderActiveTool()}

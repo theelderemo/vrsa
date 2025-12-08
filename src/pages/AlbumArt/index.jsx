@@ -23,7 +23,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- Import
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoaderCircle } from 'lucide-react';
 import * as Sentry from "@sentry/react";
 import { useUser } from '../../hooks/useUser';
@@ -31,13 +31,22 @@ import { IMAGE_GENERATOR_OPTIONS } from '../../lib/constants';
 
 const AlbumArt = () => {
   const { user, profile, loading } = useUser();
-  const navigate = useNavigate(); // <-- Init hook
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeGenerator, setActiveGenerator] = useState('album-cover');
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState(null);
   const [selectedModel, setSelectedModel] = useState(IMAGE_GENERATOR_OPTIONS[0].id);
+
+  // Set active generator from URL query parameter
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam && ['album-cover', 'artist-avatar', 'band-logo'].includes(typeParam)) {
+      setActiveGenerator(typeParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     document.title = 'Album Art Generator | VRS/A';
@@ -195,32 +204,8 @@ if (!user) {
     <div className="flex flex-col h-full bg-slate-900 text-white">
       {/* Header */}
       <div className="border-b border-slate-700 p-4">
-        <h1 className="text-2xl font-bold mb-2">Album Art Generator</h1>
-        <p className="text-slate-400 text-sm">Create stunning visuals for your music</p>
-      </div>
-
-      {/* Generator Type Selection */}
-      <div className="border-b border-slate-700 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {generators.map((gen) => {
-            return (
-              <button
-                key={gen.id}
-                onClick={() => setActiveGenerator(gen.id)}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  activeGenerator === gen.id
-                    ? 'border-indigo-500 bg-indigo-500/10'
-                    : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                }`}
-              >
-                <div>
-                  <h3 className="font-semibold mb-1">{gen.name}</h3>
-                  <p className="text-sm text-slate-400">{gen.description}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <h1 className="text-2xl font-bold mb-2">{activeGeneratorData?.name || 'Album Art Generator'}</h1>
+        <p className="text-slate-400 text-sm">{activeGeneratorData?.description || 'Create stunning visuals for your music'}</p>
       </div>
 
       {/* Main Content Area */}

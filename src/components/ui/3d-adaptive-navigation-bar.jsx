@@ -48,10 +48,18 @@ export const PillBase = () => {
           items: [
             { name: 'Audio Analyzer', path: '/audio-tools' }
           ]
+        },
+        {
+          name: 'Image Tools',
+          items: [
+            { name: 'Album Cover', path: '/albumart?type=album-cover' },
+            { name: 'Artist Avatar', path: '/albumart?type=artist-avatar' },
+            { name: 'Band Logo', path: '/albumart?type=band-logo' }
+          ]
         }
       ]
     },
-    { label: 'AlbumArt', id: 'albumart', path: '/albumart' },
+    { label: 'Blog', id: 'blog', path: '/blog' },
     { label: 'Projects', id: 'projects', path: '/projects' },
     { label: 'Guide', id: 'guide', path: '/guide' },
     { label: 'Studio Pass', id: 'studio-pass', path: '/studio-pass' },
@@ -71,8 +79,13 @@ export const PillBase = () => {
     const path = location.pathname;
     
     // Handle tool-related paths
-    if (path === '/analyzer' || path === '/writing-tools' || path.startsWith('/writing-tools') || path === '/audio-tools' || path.startsWith('/audio-tools')) {
+    if (path === '/analyzer' || path === '/writing-tools' || path.startsWith('/writing-tools') || path === '/audio-tools' || path.startsWith('/audio-tools') || path === '/albumart' || path.startsWith('/albumart')) {
       return 'tools';
+    }
+    
+    // Handle blog paths
+    if (path === '/blog' || path.startsWith('/blog/')) {
+      return 'blog';
     }
     
     const item = navItems.find(item => item.path === path);
