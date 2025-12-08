@@ -47,7 +47,7 @@ const Header = () => {
           name: 'Workflows',
           items: [
             { name: 'Chat', path: '/ghostwriter' },
-            { name: 'Notion-Style Canvas', path: '/ghostwriter/notion-canvas' }
+            { name: 'Canvas', path: '/ghostwriter/notion-canvas' }
           ]
         }
       ]

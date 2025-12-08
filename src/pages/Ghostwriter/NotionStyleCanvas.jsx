@@ -9,13 +9,18 @@ import { useNavigate } from 'react-router-dom';
 import { Command, LoaderCircle, Lock, Send, Sparkles, Wand2, Waypoints } from 'lucide-react';
 import { useUser } from '../../hooks/useUser';
 
-const defaultCanvasText = `Draft your piece like you're in Notion.
-Use the canvas as a full-page document and bring in AI only when you need it.
+const defaultCanvasText = `Rich text editor (title area)
 
-Quick ideas:
-- Use "/outline" to map the sections you want to write next.
-- Highlight a block and tap Rewrite to adjust tone.
-- Add context in the sidebar chat so the agent writes in your voice.`;
+Lyrics, brainstorming, or whatever they want would go here
+
+Users can use commands ('/') such as:
+
+Translate to
+Continue writing
+Ask a question
+Ask about this page
+Make shorter
+See more`;
 
 const NotionStyleCanvas = () => {
   const { user, profile, loading } = useUser();
@@ -26,17 +31,18 @@ const NotionStyleCanvas = () => {
     {
       role: 'assistant',
       content:
-        "Welcome to the Notion-Style Canvas. Keep writing in the main panel and loop me in when you need an autofill, rewrite, or a quick skill.",
+        "Welcome to the Canvas. Keep writing in the main panel and loop me in when you need an autofill, rewrite, or a quick skill.",
     },
   ]);
   const [chatInput, setChatInput] = useState('');
-  const [aiStatus, setAiStatus] = useState('Idle');
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashQuery, setSlashQuery] = useState('');
   const editorRef = useRef(null);
 
   const isPro = profile?.is_pro === 'true';
 
   useEffect(() => {
-    document.title = 'Notion-Style Canvas | Ghostwriter | VRS/A';
+    document.title = 'Canvas | Ghostwriter | VRS/A';
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute(
@@ -59,7 +65,7 @@ const NotionStyleCanvas = () => {
       <div className="flex items-center justify-center h-full bg-slate-900 p-8">
         <div className="max-w-md text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Authentication Required</h2>
-          <p className="text-slate-400 mb-6">Log in to access the Notion-Style Canvas and keep your drafts synced.</p>
+          <p className="text-slate-400 mb-6">Log in to access the Canvas and keep your drafts synced.</p>
           <button
             onClick={() => navigate('/login')}
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
@@ -100,24 +106,41 @@ const NotionStyleCanvas = () => {
 
   const handleAiAction = (action) => {
     if (!isPro) {
-      setAiStatus('AI skills are locked — Studio Pass required.');
-      return;
-    }
-
-    const target = selectedText || editorContent.split('\n').slice(-2).join('\n');
-    setAiStatus(`Working on ${action.toLowerCase()}...`);
-
-    setTimeout(() => {
-      setAiStatus('Idle');
-      setEditorContent((prev) => `${prev}\n\n[AI ${action}]\n${target}\n`);
       setChatMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `Applied ${action.toLowerCase()} to ${selectedText ? 'your selection' : 'the latest block'}.`,
+          content: 'AI skills are locked — unlock with Studio Pass to run inline edits and completions.',
         },
       ]);
-    }, 500);
+      return;
+    }
+
+    const target = selectedText || editorContent.split('\n').slice(-2).join('\n');
+
+    setEditorContent((prev) => `${prev}\n\n[AI ${action}]\n${target}\n`);
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: `Applied ${action.toLowerCase()} to ${selectedText ? 'your selection' : 'the latest block'}.`,
+      },
+    ]);
+  };
+
+  const handleContentChange = (e) => {
+    const text = e.currentTarget.innerText;
+    setEditorContent(text);
+
+    const lastSlashIndex = text.lastIndexOf('/');
+    if (lastSlashIndex !== -1) {
+      const query = text.slice(lastSlashIndex + 1, text.length).trim();
+      setSlashQuery(query);
+      setShowSlashMenu(true);
+    } else {
+      setShowSlashMenu(false);
+      setSlashQuery('');
+    }
   };
 
   const quickCommands = [
@@ -126,10 +149,19 @@ const NotionStyleCanvas = () => {
     { label: 'Tighten wording', icon: <Command size={16} />, action: 'Tighten' },
   ];
 
+  const slashCommands = [
+    'Translate to',
+    'Continue writing',
+    'Ask a question',
+    'Ask about this page',
+    'Make shorter',
+    'See more',
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
-        <aside className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-4 flex flex-col gap-4">
+        <aside className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-4 flex flex-col gap-4 sticky top-6 h-fit">
           <div>
             <div className="flex items-center gap-2 text-indigo-300">
               <Waypoints size={18} />
@@ -194,53 +226,154 @@ const NotionStyleCanvas = () => {
           </div>
         </aside>
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-4 md:p-6 flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-indigo-300 font-semibold">Notion-Style Canvas</p>
-              <h1 className="text-2xl font-bold text-white mt-1">Draft like a word processor, call AI like an agent</h1>
-              <p className="text-slate-400 text-sm mt-2 max-w-3xl">
-                Keep your hands on the keyboard. Highlight context, tap an AI skill, and let the agent rewrite or autofill inline while you stay in control.
-              </p>
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-4 md:p-6 flex flex-col gap-6 relative overflow-hidden">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-indigo-300 font-semibold">Canvas</p>
+                <h1 className="text-2xl font-bold text-white mt-1">Write like a doc, pull AI like a teammate</h1>
+                <p className="text-slate-400 text-sm mt-2 max-w-3xl">
+                  Whole-page editing with inline completions. Type "/" for quick skills, highlight a block to rewrite, and keep chat context pinned in the sidebar.
+                </p>
+              </div>
+              {!isPro && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
+                  <Lock size={16} className="text-amber-300" />
+                  <span>Studio Pass required for AI edits</span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200">
-              <span className="flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-300" />
-                AI status:
-              </span>
-              <span className={`font-semibold ${isPro ? 'text-emerald-300' : 'text-slate-400'}`}>{aiStatus}</span>
+
+            <div className="flex flex-wrap gap-2">
+              {quickCommands.map((command) => (
+                <button
+                  key={command.action}
+                  type="button"
+                  onClick={() => handleAiAction(command.action)}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    isPro
+                      ? 'border-indigo-700 bg-indigo-900/40 hover:bg-indigo-900/70 text-indigo-100'
+                      : 'border-slate-700 bg-slate-800/60 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {command.icon}
+                  {command.label}
+                  {!isPro && <Lock size={14} className="text-amber-300" />}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {quickCommands.map((command) => (
-              <button
-                key={command.action}
-                type="button"
-                onClick={() => handleAiAction(command.action)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                  isPro
-                    ? 'border-indigo-700 bg-indigo-900/40 hover:bg-indigo-900/70 text-indigo-100'
-                    : 'border-slate-700 bg-slate-800/60 text-slate-400 cursor-not-allowed'
-                }`}
+          <div className="relative bg-slate-950/80 border border-slate-800 rounded-xl shadow-inner">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-slate-300">
+                <div className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
+                <span className="text-sm font-semibold">Rich text editor (title area)</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>Edited just now</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">Private</span>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-6">
+              <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleContentChange}
+                onKeyUp={syncSelection}
+                onMouseUp={syncSelection}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setShowSlashMenu(false);
+                  }
+                }}
+                className="min-h-[520px] rounded-xl bg-slate-900/60 p-5 text-base text-slate-100 leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                {command.icon}
-                {command.label}
-                {!isPro && <Lock size={14} className="text-amber-300" />}
-              </button>
-            ))}
-          </div>
+                {editorContent}
+              </div>
 
-          <div
-            ref={editorRef}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setEditorContent(e.currentTarget.innerText)}
-            onKeyUp={syncSelection}
-            onMouseUp={syncSelection}
-            className="min-h-[420px] rounded-xl border border-slate-800 bg-slate-900/80 p-5 text-base text-slate-100 leading-relaxed shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {editorContent}
+              {showSlashMenu && (
+                <div className="absolute left-5 bottom-6 z-10 w-72 rounded-xl bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-slate-700">
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Commands</p>
+                    <p className="text-sm text-white font-semibold mt-1">AI</p>
+                    <p className="text-xs text-slate-400">Type "/" for quick actions</p>
+                  </div>
+                  <ul className="max-h-64 overflow-y-auto">
+                    {slashCommands
+                      .filter((command) => command.toLowerCase().includes(slashQuery.toLowerCase()))
+                      .map((command) => (
+                        <li key={command}>
+                          <button
+                            type="button"
+                            onClick={() => handleAiAction(command)}
+                            className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm ${
+                              isPro
+                                ? 'text-slate-100 hover:bg-slate-700/70'
+                                : 'text-slate-500 cursor-not-allowed'
+                            }`}
+                          >
+                            <span>{command}</span>
+                            <span className="text-xs text-slate-400">AI action</span>
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 px-5 py-4 border-t border-slate-800">
+              <div className="flex gap-2 overflow-x-auto">
+                {['Heading', 'Paragraph', 'Checklist', 'Quote'].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-200 border border-slate-700"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <span className="text-xs text-slate-400">Type or use "/" to open commands</span>
+              </div>
+            </div>
+
+            <div className="absolute bottom-4 right-4 flex flex-col gap-3 w-[320px]">
+              <div className="rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-indigo-200 font-semibold">
+                  <Sparkles size={16} />
+                  AI shortcut dock
+                </div>
+                {['Translate to', 'Continue writing', 'Ask a question', 'Ask about this page', 'Make shorter', 'See more'].map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleAiAction(label)}
+                    className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm border transition-colors ${
+                      isPro
+                        ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-100'
+                        : 'border-slate-700 bg-slate-900 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Command size={14} />
+                      {label}
+                    </span>
+                    <span className="text-xs text-slate-500">AI</span>
+                  </button>
+                ))}
+              </div>
+              {!isPro && (
+                <div className="rounded-xl bg-amber-900/40 border border-amber-700 text-amber-200 px-3 py-2 text-sm">
+                  AI shortcuts are locked. Upgrade to Studio Pass to run inline edits and completions.
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
