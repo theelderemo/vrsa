@@ -15,6 +15,70 @@ export const VRSA_BOT_NAME = '@VRSA Official Bot';
 // Official VRSA bot profile picture URL
 export const VRSA_BOT_AVATAR_URL = 'https://hsujkvvbwcomdcdcmlfx.supabase.co/storage/v1/object/public/profile-pictures/officialvrsa.jpeg';
 
+/**
+ * Extract @mentions from content and return user IDs
+ * @param {string} content - Text content with potential @mentions
+ * @returns {Promise<{userIds: string[], error: Error | null}>}
+ */
+export async function extractMentionedUserIds(content) {
+  try {
+    // Match @username patterns (username can be alphanumeric with underscores)
+    const mentionPattern = /@([a-zA-Z0-9_]+)/g;
+    const matches = [...content.matchAll(mentionPattern)];
+    
+    if (matches.length === 0) {
+      return { userIds: [], error: null };
+    }
+
+    // Get unique usernames
+    const usernames = [...new Set(matches.map(m => m[1].toLowerCase()))];
+    
+    // Look up user IDs for these usernames
+    const { data: users, error } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .in('username', usernames);
+
+    if (error) throw error;
+
+    const userIds = users?.map(u => u.id) || [];
+    return { userIds, error: null };
+  } catch (error) {
+    console.error('Error extracting mentioned users:', error);
+    return { userIds: [], error };
+  }
+}
+
+/**
+ * Send mention notifications to mentioned users
+ * @param {string[]} mentionedUserIds - Array of user IDs who were mentioned
+ * @param {string} fromUserId - User ID who created the content
+ * @param {string} sourceType - Type of source ('post' or 'post_comment')
+ * @param {string} sourceId - ID of the post or comment
+ * @param {string} fromUsername - Username of the person who mentioned them
+ */
+async function sendMentionNotifications(mentionedUserIds, fromUserId, sourceType, sourceId, fromUsername) {
+  // Don't notify yourself
+  const usersToNotify = mentionedUserIds.filter(id => id !== fromUserId);
+  
+  if (usersToNotify.length === 0) return;
+
+  try {
+    const notifications = usersToNotify.map(userId => ({
+      user_id: userId,
+      type: 'mention',
+      content: `@${fromUsername} mentioned you in a ${sourceType === 'post_comment' ? 'comment' : 'post'}`,
+      source_type: sourceType,
+      source_id: sourceId,
+      from_user_id: fromUserId
+    }));
+
+    await supabase.from('notifications').insert(notifications);
+  } catch (error) {
+    console.error('Error sending mention notifications:', error);
+  }
+}
+
 // ============================================
 // FOLLOWERS SYSTEM
 // ============================================
@@ -860,6 +924,12 @@ export async function createPost({ userId, content, privacy = 'public' }) {
       .eq('id', userId)
       .single();
 
+    // Handle mentions - send notifications to mentioned users
+    const { userIds: mentionedUserIds } = await extractMentionedUserIds(content);
+    if (mentionedUserIds.length > 0 && profile?.username) {
+      await sendMentionNotifications(mentionedUserIds, userId, 'post', post.id, profile.username);
+    }
+
     return { 
       post: { ...post, profiles: profile || { id: userId, username: 'Unknown' } }, 
       error: null 
@@ -1170,6 +1240,12 @@ export async function addPostComment({ postId, userId, content, parentCommentId 
       .select('id, username, profile_picture_url')
       .eq('id', userId)
       .single();
+
+    // Handle mentions - send notifications to mentioned users
+    const { userIds: mentionedUserIds } = await extractMentionedUserIds(content);
+    if (mentionedUserIds.length > 0 && profile?.username) {
+      await sendMentionNotifications(mentionedUserIds, userId, 'post_comment', comment.id, profile.username);
+    }
 
     return { 
       comment: { ...comment, profiles: profile || { id: userId, username: 'Unknown' } }, 

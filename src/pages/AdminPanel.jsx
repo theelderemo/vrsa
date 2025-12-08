@@ -34,7 +34,8 @@ import {
   Database,
   Bot,
   Send,
-  FileText
+  FileText,
+  Search
 } from 'lucide-react';
 import { useUser } from '../hooks/useUser';
 import { Button } from '../components/ui/Button';
@@ -282,6 +283,11 @@ const AdminPanel = () => {
   const [editingBlog, setEditingBlog] = useState(null);
   const [loadingBlogs, setLoadingBlogs] = useState(false);
 
+  // User search state
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+
   // Check admin authorization
   useEffect(() => {
     if (!userLoading) {
@@ -495,7 +501,43 @@ const AdminPanel = () => {
     const { profile, error } = await updateUserProfile(userId, { [field]: newValue });
     if (!error && profile) {
       setRecentUsers(prev => prev.map(u => u.id === userId ? { ...u, [field]: newValue } : u));
+      setSearchedUsers(prev => prev.map(u => u.id === userId ? { ...u, [field]: newValue } : u));
     }
+  };
+
+  // User search handler
+  const handleUserSearch = async (e) => {
+    e.preventDefault();
+    if (!userSearchQuery.trim()) {
+      setSearchedUsers([]);
+      return;
+    }
+
+    setSearchingUsers(true);
+    try {
+      const searchTerm = userSearchQuery.trim().toLowerCase();
+      
+      // Search by email or username (case-insensitive)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`email.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setSearchedUsers(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      alert('Failed to search users: ' + error.message);
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const clearUserSearch = () => {
+    setUserSearchQuery('');
+    setSearchedUsers([]);
   };
 
   // Bot management handlers
@@ -786,10 +828,96 @@ const AdminPanel = () => {
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Recent Users</h3>
-            
+          <div className="space-y-6">
+            {/* User Search */}
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Search size={20} className="text-indigo-400" />
+                Search Users
+              </h3>
+              <form onSubmit={handleUserSearch} className="flex gap-3">
+                <input
+                  type="text"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Search by email or username..."
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <Button type="submit" disabled={searchingUsers}>
+                  {searchingUsers ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Search size={16} />
+                  )}
+                </Button>
+                {searchedUsers.length > 0 && (
+                  <Button type="button" variant="outline" onClick={clearUserSearch}>
+                    <X size={16} />
+                  </Button>
+                )}
+              </form>
+            </div>
+
+            {/* Search Results */}
+            {searchedUsers.length > 0 && (
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-slate-700">
+                  <h4 className="font-medium text-white">Search Results ({searchedUsers.length})</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-700">
+                        <th className="text-left text-sm font-medium text-slate-400 p-4">Email</th>
+                        <th className="text-left text-sm font-medium text-slate-400 p-4">Username</th>
+                        <th className="text-left text-sm font-medium text-slate-400 p-4">Joined</th>
+                        <th className="text-center text-sm font-medium text-slate-400 p-4">Pro</th>
+                        <th className="text-center text-sm font-medium text-slate-400 p-4">Beta</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {searchedUsers.map(user => (
+                        <tr key={user.id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                          <td className="p-4 text-sm text-white">{user.email}</td>
+                          <td className="p-4 text-sm text-slate-300">{user.username || '-'}</td>
+                          <td className="p-4 text-sm text-slate-400">{formatDate(user.created_at)}</td>
+                          <td className="p-4 text-center">
+                            <button
+                              onClick={() => handleToggleUserStatus(user.id, 'is_pro', user.is_pro)}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                user.is_pro === 'true'
+                                  ? 'text-yellow-400 bg-yellow-600/20'
+                                  : 'text-slate-500 hover:bg-slate-700'
+                              }`}
+                            >
+                              <Crown size={16} />
+                            </button>
+                          </td>
+                          <td className="p-4 text-center">
+                            <button
+                              onClick={() => handleToggleUserStatus(user.id, 'is_beta', user.is_beta)}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                user.is_beta === 'true'
+                                  ? 'text-cyan-400 bg-cyan-600/20'
+                                  : 'text-slate-500 hover:bg-slate-700'
+                              }`}
+                            >
+                              <TestTube size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Users */}
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-slate-700">
+                <h4 className="font-medium text-white">Recent Users ({recentUsers.length})</h4>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
