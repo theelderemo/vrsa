@@ -215,11 +215,11 @@ const AudioAnalyzer = () => {
                 <div className="relative pt-2">
                   <div className="overflow-hidden h-2 mb-2 text-xs flex rounded bg-slate-700">
                     <div 
-                      style={{ width: `${analysis.danceability * 100}%` }} 
+                      style={{ width: `${Math.min(analysis.danceability * 100, 100)}%` }} 
                       className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-pink-500 transition-all duration-1000"
                     ></div>
                   </div>
-                  <span className="text-2xl font-bold text-white">{(analysis.danceability * 100).toFixed(0)}%</span>
+                  <span className="text-2xl font-bold text-white">{Math.min(analysis.danceability * 100, 100).toFixed(0)}%</span>
                 </div>
               </div>
 
